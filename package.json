@@ -1,0 +1,33 @@
+{
+  "name": "bodnik-daemon",
+  "version": "1.0.0",
+  "description": "",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node build/index.js",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/moment-timezone": "^0.5.30",
+    "moment-timezone": "^0.6.0",
+    "node-interval-tree": "^2.1.2",
+    "zwave-js": "^15.10.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.27.4",
+    "@babel/preset-react": "^7.27.1",
+    "@types/node": "^24.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.34.0",
+    "@typescript-eslint/parser": "^8.34.0",
+    "esbuild": "^0.25.5",
+    "eslint": "^9.29.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  }
+}
