@@ -5,124 +5,12 @@
   * Or better, the server sends a diff (or we compute it) 
 */
 import { exit } from 'process';
+import { UsagePollingService } from './usagePollingService';
 import { TranslatedValueID, Driver, isTransportServiceEncapsulation, ZWaveNode } from 'zwave-js';
-import { IntervalTree, Interval } from 'node-interval-tree';
-
-interface CodeInterval {
-  low: number,
-  high: number,
-  code: string,
-  startEvent: ScheduledTask, // | { overlapsEarlier: CodeInterval },
-  stopEvent: ScheduledTask, //| { overlapsLater: CodeInterval },
-};
-
-function countUnique(xs: string[]): number {
-  const m = new Set<string>();
-  xs.forEach((x) => m.add(x));
-  return m.size;
-}
-
-class ScheduledTask {
-  id: NodeJS.Timeout;
-  finalState: 'finishedEarly' | 'cancelled' | 'occurred' | undefined;
-  f: () => void;
-
-  cancel() {
-    if (this.finalState == undefined) {
-      this.finalState = 'cancelled';
-      clearTimeout(this.id);
-    }
-  }
-
-  finishEarly() {
-    if (this.finalState == undefined) {
-      this.finalState = 'finishedEarly';
-      clearTimeout(this.id);
-      this.f();
-    }
-  }
-
-  constructor(t: Date, f: () => void) {
-    this.finalState = undefined;
-    const now = Date.now();
-    this.f = f;
-
-    this.id = global.setTimeout(() => {
-      if (this.finalState == undefined) {
-        this.finalState = 'occurred';
-        f();
-      }
-    }, t.getTime() - now);
-  }
-}
-
-type Result<T, E = Error> =
-  | { ok: true; value: T }
-  | { ok: false; error: E };
-function Err<T, E>(e: E): Result<T, E> {
-  return { ok: false, error: e };
-}
-function Ok<T, E>(x: T): Result<T, E> {
-  return { ok: true, value: x };
-}
-
-function unwrap<A, E>(x: Result<A, E>): A {
-  if (x.ok == true) {
-    return x.value;
-  } else {
-    throw x.error;
-  }
-}
-
-const CAPACITY = 20;
-const CODE_LENGTH = 4;
-const CODE_ENABLED = 1;
-const CODE_AVAILABLE = 0;
-
+import { runLockManager } from './lockManager';
 
 class SaunaManager {
   static TARGET_TEMP = 180;
-}
-
-function randomCode(): string {
-  const res = [];
-  for (let i = 0; i < CODE_LENGTH; ++i) {
-    const x = Math.floor(Math.random() * 10);
-    res.push(x.toString());
-  }
-  return res.join('');
-}
-
-function popSet<A>(set: Set<A>): A | undefined {
-  for (const value of set) {
-    set.delete(value);
-    return value;
-  }
-  return undefined;
-}
-
-type CodeSlot = { value: TranslatedValueID, status: TranslatedValueID };
-type AllocatedSlot = { slot: CodeSlot, slotIndex: number, count: number };
-
-function runLockManager(lock: ZWaveNode) {
-  const BOOKING_WEBSOCKET = '';
-  const manager = new LockManager(lock);
-  const ws = new WebSocket(BOOKING_WEBSOCKET);
-
-  type BookingMessage =
-    | { kind: 'addAccess', code: string, start: number, stop: number }
-    | { kind: 'removeAccess', code: string, start: number, stop: number };
-  ws.onmessage = (ev) => {
-    const msg: BookingMessage = JSON.parse(ev.data)
-    switch (msg.kind) {
-      case 'addAccess':
-        manager.addAccessInterval(msg.code, [new Date(msg.start), new Date(msg.stop)]);
-        break;
-      case 'removeAccess':
-        manager.removeAccessInterval(msg.code, [new Date(msg.start), new Date(msg.stop)]);
-        break;
-    }
-  }
 }
 
 // On start up, request the schedule from the server.
@@ -130,153 +18,37 @@ function runLockManager(lock: ZWaveNode) {
 // Should maintain a websocket. On opening, the server sends all the scheduled acceses,
 // and as new bookings or cancellations occur, the server should send them.
 //
-class LockManager {
-  lock: ZWaveNode;
-  tree: IntervalTree<CodeInterval>;
-  userCodeSlots: Array<CodeSlot>;
-  // These are indices into the userCodeIds array. The 
-  availableSlots: Set<number>;
-  // ref-counting to handle overlapping intervals with the same code
-  codeToSlot: Map<string, AllocatedSlot>;
+// Initialize usage polling service
+const usageService = new UsagePollingService(
+  process.env.RISO_ADMIN_URL || 'http://192.168.1.100/admin',
+  {
+    serverUrl: process.env.CLOUD_SERVER_URL || 'https://your-server.com',
+    daemonSecret: process.env.DAEMON_SECRET || 'your-secret-here'
+  },
+  parseInt(process.env.POLLING_INTERVAL_MINUTES || '5') * 60 * 1000
+);
 
-  constructor(lock: ZWaveNode) {
-    this.lock = lock;
-    this.tree = new IntervalTree();
-    this.codeToSlot = new Map();
-    // TODO: filter out the reserved codes
-    const codeOrStatus = lock.getDefinedValueIDs().filter(v => v.commandClass === 99 && v.propertyKey != 0);
-    // propertyKey 0 is special and used for modifying all the codes.
-    const codeValues = codeOrStatus.filter(v => v.property == 'userCode');
-    const statusesByIndex = new Map<any, TranslatedValueID>();
-    codeOrStatus.forEach(v => {
-      if (v.property == 'userIdStatus') {
-        statusesByIndex.set(v.propertyKey, v);
-      }
-    });
+// Store references for graceful shutdown
+let wsClient: any = null;
 
-    this.userCodeSlots = codeValues.map((code) => {
-      const status = statusesByIndex.get(code.propertyKey);
-      if (status == undefined) {
-        throw 'Status for code not found';
-      }
-      return { value: code, status };
-    });
-
-    this.availableSlots = new Set();
-    for (let i = 0; i < this.userCodeSlots.length; ++i) {
-      this.availableSlots.add(i);
-    }
+// Graceful shutdown handlers
+process.on('SIGINT', async () => {
+  console.log('Received SIGINT, shutting down services...');
+  if (wsClient) {
+    wsClient.disconnect();
   }
+  await usageService.stop();
+  process.exit(0);
+});
 
-  startAccess(t: Date, code: string): ScheduledTask {
-    return new ScheduledTask(t, () => {
-      unwrap(this.allocateCodeSlot(code));
-    });
+process.on('SIGTERM', async () => {
+  console.log('Received SIGTERM, shutting down services...');
+  if (wsClient) {
+    wsClient.disconnect();
   }
-
-  stopAccess(t: Date, code: string): ScheduledTask {
-    return new ScheduledTask(t, () => {
-      this.freeCodeSlot(code);
-    });
-  }
-
-  removeAccessInterval(code: string, [start, stop]: [Date, Date]) {
-    const low = start.getTime();
-    const high = stop.getTime();
-    const overlapping = this.tree.search(low, high);
-    const relevantSegment = overlapping.find(
-      (x) => x.code == code && x.low == low && x.high == high);
-
-    if (relevantSegment == undefined) {
-      // Nothing to do.
-      return;
-    }
-
-    // Need to decrement ref-count and free up the slot if the stopEvent has not been called.
-    if (relevantSegment.startEvent.finalState == 'occurred') {
-      if (relevantSegment.stopEvent.finalState == undefined) {
-        relevantSegment.stopEvent.finishEarly();
-      }
-    } else {
-      relevantSegment.startEvent.cancel();
-      relevantSegment.stopEvent.cancel();
-    }
-  }
-
-  freeCodeSlot(code: string) {
-    const r = this.codeToSlot.get(code);
-    if (r != undefined) {
-      r.count -= 1;
-      if (r.count <= 0) {
-        this.codeToSlot.delete(code)
-        this.availableSlots.add(r.slotIndex);
-        this.lock.setValue(r.slot.status, CODE_AVAILABLE);
-      }
-    }
-  }
-
-  allocateCodeSlot(code: string): Result<AllocatedSlot, string> {
-    let r = this.codeToSlot.get(code);
-
-    if (r == undefined) {
-      const i = popSet(this.availableSlots);
-      if (i == undefined) {
-        return Err('No available slot');
-      } else {
-        r = { slotIndex: i, count: 1, slot: this.userCodeSlots[i] };
-        this.codeToSlot.set(code, r);
-      }
-    } else {
-      r.count += 1;
-    }
-
-    // Do it unconditionally for good measure
-    this.lock.setValue(r.slot.status, CODE_ENABLED);
-    this.lock.setValue(r.slot.value, code);
-
-    return Ok(r);
-  }
-
-  addAccessInterval(code: string, [start, stop]: [Date, Date]): Result<void, string> {
-    const low = start.getTime();
-    const high = stop.getTime();
-    const overlapping = this.tree.search(low, high);
-    const alreadyPresent = overlapping.find(
-      (x) => x.code == code && x.low == low && x.high == high) != undefined;
-
-    if (alreadyPresent) {
-      return Ok(undefined);
-    } else {
-      const EPSILON = 1;
-      // Make sure at every point in this interval there's less than CAPACITY other people.
-      // The number of intervals overlapping only changes at endpoints.
-      const testPoints = overlapping.flatMap(
-        (r) => [r.low + EPSILON, r.high - EPSILON].filter((t) => low < t && t < high));
-
-      const spaceAvailable = testPoints.every((t) => {
-        // See how many overlapping intervals overlap with time t
-        const codesAtTime = new Set<string>();
-        overlapping.forEach((r) => {
-          if (r.low < t && t < r.high) { codesAtTime.add(r.code); }
-        });
-        codesAtTime.delete(code);
-        return codesAtTime.size < CAPACITY
-      });
-
-      if (!spaceAvailable) {
-        return Err('At capacity');
-      }
-
-      this.tree.insert({
-        low, high, code,
-        startEvent: this.startAccess(start, code),
-        stopEvent: this.stopAccess(stop, code),
-      });
-
-      return Ok(undefined);
-    }
-  }
-}
+  await usageService.stop();
+  process.exit(0);
+});
 
 const driver = new Driver('/dev/serial/by-id/usb-Zooz_800_Z-Wave_Stick_533D004242-if00', {
   storage: {
@@ -286,35 +58,50 @@ const driver = new Driver('/dev/serial/by-id/usb-Zooz_800_Z-Wave_Stick_533D00424
 
 driver.disableStatistics();
 
+// Start usage polling service
+usageService.start().then(() => {
+  console.log('Usage polling service started successfully');
+}).catch((error) => {
+  console.error('Failed to start usage polling service:', error);
+});
+
 driver.start().then(async () => {
   return driver.on('all nodes ready', () => {
-    for (let i = 0; i < 10; ++i) {console.log('arstieaonrstei');}
+    console.log('All Z-Wave nodes are ready');
     const lockNode = driver.controller.nodes.get(2);
-    if (lockNode == undefined) { exit(1); }
+    if (lockNode == undefined) { 
+      console.error('Lock node (node 2) not found');
+      exit(1); 
+    }
 
-      // Get ALL values for the node
-      const allValues = lockNode.getDefinedValueIDs();
-      console.log('All available values:');
-      allValues.forEach(valueId => {
-        const value = lockNode.getValue(valueId);
-        const metadata = lockNode.getValueMetadata(valueId);
-        console.log(`CC ${valueId.commandClass}, property: ${valueId.property}, key: ${valueId.propertyKey}, value:
-  ${value}, label: ${metadata?.label}`);
-      });
+    console.log('Lock node found, initializing lock manager...');
 
-      // Get specific User Code values
-      console.log('\nUser Codes:');
-      const userCodeValues = allValues.filter(v => v.commandClass === 99); // User Code CC
-      userCodeValues.forEach(valueId => {
-        const value = lockNode.getValue(valueId);
-        if (valueId.property === 'userCode' && value) {
-          console.log(`User slot ${valueId.propertyKey}: ${value}`);
-        }
-        if (valueId.property === 'userIdStatus') {
-          console.log(`User slot ${valueId.propertyKey} status: ${value}`);
-        }
-      });
+    // Initialize lock manager with WebSocket connection
+    const serverUrl = process.env.BOOKING_SERVER_URL || 'ws://localhost:8080';
+    const { manager, wsClient: lockWsClient } = runLockManager(lockNode, serverUrl);
+    
+    // Store reference for graceful shutdown
+    wsClient = lockWsClient;
 
-    console.log('eyo', driver.controller.nodes);
+    // Get ALL values for the node (for debugging)
+    const allValues = lockNode.getDefinedValueIDs();
+    console.log(`Lock has ${allValues.length} defined values`);
+    
+    // Get specific User Code values
+    const userCodeValues = allValues.filter(v => v.commandClass === 99); // User Code CC
+    console.log(`Found ${userCodeValues.length} user code-related values`);
+
+    // Log initial user code slots
+    userCodeValues.forEach(valueId => {
+      const value = lockNode.getValue(valueId);
+      if (valueId.property === 'userCode' && value) {
+        console.log(`User slot ${valueId.propertyKey}: ${value}`);
+      }
+      if (valueId.property === 'userIdStatus') {
+        console.log(`User slot ${valueId.propertyKey} status: ${value}`);
+      }
+    });
+
+    console.log('Lock manager initialized successfully');
   })
 });
