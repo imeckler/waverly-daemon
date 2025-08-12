@@ -15,8 +15,11 @@
   "license": "ISC",
   "dependencies": {
     "@types/moment-timezone": "^0.5.30",
+    "@types/ws": "^8.5.12",
     "moment-timezone": "^0.6.0",
     "node-interval-tree": "^2.1.2",
+    "puppeteer": "^24.16.1",
+    "ws": "^8.18.0",
     "zwave-js": "^15.10.0"
   },
   "devDependencies": {
