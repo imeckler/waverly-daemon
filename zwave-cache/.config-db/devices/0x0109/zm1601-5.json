@@ -1,0 +1,55 @@
+{
+	"manufacturer": "Vision Security",
+	"manufacturerId": "0x0109",
+	"label": "ZM1601-5",
+	"description": "Siren with LED Strobe Light",
+	"devices": [
+		{
+			"productType": "0x2005",
+			"productId": "0x0505",
+			"zwaveAllianceId": 1009
+		},
+		{
+			"productType": "0x2005",
+			"productId": "0x0508",
+			"zwaveAllianceId": 1278
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Group 1",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Siren/Strobe Mode",
+			"description": "0(all enable),1(siren only),2(storbe only)",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 2,
+			"defaultValue": 0
+		},
+		{
+			"#": "2",
+			"label": "Alarm Auto Stop Time",
+			"description": "0(30s),1(60s),2(120s),3(unlimited)",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 3,
+			"defaultValue": 0
+		}
+	],
+	"metadata": {
+		"inclusion": "Open the bracket and press the program switch for at least 1 second. The LED should go off after successful inclusion or flash orange continuously if not included.",
+		"exclusion": "Press the program switch for at least 1 second. LED will flash orange continuously for 25 seconds during exclusion.",
+		"reset": "Device resets to factory defaults when excluded.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1009/ZM%201601%20Siren_20140407-500%20series.pdf"
+	}
+}

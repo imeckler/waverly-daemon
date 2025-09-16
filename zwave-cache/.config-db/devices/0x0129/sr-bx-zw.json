@@ -1,0 +1,60 @@
+{
+	"manufacturer": "Yale",
+	"manufacturerId": "0x0129",
+	"label": "SR-BX-ZW",
+	"description": "External Siren",
+	"devices": [
+		{
+			"productType": "0x6f01",
+			"productId": "0x0001",
+			"zwaveAllianceId": 2039
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Alarm Duration",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 1,
+			"maxValue": 10,
+			"defaultValue": 10
+		},
+		{
+			"#": "2",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Alarm LED Flash"
+		},
+		{
+			"#": "3",
+			"label": "Flashing LED Interval",
+			"description": "Control's the siren's LED flash during non-alarm mode. Note: Setting this parameter will significantly reduce the battery life of your siren.",
+			"valueSize": 1,
+			"unit": "10 seconds",
+			"minValue": 0,
+			"maxValue": 25,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "4",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Tamper Alarm"
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Turn on the battery power switch to activate the pre-inserted batteries\n2. The Siren will emit a 2-tone beep\n3. Within 1.5 seconds, press the Siren learn button 3 times",
+		"exclusion": "Within 1.5 seconds, press the learn button 3 times and the Siren will be removed from the existing Z-Wave network.",
+		"reset": "1. Turn off battery power switch and disconnect 9V power adaptor if present\n2. Press and hold the learn button\n3. While holding the learn button, power on the Siren by turning power switch ON and reconnecting the 9V power adaptor\n4. Keep holding for 10 seconds to complete the factory reset",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2039/YSL_External_Siren_SR-BX-ZW_1C.pdf"
+	}
+}

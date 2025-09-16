@@ -1,0 +1,77 @@
+{
+	"manufacturer": "Vision Security",
+	"manufacturerId": "0x0109",
+	"label": "ZD2201",
+	"description": "Multisensor 4in1",
+	"devices": [
+		{
+			"productType": "0x201f",
+			"productId": "0x1f10",
+			"zwaveAllianceId": [1566, 2480]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Temperature Unit Selection",
+			"description": "Choose °C or °F",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Celsius",
+					"value": 0
+				},
+				{
+					"label": "Fahrenheit",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "2",
+			"label": "Auto Temperature Report Interval",
+			"valueSize": 1,
+			"unit": "0.1 °C",
+			"minValue": 0,
+			"maxValue": 50,
+			"defaultValue": 10
+		},
+		{
+			"#": "3",
+			"label": "Auto Humidity Report Interval",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 50,
+			"defaultValue": 10
+		},
+		{
+			"#": "4",
+			"label": "Auto Light Report Interval",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 50,
+			"defaultValue": 10
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the program switch.",
+		"exclusion": "Press the program switch for at least 1 second.",
+		"reset": "1. Open the rear cover.\n2. Press the program switch 10 times in 10 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2480/ZD%202201-5_R1_20150812.pdf"
+	}
+}

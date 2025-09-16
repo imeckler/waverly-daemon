@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Sharp",
+	"manufacturerId": "0x010b",
+	"label": "3G Gateway",
+	"description": "3G Gateway",
+	"devices": [
+		{
+			"productType": "0x4561",
+			"productId": "0x0088",
+			"zwaveAllianceId": 2782
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "1. Tap the Setting button in the mobile application.\n2. Select \"Reset\" and press 'RESET' button in Factory Default Reset dialog.\n3. All LEDs will blink when reset is complete.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2782/UsersGuide_DN3E6JE088_20171225.pdf"
+	}
+}

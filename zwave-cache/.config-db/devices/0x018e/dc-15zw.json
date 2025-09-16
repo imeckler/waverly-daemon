@@ -1,0 +1,30 @@
+{
+	"manufacturer": "Climax Technology, Ltd.",
+	"manufacturerId": "0x018e",
+	"label": "DC-15ZW",
+	"description": "Door Contact",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0001",
+			"zwaveAllianceId": [1429, 3080]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"3": {
+			"label": "Group 3",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"metadata": {
+		"inclusion": "1. Pull out the battery insulator\n2. The LED indicator will turn on briefly\n3. Press the Test Button 3 times within 1.5 seconds\n4. Press and release the Tamper Switch once\n5. Activate the Door Contact once (open and close)",
+		"exclusion": "Press the Test Button 3 times within 1.5 seconds. The Door Contact will be removed from the Z-wave network.",
+		"reset": "Press and hold the Test Button for 10 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1429/DC-15ZW_20150806.doc"
+	}
+}

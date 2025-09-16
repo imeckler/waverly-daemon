@@ -1,0 +1,76 @@
+{
+	"manufacturer": "Vision Security",
+	"manufacturerId": "0x0109",
+	"label": "ZD2301EU-5",
+	"description": "4 in 1 Door Sensor",
+	"devices": [
+		{
+			"productType": "0x201f",
+			"productId": "0x1f20",
+			"zwaveAllianceId": 1334
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Temperature Unit",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Celsius",
+					"value": 0
+				},
+				{
+					"label": "Fahrenheit",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "2",
+			"label": "Temperature Report Threshold",
+			"valueSize": 1,
+			"unit": "0.1 (°C/°F)",
+			"minValue": 1,
+			"maxValue": 50,
+			"defaultValue": 10
+		},
+		{
+			"#": "3",
+			"label": "Humidity Report Threshold",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 1,
+			"maxValue": 50,
+			"defaultValue": 10
+		},
+		{
+			"#": "4",
+			"label": "Luminance Report Threshold",
+			"description": "Allowable range: 0, 5-50",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 50,
+			"defaultValue": 10,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the program switch.",
+		"exclusion": "Press the program switch for at least 1 second.",
+		"reset": "1. Open the rear cover.\n2. Press the program switch 10 times in 10 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1334/ZD%202301-5_20150603.pdf"
+	}
+}

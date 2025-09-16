@@ -1,0 +1,56 @@
+{
+	"manufacturer": "HomeSeer Technologies",
+	"manufacturerId": "0x000c",
+	"label": "HS-WS200+",
+	"description": "Scene Capable Wall Switch",
+	"devices": [
+		{
+			"productType": "0x4447",
+			"productId": "0x3035",
+			"zwaveAllianceId": 2675
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"$import": "templates/homeseer_template.json#led_indicator"
+		},
+		{
+			"#": "4",
+			"$import": "~/templates/master_template.json#orientation"
+		},
+		{
+			"#": "6",
+			"$if": "firmwareVersion >= 5.12",
+			"$import": "templates/homeseer_template.json#scene_control"
+		},
+		{
+			"#": "13",
+			"$import": "templates/homeseer_template.json#status_mode"
+		},
+		{
+			"#": "14",
+			"$import": "templates/homeseer_template.json#led_colors",
+			"label": "Default LED Color"
+		},
+		{
+			"#": "21",
+			"$import": "templates/homeseer_template.json#status_mode_choices",
+			"label": "Status Mode LED Color"
+		},
+		{
+			"#": "31",
+			"$import": "templates/homeseer_template.json#blink_frequency"
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Tap the upper or lower part of the rocker.",
+		"exclusion": "1. Tap the upper or lower part of the rocker.",
+		"reset": "1. Tap the ON button twice quickly.\n2. Tap the OFF button twice quickly.\n3. Repeat both steps.",
+		"manual": "https://homeseer.com/guides/HS-WS200-Manual.pdf"
+	}
+}

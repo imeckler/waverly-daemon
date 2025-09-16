@@ -1,0 +1,32 @@
+{
+	"manufacturer": "Shenzhen Saykey Technology Co., Ltd.",
+	"manufacturerId": "0x032c",
+	"label": "SK-5005-02",
+	"description": "Keyfob Remote Control",
+	"devices": [
+		{
+			"productType": "0x5005",
+			"productId": "0x0002",
+			"zwaveAllianceId": 2496
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Protect Timeout",
+			"valueSize": 1,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 60,
+			"defaultValue": 30
+		}
+	],
+	"metadata": {
+		"reset": "1. Press and hold both 'On' and 'Off' keys together for 2 seconds until the LED indicator turns on, then release all keys\n2. Press and hold both 'Stop' and 'SOS' keys together for 10 seconds\n3. The LED will blink off at 0.5 second intervals during the hold time\n4. After holding for 10 seconds the LED indicator will turn off, then release all keys\n5. The LED indicator will flash three times to confirm successful factory reset",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2496/Wireless_Keyfob_User_Manual_20171112.pdf"
+	}
+}

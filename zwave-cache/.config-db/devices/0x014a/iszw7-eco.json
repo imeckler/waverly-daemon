@@ -1,0 +1,96 @@
+{
+	"manufacturer": "Ecolink",
+	"manufacturerId": "0x014a",
+	"label": "ISZW7-ECO",
+	"description": "Chime+Siren",
+	"devices": [
+		{
+			"productType": "0x0007",
+			"productId": "0x3975",
+			"zwaveAllianceId": 4000
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Default Sound",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 100,
+			"defaultValue": 5
+		},
+		{
+			"#": "2",
+			"label": "Battery Report Interval",
+			"valueSize": 4,
+			"unit": "seconds",
+			"minValue": 120,
+			"maxValue": 86400,
+			"defaultValue": 3600
+		},
+		{
+			"#": "3",
+			"label": "Supervision Encapsulation for Get Requests",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "Enable",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "4",
+			"label": "Volume",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 50
+		},
+		{
+			"#": "5",
+			"label": "Sounds Available",
+			"description": "Number of sounds available to play",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 30,
+			"unsigned": true,
+			"readOnly": true
+		},
+		{
+			"#": "6",
+			"label": "Allow Volume Adjustments for Intrusion/Smoke/CO Alarms",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "Enable",
+					"value": 1
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the Pair Button (the smaller of the two buttons). During inclusion mode, the green LED will blink two times every three seconds. If inclusion times out, the device will blink red and green.",
+		"exclusion": "Press the smaller of the two buttons (Add/Test). The red LED will come on solid for 1 second when removed.",
+		"reset": "Hold the Pair button for 10 seconds. During the 10 seconds the green LED will flash, and after 10 seconds the red LED will come on solid for 1 second.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4000/ISZW7-ECO%20-%20Operation%20Manual%20v9.pdf"
+	}
+}

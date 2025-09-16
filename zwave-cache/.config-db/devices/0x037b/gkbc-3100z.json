@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Guardtec Inc.",
+	"manufacturerId": "0x037b",
+	"label": "GKBC-3100Z",
+	"description": "Staybinder Smart Door Lock",
+	"devices": [
+		{
+			"productType": "0x0006",
+			"productId": "0x0001",
+			"zwaveAllianceId": 3803
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "1. Ensure the door lock is open\n2. Open the battery cover and press the [REG] button\n3. Press [*] then [8][8]",
+		"exclusion": "1. Ensure the door lock is open\n2. Open the battery cover and press the [REG] button\n3. Press [*] then [9][9]",
+		"reset": "1. Ensure the door lock is open\n2. Open the battery cover and press the [REG] button\n3. Press [*] then [5]\n4. Press [*] then [2]",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3803/GKBC-3100Z_Z-Wave%20Manual_20200226.pdf"
+	}
+}

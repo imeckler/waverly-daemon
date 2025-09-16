@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Alula",
+	"manufacturerId": "0x0353",
+	"label": "RE6100",
+	"description": "Connect+ Security Panel with Z-Wave Controller",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0001",
+			"zwaveAllianceId": [3235, 3306, 3307]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "1. Navigate to Settings > Panel (enter PIN) > Z-Wave\n2. Select 'Hard Reset'\n3. Confirm the reset action",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3307/RE6100P%20Installation%20Manual%20Z-Wave%20(1).pdf"
+	}
+}

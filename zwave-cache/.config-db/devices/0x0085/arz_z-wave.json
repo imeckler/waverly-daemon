@@ -1,0 +1,54 @@
+{
+	"manufacturer": "Fakro",
+	"manufacturerId": "0x0085",
+	"label": "ARZ Z-Wave",
+	"description": "Roller Shutter",
+	"devices": [
+		{
+			// This is the Z-Wave Plus variant
+			"productType": "0x0003",
+			"productId": "0x0011",
+			"zwaveAllianceId": [2571, 2888]
+		},
+		{
+			// ARZ 1.1 (?)
+			"productType": "0x0003",
+			"productId": "0x0111"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Basic Repeat",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Multilevel Switch Repeat",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "12",
+			"$import": "templates/fakro_template.json#calibration"
+		},
+		{
+			"#": "13",
+			"$import": "templates/fakro_template.json#shutter_response_to_basic_set_0xff"
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Turn the power OFF and ON 3 times (OFF-ON-OFF-ON-OFF-ON) with no more than 20 seconds between each step. 2. Wait up to 10 minutes for automatic inclusion. 3. Alternatively, press the programming button P for 1 second.",
+		"exclusion": "Press the programming button P for 1 second.",
+		"reset": "Press the programming button P 5 times quickly.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2571/170307%20ARZ%20Z-WAVE%20User%20Manual.pdf"
+	}
+}

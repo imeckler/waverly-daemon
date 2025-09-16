@@ -1,0 +1,64 @@
+{
+	"manufacturer": "Everspring",
+	"manufacturerId": "0x0060",
+	"label": "EH403",
+	"description": "Z-Wave Floodlight with Motion Detector",
+	"devices": [
+		{
+			"productType": "0x0012",
+			"productId": "0x0001",
+			"zwaveAllianceId": 2890
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "PIR Trigger Off Period",
+			"description": "Pir trigger off period can be set 8~720 secs",
+			"valueSize": 2,
+			"minValue": 8,
+			"maxValue": 720,
+			"defaultValue": 15
+		},
+		{
+			"#": "2",
+			"label": "Lux Sensor Threshold",
+			"description": "Lux sensor threshold can be set 30~200",
+			"valueSize": 2,
+			"minValue": 30,
+			"maxValue": 200,
+			"defaultValue": 50,
+			"writeOnly": true
+		},
+		{
+			"#": "3",
+			"label": "Lux Auto Report",
+			"description": "Lux auto report can be set 0~1440 minutes",
+			"valueSize": 2,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 1440,
+			"defaultValue": 0
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the tamper switch 3 times within 1.5 seconds",
+		"exclusion": "Press the tamper switch 3 times within 1.5 seconds",
+		"reset": "Press the tamper switch 3 times within 1.5 seconds, then within 1 second press the tamper switch again and hold until LED is off",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2890/EH403%20Manual_20180522修改-A501112670R.pdf"
+	},
+	"compat": {
+		"commandClasses": {
+			"remove": {
+				// The device does not support Supervision correctly
+				"Supervision": {
+					"endpoints": "*"
+				}
+			}
+		}
+	}
+}

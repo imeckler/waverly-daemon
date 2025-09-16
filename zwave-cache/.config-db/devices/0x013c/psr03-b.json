@@ -1,0 +1,131 @@
+{
+	"manufacturer": "Philio Technology Corp",
+	"manufacturerId": "0x013c",
+	"label": "PSR03-B",
+	"description": "Scene Remote",
+	"devices": [
+		{
+			"productType": "0x0008",
+			"productId": "0x001d",
+			"zwaveAllianceId": 1176
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 4,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Lighting Group 1 (Top Left)",
+			"maxNodes": 4
+		},
+		"3": {
+			"label": "Lighting Group 2 (Top Right)",
+			"maxNodes": 4
+		},
+		"4": {
+			"label": "Lighting Group 3 (Bottom Left)",
+			"maxNodes": 4
+		},
+		"5": {
+			"label": "Lighting Group 4 (Bottom Right)",
+			"maxNodes": 4
+		},
+		"6": {
+			"label": "Lighting Group 5 (Top Left)",
+			"maxNodes": 4
+		},
+		"7": {
+			"label": "Lighting Group 6 (Top Right)",
+			"maxNodes": 4
+		},
+		"8": {
+			"label": "Lighting Group 7 (Bottom Left)",
+			"maxNodes": 4
+		},
+		"9": {
+			"label": "Lighting Group 8 (Bottom Right)",
+			"maxNodes": 4
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "2",
+			"$import": "templates/philio_template.json#basic_set_value"
+		},
+		{
+			"#": "7[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button Function",
+			"options": [
+				{
+					"label": "AV control",
+					"value": 0
+				},
+				{
+					"label": "Lighting group control",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "10",
+			"$import": "templates/philio_template.json#battery_report_interval_30m"
+		},
+		{
+			"#": "82",
+			"$import": "templates/philio_template.json#association_basic_set_value",
+			"label": "Lighting Group 1: Basic Set Value"
+		},
+		{
+			"#": "83",
+			"$import": "templates/philio_template.json#association_basic_set_value",
+			"label": "Lighting Group 2: Basic Set Value"
+		},
+		{
+			"#": "84",
+			"$import": "templates/philio_template.json#association_basic_set_value",
+			"label": "Lighting Group 3: Basic Set Value"
+		},
+		{
+			"#": "85",
+			"$import": "templates/philio_template.json#association_basic_set_value",
+			"label": "Lighting Group 4: Basic Set Value"
+		},
+		{
+			"#": "86",
+			"$import": "templates/philio_template.json#association_basic_set_value",
+			"label": "Lighting Group 5: Basic Set Value"
+		},
+		{
+			"#": "87",
+			"$import": "templates/philio_template.json#association_basic_set_value",
+			"label": "Lighting Group 6: Basic Set Value"
+		},
+		{
+			"#": "88",
+			"$import": "templates/philio_template.json#association_basic_set_value",
+			"label": "Lighting Group 7: Basic Set Value"
+		},
+		{
+			"#": "89",
+			"$import": "templates/philio_template.json#association_basic_set_value",
+			"label": "Lighting Group 8: Basic Set Value"
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the key three times within 1.5 seconds.",
+		"exclusion": "Press the key three times within 1.5 seconds.",
+		"reset": "1. Press and hold the key four times within 1.5 seconds, keeping it held on the 4th press\n2. Wait for the LED to light up for 3 seconds, then turn off\n3. Release the key within 2 seconds after the LED turns off",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1407/PSR03_ABC_version_Manual.pdf"
+	},
+	"compat": {
+		// The device uses Basic Set to indicate pressed buttons in Lighting Control Mode
+		"mapBasicSet": "event"
+	}
+}

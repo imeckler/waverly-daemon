@@ -1,0 +1,52 @@
+{
+	"manufacturer": "GE/Enbrighten",
+	"manufacturerId": "0x0063",
+	"label": "43072 / ZW4008DV",
+	"description": "In-Wall Paddle Switch, 120+277, QFSW, 500S",
+	"devices": [
+		{
+			"productType": "0x4952",
+			"productId": "0x3139",
+			"zwaveAllianceId": [3349, 4156]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Local Load",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Double Tap",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"$import": "~/templates/master_template.json#led_indicator_four_options"
+		},
+		{
+			"#": "19",
+			"$import": "templates/jasco_template.json#alternate_exclusion"
+		}
+	],
+	"compat": {
+		"mapBasicSet": "event"
+	},
+	"metadata": {
+		"inclusion": "Press and release the top or bottom of the switch.",
+		"exclusion": "Press and release the top or bottom of the switch.",
+		"reset": "1. Quickly press top button three times.\n2. Immediately press the bottom button three times.\n3. The LED will flash ON/OFF five times when completed successfully.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4156/43072%20QSG%20v4.pdf"
+	}
+}

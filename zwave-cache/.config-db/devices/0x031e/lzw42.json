@@ -1,0 +1,81 @@
+{
+	"manufacturer": "Inovelli",
+	"manufacturerId": "0x031e",
+	"label": "LZW42",
+	"description": "Multi-Color Bulb",
+	"devices": [
+		{
+			"productType": "0x0005",
+			"productId": "0x0001",
+			"zwaveAllianceId": 3613
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "2",
+			"label": "State After Power Loss",
+			"description": "This state will be chosen when the power is restored",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "On",
+					"value": 0
+				},
+				{
+					"label": "Previous state",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "81",
+			"label": "Color Adjustment (Warm White)",
+			"description": "Changes the color temperature for warm white",
+			"valueSize": 2,
+			"unit": "K",
+			"minValue": 2700,
+			"maxValue": 4999,
+			"defaultValue": 2700
+		},
+		{
+			"#": "82",
+			"label": "Color Adjustment (Cold White)",
+			"description": "Changes the color temperature for cold white",
+			"valueSize": 2,
+			"unit": "K",
+			"minValue": 5000,
+			"maxValue": 6500,
+			"defaultValue": 6500
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Turn off the bulb\n2. Turn on the bulb - it will blink twice indicating inclusion mode\n3. If successful, the bulb will blink once more",
+		"exclusion": "Turn power to the bulb on - it will blink twice indicating exclusion mode. The bulb will blink once more when exclusion is successful",
+		"reset": "Power the bulb on/off 6 times (between 0.5-2 seconds each time). The bulb will flash twice to indicate factory reset",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3613/LZW42%20Manual.pdf"
+	},
+	"compat": {
+		// The device supports Color Switch V2, despite only reporting support for V1
+		"commandClasses": {
+			"add": {
+				"Color Switch": {
+					"isSupported": true,
+					"version": 2
+				}
+			}
+		}
+	}
+}

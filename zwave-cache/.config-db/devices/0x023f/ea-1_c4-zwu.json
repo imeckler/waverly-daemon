@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Control4 Corporation",
+	"manufacturerId": "0x023f",
+	"label": "EA-1 / C4-ZWU",
+	"description": "EA-1 Entertainment and Automation Controller with US Z-Wave Module",
+	"devices": [
+		{
+			"productType": "0x0000",
+			"productId": "0x002a",
+			"zwaveAllianceId": [1927, 1928, 2450, 2451, 2452]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "Launch Composer and click on the Z-Wave Configuration tab in the project properties window, then click on \"Reset Defaults\"",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2452/DOC-00228-B%20Z-Wave%20Setup%20Guide.pdf"
+	}
+}

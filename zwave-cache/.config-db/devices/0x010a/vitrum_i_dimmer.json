@@ -1,0 +1,34 @@
+{
+	"manufacturer": "Vitrum",
+	"manufacturerId": "0x010a",
+	"label": "01E010010 / 01B010010",
+	"description": "I Dimmer Wireless",
+	"devices": [
+		{
+			"productType": "0x1100",
+			"productId": "0x4900",
+			"zwaveAllianceId": 121
+		},
+		{
+			"productType": "0x2100",
+			"productId": "0x8900",
+			"zwaveAllianceId": 95
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Button 1",
+			"maxNodes": 5
+		}
+	},
+	"metadata": {
+		"inclusion": "1. Touch any key on the device.\n2. LEDs will flash yellow 3 times and all outputs will switch on when successfully included.",
+		"exclusion": "1. Press and hold the top left button for at least 8 seconds.\n2. LED will flash red 3 times and sound a tone when successfully excluded.",
+		"reset": "1. Remove the unit from the wall mounting box.\n2. Press and hold the hidden factory reset button for at least 3 seconds.\n3. LED will flash red 3 times and sound a tone when reset is complete.",
+		"manual": "https://z-wave.ru/podderzhka/skachat/category/83-thinksimple.html?download=231:vitrum-dimmer-wireless"
+	}
+}

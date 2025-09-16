@@ -1,0 +1,29 @@
+{
+	"manufacturer": "Leviton",
+	"manufacturerId": "0x001d",
+	"label": "ZW15S",
+	"description": "Decora Smart 800 Series Switch",
+	"devices": [
+		{
+			"productType": "0x0042",
+			"productId": "0x0002",
+			"zwaveAllianceId": 5007
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "7",
+			"$import": "templates/leviton_template.json#status_led_800_series"
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Hold the control button for 7 seconds until the LED blinks amber.\n2. Tap the top rocker 1 time\n3. The Status LED will quickly flash green",
+		"exclusion": "1. Hold the control button for 7 seconds until the LED blinks amber.\n2. Tap the top rocker 1 time\n3. The Status LED will quickly flash green",
+		"reset": "Hold the top rocker for 14 seconds. After the first 7 seconds, the Status LED will turn amber, continue holding until the Status LED flashes red/amber then release.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=cert_portal/certs/997/DI-000-ZW15S-02A-X7.pdf"
+	}
+}

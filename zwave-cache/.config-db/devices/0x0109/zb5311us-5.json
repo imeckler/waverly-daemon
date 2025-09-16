@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Vision Security",
+	"manufacturerId": "0x0109",
+	"label": "ZB5311US-5",
+	"description": "Glass Break Detector",
+	"devices": [
+		{
+			"productType": "0x202f",
+			"productId": "0x2f01",
+			"zwaveAllianceId": 3819
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press the program switch once. The green LED will be solid on for 0.5 second after successful inclusion.",
+		"exclusion": "Press the program switch once. The green LED will flash 5 times quickly after successful exclusion.",
+		"reset": "Long press the program switch for up to 10 seconds. The green LED will flash 5 times quickly after successful reset.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3819/ZB5311-5%20Glass%20Break%20Detector%20Manual%20(RD%20%20FCC%20Checked)_20200304.pdf"
+	}
+}

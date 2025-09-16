@@ -1,0 +1,44 @@
+{
+	"manufacturer": "Vision Security",
+	"manufacturerId": "0x0109",
+	"label": "ZD2112JP-5",
+	"description": "Door Contact",
+	"devices": [
+		{
+			"productType": "0x2001",
+			"productId": "0x01a1",
+			"zwaveAllianceId": 1750
+		},
+		{
+			"productType": "0x2001",
+			"productId": "0x01a2",
+			"zwaveAllianceId": 2499
+		},
+		{
+			"productType": "0x2001",
+			"productId": "0x01a3",
+			"zwaveAllianceId": 2667
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Group 1",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Group 2",
+			"maxNodes": 5
+		}
+	},
+	"metadata": {
+		"inclusion": "Press the program switch.",
+		"exclusion": "Press the program switch for at least 1 second.",
+		"reset": "1. Trigger the rear cover switch.\n2. Trigger the reed switch (close & open) 5 times in 10 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1750/ZD%202112-5_12122014-Japan%20DW.pdf"
+	}
+}

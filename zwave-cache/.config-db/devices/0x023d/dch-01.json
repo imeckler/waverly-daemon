@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Honest Technology Co., Ltd.",
+	"manufacturerId": "0x023d",
+	"label": "DCH-01",
+	"description": "IoT DoorCam",
+	"devices": [
+		{
+			"productType": "0x0043",
+			"productId": "0x0001",
+			"zwaveAllianceId": [1693, 1831, 2457]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "1. Press & hold the Z-Wave inclusion button for 5 seconds.\n2. When the Z-Wave LED blinks rapidly, release the Z-Wave inclusion button.\n3. The DoorCam will try inclusion for 30 seconds.\n4. If inclusion was successful, the Z-Wave LED will turn off.",
+		"exclusion": "1. Press & hold 'Z-Wave' button for 5 seconds.\n2. When Z-Wave LED blinks with 250ms interval, release 'Z-Wave' button.\n3. DoorCam will try exclusion for 30sec.\n4. Z-Wave LED will be turned on if exclusion is successful.",
+		"reset": "1. Hold the 'Z-Wave' button for 10 seconds.\n2. When Z-Wave LED stops blinking after 10 seconds, release Z-Wave button.\n3. When factory reset is successful, LED will be on.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2457/IoT%20DoorCam_Manual_r03.pdf"
+	}
+}

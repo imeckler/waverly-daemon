@@ -1,0 +1,52 @@
+{
+	"manufacturer": "Philio Technology Corp",
+	"manufacturerId": "0x013c",
+	"label": "PAD09",
+	"description": "Smart Dimmer Plug",
+	"devices": [
+		{
+			"productType": "0x0005",
+			"productId": "0x0060",
+			"zwaveAllianceId": [3142, 3180, 3181, 3182]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Dimmer Level Report Mode",
+			"description": "0 : disable 1 : enable",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 1
+		},
+		{
+			"#": "2",
+			"label": "LED Indication Mode",
+			"description": "1: show dimmer state 2 : show night mode 3: one flash mode",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 3,
+			"defaultValue": 1
+		},
+		{
+			"#": "4",
+			"label": "Restore Dimmer State",
+			"description": "0 : dimmer off 1 : last dimmer state 2 : dimmer on",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 2,
+			"defaultValue": 1
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the Include button three times within 2 seconds.",
+		"exclusion": "Press the Include button three times within 2 seconds.",
+		"reset": "1. Press the Include button three times within 2 seconds.\n2. Within 1 second, press the Include button again for 5 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3142/PAD09_UserManual_Philio.pdf"
+	}
+}

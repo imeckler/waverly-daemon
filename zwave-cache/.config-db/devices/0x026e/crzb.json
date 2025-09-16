@@ -1,0 +1,26 @@
+{
+	"manufacturer": "Springs Window Fashions",
+	"manufacturerId": "0x026e",
+	"label": "CRZB",
+	"description": "Motorized Blinds",
+	"devices": [
+		{
+			"productType": "0x4254",
+			"productId": "0x5a42"
+		},
+		{
+			"productType": "0x5252",
+			"productId": "0x5a42"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press and hold the shade programming button for 3 seconds. Release when LED flashes.",
+		"exclusion": "Press and hold the shade programming button for 3 seconds. Release when LED flashes.",
+		"reset": "Z-Wave Reset: Exclude from the controller before doing this. Press and hold the button on the shade for approximately 10 seconds, and release when the shade jogs.\n\nFull Reset: Press and hold the button on the shade for approximately 15 seconds (the LED will stop flashing when complete) - you will need to set top / bottom / home positions.",
+		"manual": "https://support.springswf.net/helpdesk/attachments/30050113378"
+	}
+}

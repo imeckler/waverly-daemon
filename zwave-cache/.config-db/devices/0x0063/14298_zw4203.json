@@ -1,0 +1,52 @@
+{
+	"manufacturer": "GE/Enbrighten",
+	"manufacturerId": "0x0063",
+	"label": "14298 / ZW4203",
+	"description": "Plug-In Outdoor Switch V2, 500S",
+	"devices": [
+		{
+			"productType": "0x4f50",
+			"productId": "0x3034",
+			"zwaveAllianceId": 3408
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Local Load",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Double Tap",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"$import": "~/templates/master_template.json#led_indicator_four_options"
+		},
+		{
+			"#": "19",
+			"$import": "templates/jasco_template.json#alternate_exclusion"
+		}
+	],
+	"compat": {
+		"mapBasicSet": "event"
+	},
+	"metadata": {
+		"inclusion": "Press and release the top or bottom of the smart switch",
+		"exclusion": "Press and release the top or bottom of the smart switch",
+		"reset": "Unplug the switch from the receptacle. Press and hold the button for at least 3 seconds while you plug the switch into a receptacle",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3408/14298%20EnFrSp%20QSG%20v1.pdf"
+	}
+}

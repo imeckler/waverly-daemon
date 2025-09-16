@@ -1,0 +1,24 @@
+{
+	"manufacturer": "EbV",
+	"manufacturerId": "0x017c",
+	"label": "9601921000",
+	// eslint-disable-next-line @zwave-js/consistent-config-string-case
+	"description": "heatapp! Repeater S2",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x000a",
+			"zwaveAllianceId": 3270
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press and hold the button for 3-8 seconds. The LED will flash briefly, then show steady light after 3 seconds - release the button when the LED shows steady light.",
+		"exclusion": "Press and hold the button for 3-8 seconds. The LED will flash briefly, then show steady light after 3 seconds - release the button when the LED shows steady light.",
+		"reset": "Press the button for more than 10 seconds. The LED will turn off after the device resets to factory defaults.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3270/0450000594_1913_IA_heatapp-repeaterS2_EbV_EN.pdf"
+	}
+}

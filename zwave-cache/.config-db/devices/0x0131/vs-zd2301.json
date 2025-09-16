@@ -1,0 +1,76 @@
+{
+	"manufacturer": "Zipato",
+	"manufacturerId": "0x0131",
+	"label": "VS-ZD2301",
+	"description": "4 in 1 Door Sensor",
+	"devices": [
+		{
+			"productType": "0x201f",
+			"productId": "0x1f20",
+			"zwaveAllianceId": 2346
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Temperature Unit",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Celsius",
+					"value": 0
+				},
+				{
+					"label": "Fahrenheit",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "2",
+			"label": "Temperature Report Threshold",
+			"valueSize": 1,
+			"unit": "0.1 (°C/°F)",
+			"minValue": 1,
+			"maxValue": 50,
+			"defaultValue": 10
+		},
+		{
+			"#": "3",
+			"label": "Humidity Report Threshold",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 1,
+			"maxValue": 50,
+			"defaultValue": 10
+		},
+		{
+			"#": "4",
+			"label": "Luminance Report Threshold",
+			"description": "Allowable range: 0, 5-50",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 50,
+			"defaultValue": 10,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the program switch to send the NIF.",
+		"exclusion": "Press the program switch for at least 1 second.",
+		"reset": "All user and network settings will be cleared when the device is excluded.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2346/zp2301.pdf"
+	}
+}

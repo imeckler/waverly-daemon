@@ -1,0 +1,28 @@
+{
+	"manufacturer": "Willis Electric Co., Ltd.",
+	"manufacturerId": "0x015d",
+	"label": "ZW30",
+	"description": "In-Wall Smart Switch",
+	"devices": [
+		{
+			"productType": "0x0111",
+			"productId": "0x1e1c",
+			"zwaveAllianceId": 1711
+		},
+		{
+			"productType": "0xb111",
+			"productId": "0x1e1c",
+			"zwaveAllianceId": 2348
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press up and release the toggle.",
+		"exclusion": "Press up and release the front button.",
+		"reset": "Press and hold the top button for at least 3 seconds while applying AC power to this device.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2348/ZW30manual170412.pdf"
+	}
+}

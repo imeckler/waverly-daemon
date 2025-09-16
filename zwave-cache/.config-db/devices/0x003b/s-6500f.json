@@ -1,0 +1,80 @@
+{
+	"manufacturer": "Schlage",
+	"manufacturerId": "0x003b",
+	"label": "S-6500F",
+	"description": "Z-Wave Mortise Lock",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x6500",
+			"zwaveAllianceId": [3690, 3811, 3813, 4122, 4181, 4182, 4492]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"label": "Beeper",
+			"valueSize": 1,
+			"defaultValue": 255,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "Enable",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "5",
+			"label": "Auto Lock",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "Enable",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "6",
+			"label": "User Slots",
+			"description": "This value represents a bitmask with 10 bits. Each bit represents a user slot. A value of 1 means that the slot is occupied.",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 1023,
+			"defaultValue": 3
+		},
+		{
+			"#": "18",
+			"label": "Bootloader Version",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 1,
+			"unsigned": true,
+			"readOnly": true
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Slide the battery cover upward\n2. Press the wireless button for more than 3 seconds\n3. Enter sequence: 1, 6, [User Code], #\n4. RF LED flickers when successful",
+		"exclusion": "1. Slide the battery cover upward\n2. Press the wireless button for more than 3 seconds\n3. Enter sequence: 2, 6, [User Code], #\n4. RF LED flickers when successful",
+		"reset": "When Master code is already registered:\n1. Remove batteries\n2. Press and hold \"N\" and \"S\" buttons simultaneously\n3. Insert batteries while holding buttons\n4. Release buttons\n5. Enter Master code, then #\n6. Press 8\n\nWhen Master code is not registered:\n1. Remove batteries\n2. Press and hold \"N\" and \"S\" buttons simultaneously\n3. Insert batteries while holding buttons\n4. Release buttons\n5. Enter Master code to register, then #\n6. Enter the same Master code again, then #",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4122/Manual%20for%20Schlage%20Z-Wave%20Mortise%20Lock%20v1.1.pdf"
+	}
+}

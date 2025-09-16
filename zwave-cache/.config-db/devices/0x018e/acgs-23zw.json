@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Climax Technology, Ltd.",
+	"manufacturerId": "0x018e",
+	"label": "ACGS-23ZW",
+	"description": "Acoustic Glass Break Detector",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x000e",
+			"zwaveAllianceId": 3240
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Insert the 3V CR123A Lithium battery with correct polarity, then press the Function Button 3 times within 1 second.",
+		"exclusion": "Press the Function Button 3 times within 1 second. The Glass Break Detector will be removed from the Z-Wave network.",
+		"reset": "1. Remove the batteries from the Glass Break Detector\n2. Press and hold the Function Button\n3. While holding the Function Button, re-insert the batteries and wait for 10 seconds",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3240/ACGS-23ZW-(OTA)%2020190124%20S2認證.pdf"
+	}
+}

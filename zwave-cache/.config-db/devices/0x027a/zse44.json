@@ -1,0 +1,410 @@
+{
+	"manufacturer": "Zooz",
+	"manufacturerId": "0x027a",
+	"label": "ZSE44",
+	"description": "Temperature Humidity XS Sensor",
+	"devices": [
+		{
+			"productType": "0x7000",
+			"productId": "0xe004"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 3,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "High Temperature",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Low Temperature",
+			"maxNodes": 5
+		},
+		"4": {
+			"label": "High Humidity",
+			"maxNodes": 5
+		},
+		"5": {
+			"label": "Low Humidity",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		// Parameter 1 was removed in firmware 1.20 and re-added in firmware 1.30
+		// and had its limit/default changed back to pre-1.20 settings in firmware 2.0
+		{
+			"#": "1",
+			"$if": "firmwareVersion === 1.30",
+			"$import": "templates/zooz_template.json#battery_report_threshold",
+			"minValue": 10,
+			"defaultValue": 20
+		},
+		{
+			"#": "1",
+			"$if": "firmwareVersion < 1.20 || firmwareVersion >= 2.0",
+			"$import": "templates/zooz_template.json#battery_report_threshold",
+			"maxValue": 10,
+			"defaultValue": 5
+		},
+		{
+			"#": "2",
+			"$import": "templates/zooz_template.json#low_battery_alarm_threshold",
+			"minValue": 5,
+			"maxValue": 20,
+			"defaultValue": 10
+		},
+		{
+			"#": "3",
+			"$if": "firmwareVersion < 2.0",
+			"label": "Temperature Report Threshold",
+			"valueSize": 1,
+			"unit": "0.1 °F/C",
+			"minValue": 10,
+			"maxValue": 100,
+			"defaultValue": 20
+		},
+		{
+			"#": "3",
+			"$if": "firmwareVersion >= 2.0",
+			"label": "Temperature Report Threshold",
+			"valueSize": 1,
+			"unit": "0.1 °F/C",
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 10,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "4",
+			"$if": "firmwareVersion < 2.0",
+			"label": "Humidity Report Threshold",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 1,
+			"maxValue": 50,
+			"defaultValue": 10
+		},
+		{
+			"#": "4",
+			"$if": "firmwareVersion >= 2.0",
+			"label": "Humidity Report Threshold",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 50,
+			"defaultValue": 5,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "5",
+			"$if": "firmwareVersion < 2.0",
+			"label": "High Temperature Alert Threshold",
+			"valueSize": 1,
+			"unit": "°F/C",
+			"minValue": 50,
+			"maxValue": 120,
+			"defaultValue": 120
+		},
+		{
+			"#": "5",
+			"$if": "firmwareVersion >= 2.0",
+			"label": "High Temperature Alert Threshold",
+			"valueSize": 1,
+			"unit": "°F/C",
+			"minValue": 50,
+			"maxValue": 200,
+			"defaultValue": 200,
+			"unsigned": true
+		},
+		{
+			"#": "6",
+			"label": "High Temperature Alert Reporting",
+			"valueSize": 1,
+			"defaultValue": 7,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "Lifeline only",
+					"value": 1
+				},
+				{
+					"label": "0xff (On) to group 2 only",
+					"value": 2
+				},
+				{
+					"label": "0xff (On) to Lifeline and group 2",
+					"value": 3
+				},
+				{
+					"label": "0x00 (Off) to group 2 only",
+					"value": 4
+				},
+				{
+					"label": "0x00 (Off) to Lifeline and group 2",
+					"value": 5
+				},
+				{
+					"label": "0xff (On) and 0x00 (Off) to group 2 only",
+					"value": 6
+				},
+				{
+					"label": "0xff (On) and 0x00 (Off) to Lifeline and group 2",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": "7",
+			"$if": "firmwareVersion < 2.0",
+			"label": "Low Temperature Alert Threshold",
+			"valueSize": 1,
+			"unit": "°F/C",
+			"minValue": 10,
+			"maxValue": 100,
+			"defaultValue": 10
+		},
+		{
+			"#": "7",
+			"$if": "firmwareVersion >= 2.0",
+			"label": "Low Temperature Alert Threshold",
+			"valueSize": 1,
+			"unit": "°F/C",
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 10
+		},
+		{
+			"#": "8",
+			"label": "Low Temperature Alert Reporting",
+			"valueSize": 1,
+			"defaultValue": 7,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "Lifeline only",
+					"value": 1
+				},
+				{
+					"label": "0xff (On) to group 3 only",
+					"value": 2
+				},
+				{
+					"label": "0xff (On) to Lifeline and group 3",
+					"value": 3
+				},
+				{
+					"label": "0x00 (Off) to group 3 only",
+					"value": 4
+				},
+				{
+					"label": "0x00 (Off) to Lifeline and group 3",
+					"value": 5
+				},
+				{
+					"label": "0xff (On) and 0x00 (Off) to group 3 only",
+					"value": 6
+				},
+				{
+					"label": "0xff (On) and 0x00 (Off) to Lifeline and group 3",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": "9",
+			"$import": "~/templates/master_template.json#base_0-100_nounit",
+			"label": "High Humidity Alert Threshold",
+			"unit": "%",
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "10",
+			"label": "High Humidity Alert Reporting",
+			"valueSize": 1,
+			"defaultValue": 7,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "Lifeline only",
+					"value": 1
+				},
+				{
+					"label": "0xff (On) to group 4 only",
+					"value": 2
+				},
+				{
+					"label": "0xff (On) to Lifeline and group 4",
+					"value": 3
+				},
+				{
+					"label": "0x00 (Off) to group 4 only",
+					"value": 4
+				},
+				{
+					"label": "0x00 (Off) to Lifeline and group 4",
+					"value": 5
+				},
+				{
+					"label": "0xff (On) and 0x00 (Off) to group 4 only",
+					"value": 6
+				},
+				{
+					"label": "0xff (On) and 0x00 (Off) to Lifeline and group 4",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": "11",
+			"$import": "~/templates/master_template.json#base_0-100_nounit",
+			"label": "Low Humidity Alert Threshold",
+			"unit": "%",
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "12",
+			"label": "Low Humidity Alert Reporting",
+			"valueSize": 1,
+			"defaultValue": 7,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "Lifeline only",
+					"value": 1
+				},
+				{
+					"label": "0xff (On) to group 5 only",
+					"value": 2
+				},
+				{
+					"label": "0xff (On) to Lifeline and group 5",
+					"value": 3
+				},
+				{
+					"label": "0x00 (Off) to group 5 only",
+					"value": 4
+				},
+				{
+					"label": "0x00 (Off) to Lifeline and group 5",
+					"value": 5
+				},
+				{
+					"label": "0xff (On) and 0x00 (Off) to group 5 only",
+					"value": 6
+				},
+				{
+					"label": "0xff (On) and 0x00 (Off) to Lifeline and group 5",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": "13",
+			"$import": "~/templates/master_template.json#temperature_scale_celsius_fahrenheit",
+			"defaultValue": 1 // Fahrenheit
+		},
+		{
+			"#": "14",
+			"label": "Temperature Offset",
+			"description": "0=-10, 100=0, 200=+10",
+			"valueSize": 1,
+			"unit": "0.1 °F/C",
+			"minValue": 0,
+			"maxValue": 200,
+			"defaultValue": 100,
+			"unsigned": true
+		},
+		{
+			"#": "15",
+			"label": "Humidity Offset",
+			"description": "0=-10, 100=0, 200=+10",
+			"valueSize": 1,
+			"unit": "0.1 %",
+			"minValue": 0,
+			"maxValue": 200,
+			"defaultValue": 100,
+			"unsigned": true
+		},
+		{
+			"#": "16",
+			"label": "Temperature Reporting Interval",
+			"valueSize": 2,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 480,
+			"defaultValue": 240,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "17",
+			"label": "Humidity Reporting Interval",
+			"valueSize": 2,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 480,
+			"defaultValue": 240,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "Click the Z-Wave button 3 times as quickly as possible. The LED indicator will start flashing and turn off once inclusion is completed.",
+		"exclusion": "Click the Z-Wave button 3 times as quickly as possible. The LED indicator will start flashing and turn off when exclusion is complete.",
+		"reset": "1. Click the Z-Wave button twice and hold it the third time for 10 seconds\n2. The LED indicator will blink continuously\n3. Immediately click the Z-Wave button twice more to finalize the reset\n4. The LED indicator will flash 3 times to confirm a successful reset",
+		"manual": "https://cdn.shopify.com/s/files/1/0218/7704/files/zooz-700-series-tilt-shock-xs-sensor-zse43-manual.pdf"
+	}
+}

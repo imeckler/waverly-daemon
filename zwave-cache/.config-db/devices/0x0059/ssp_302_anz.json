@@ -1,0 +1,181 @@
+{
+	"manufacturer": "Secure Meters (UK) Ltd.",
+	"manufacturerId": "0x0059",
+	"label": "SSP 302 ANZ",
+	"description": "Secure Smart Plug 302",
+	"devices": [
+		{
+			"productType": "0x0011",
+			"productId": "0x0002",
+			"zwaveAllianceId": 1271
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Switch Status Delta Based Configuration",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 1,
+			"unsigned": true
+		},
+		{
+			"#": "2",
+			"label": "Voltage Delta Based Configuration",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0
+		},
+		{
+			"#": "3",
+			"label": "Current Delta Based Configuration",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "4",
+			"label": "Power Factor Delta Based Configuration",
+			"description": "This configuration parameter will be used to enable/disable the delta base power factor reporting in 0.1% resolution.  if user wants to set power factor 10% = 10/0.1 = 100",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "5",
+			"label": "Active Power Delta Based Configuration",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0
+		},
+		{
+			"#": "6",
+			"label": "Active Energy Delta Based Configuration",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0
+		},
+		{
+			"#": "7",
+			"label": "Apparent Energy Delta Based Configuration",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0
+		},
+		{
+			"#": "8",
+			"label": "Switch Status Time Interval Based",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0
+		},
+		{
+			"#": "9",
+			"label": "Voltage Time Interval Based",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0
+		},
+		{
+			"#": "10",
+			"label": "Current Time Interval Based",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0
+		},
+		{
+			"#": "11",
+			"label": "Power Factor Time Interval Based",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0
+		},
+		{
+			"#": "12",
+			"label": "Active Power Time Interval Based",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0
+		},
+		{
+			"#": "13",
+			"label": "Active Energy Time Interval Based",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0
+		},
+		{
+			"#": "14",
+			"label": "Apparent Energy Time Interval Based",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0
+		},
+		{
+			"#": "15",
+			"label": "Relay and LED Configuration",
+			"description": "This configuration is used to change the relay LED status when relay is open/close and also enable to whether to retain the last relay status over power cycle",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Relay status will not be retain over power cycle, and relay status LED will lit when relay on and relay status LED will off when relay off\"",
+					"value": 0
+				},
+				{
+					"label": "Relay status will be retain over power cycle, and relay status LED will lit when relay on and relay status LED will off when relay off",
+					"value": 1
+				},
+				{
+					"label": "Relay status will not be retain over power cycle, and relay status LED will off when relay on and relay status LED will lit when relay off",
+					"value": 2
+				},
+				{
+					"label": "Relay status will be retain over power cycle, and relay status LED will off when relay on and relay status LED will lit when relay off",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "16",
+			"label": "Sleep Current Configuration",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		}
+	],
+	"metadata": {
+		"inclusion": "Press and hold the button for 4 to 7 seconds, then release. The LED flashes twice per second during the process and turns off when successful.",
+		"exclusion": "Press and hold the button for 4 to 7 seconds, then release. The LED flashes twice per second during the process, then once per second when successful.",
+		"reset": "1. Power cycle the device\n2. Press and hold the button for 11-15 seconds within 60 seconds of power cycle",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1271/SSP%20302%20User%20Manual%20for%20Web.pdf"
+	}
+}

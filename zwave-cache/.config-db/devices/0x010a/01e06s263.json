@@ -1,0 +1,149 @@
+{
+	"manufacturer": "Vitrum",
+	"manufacturerId": "0x010a",
+	"label": "01E06S263",
+	"description": "VI On-Off 6 Triac",
+	"devices": [
+		{
+			"productType": "0x8161",
+			"productId": "0x2062",
+			"zwaveAllianceId": [3271, 3899, 3918]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "7",
+			"$import": "templates/vitrum_template.json#button_1_off_color"
+		},
+		{
+			"#": "8",
+			"$import": "templates/vitrum_template.json#button_2_off_color"
+		},
+		{
+			"#": "9",
+			"$import": "templates/vitrum_template.json#button_3_off_color"
+		},
+		{
+			"#": "10",
+			"$import": "templates/vitrum_template.json#button_4_off_color"
+		},
+		{
+			"#": "11",
+			"$import": "templates/vitrum_template.json#button_5_off_color"
+		},
+		{
+			"#": "12",
+			"$import": "templates/vitrum_template.json#button_6_off_color"
+		},
+		{
+			"#": "13",
+			"$import": "templates/vitrum_template.json#button_1_on_color"
+		},
+		{
+			"#": "14",
+			"$import": "templates/vitrum_template.json#button_2_on_color"
+		},
+		{
+			"#": "15",
+			"$import": "templates/vitrum_template.json#button_3_on_color"
+		},
+		{
+			"#": "16",
+			"$import": "templates/vitrum_template.json#button_4_on_color"
+		},
+		{
+			"#": "17",
+			"$import": "templates/vitrum_template.json#button_5_on_color"
+		},
+		{
+			"#": "18",
+			"$import": "templates/vitrum_template.json#button_6_on_color"
+		},
+		{
+			"#": "25",
+			"$import": "templates/vitrum_template.json#button_1_output_6ch"
+		},
+		{
+			"#": "26",
+			"$import": "templates/vitrum_template.json#button_2_output_6ch"
+		},
+		{
+			"#": "27",
+			"$import": "templates/vitrum_template.json#button_3_output_6ch"
+		},
+		{
+			"#": "28",
+			"$import": "templates/vitrum_template.json#button_4_output_6ch"
+		},
+		{
+			"#": "29",
+			"$import": "templates/vitrum_template.json#button_5_output_6ch"
+		},
+		{
+			"#": "30",
+			"$import": "templates/vitrum_template.json#button_6_output_6ch"
+		},
+		{
+			"#": "31",
+			"$import": "templates/vitrum_template.json#basic_set_type",
+			"label": "Basic Set On From Group 2"
+		},
+		{
+			"#": "32",
+			"$import": "templates/vitrum_template.json#basic_set_type",
+			"label": "Basic Set On From Group 3"
+		},
+		{
+			"#": "33",
+			"$import": "templates/vitrum_template.json#basic_set_type",
+			"label": "Basic Set On From Group 4"
+		},
+		{
+			"#": "34",
+			"$import": "templates/vitrum_template.json#basic_set_type",
+			"label": "Basic Set On From Group 5"
+		},
+		{
+			"#": "35",
+			"$import": "templates/vitrum_template.json#basic_set_type",
+			"label": "Basic Set On From Group 6"
+		},
+		{
+			"#": "36",
+			"$import": "templates/vitrum_template.json#basic_set_type",
+			"label": "Basic Set On From Group 7"
+		},
+		{
+			"#": "206",
+			"$import": "~/templates/master_template.json#base_0-100_nounit",
+			"label": "Buttons Maximum Brightness",
+			"defaultValue": 100
+		},
+		{
+			"#": "207",
+			"$import": "~/templates/master_template.json#base_0-100_nounit",
+			"label": "Buttons Minimum Brightness",
+			"defaultValue": 5
+		},
+		{
+			"#": "209",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Buzzer"
+		},
+		{
+			"#": "218",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Front-End Buttons Lock"
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Press and hold button 1 for more than 4 seconds until the LED blinks magenta, or press the physical button on the back briefly\n2. All LED buttons will blink green 3 times when successfully included",
+		"exclusion": "1. Press and hold button 1 for more than 6 seconds until the device emits a long beep\n2. Release the button and press it 3 times quickly, or press the physical button on the back briefly\n3. Button LED will blink red when successfully excluded",
+		"reset": "Press and hold the physical button for about 5 seconds until the buzzer plays a long beep, release and press again until you hear 3 short beeps.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3271/Vitrum%20VI%20EU%20on-off%206%20triac%20868.4MHz%20User%20Manual.1.21.pdf"
+	}
+}

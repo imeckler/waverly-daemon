@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Philio Technology Corp",
+	"manufacturerId": "0x013c",
+	"label": "PSA03-US",
+	"description": "DoorLock",
+	"devices": [
+		{
+			"productType": "0x000a",
+			"productId": "0x0069",
+			"zwaveAllianceId": 2987
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "1. Enter the Programming Code (default: 0000) and press enter\n2. Press 1, then 0, then enter",
+		"exclusion": "1. Enter the Programming Code (default: 0000) and press enter\n2. Press 1, then 0, then enter",
+		"reset": "Press and hold the black key in the battery cover for 5 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2987/PSA03_UserManual_Philio_V12.pdf"
+	}
+}

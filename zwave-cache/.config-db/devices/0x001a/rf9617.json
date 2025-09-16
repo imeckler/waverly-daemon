@@ -1,0 +1,104 @@
+{
+	"manufacturer": "Eaton",
+	"manufacturerId": "0x001a",
+	"label": "RF9617",
+	"description": "Z-Wave Plus Smart Accessory Switch",
+	"devices": [
+		{
+			"productType": "0x5352",
+			"productId": "0x0504"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "On/Off",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Delayed Off Time",
+			"valueSize": 1,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 0
+		},
+		{
+			"#": "2",
+			"label": "Panic On Time",
+			"valueSize": 1,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 0
+		},
+		{
+			"#": "3",
+			"label": "Panic Off Time",
+			"valueSize": 1,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 0
+		},
+		{
+			"#": "5",
+			"label": "Power Up State",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Off",
+					"value": 1
+				},
+				{
+					"label": "On",
+					"value": 2
+				},
+				{
+					"label": "Last state",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "6",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Panic Mode"
+		},
+		{
+			"#": "13",
+			"label": "Blue LED Brightness Level While Switch Is ON",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 4,
+			"defaultValue": 4
+		},
+		{
+			"#": "14",
+			"label": "Blue LED Brightness Level While Switch Is OFF",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 4,
+			"defaultValue": 2
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the device ON/OFF switch one time. The LED will stop blinking when the device is included.",
+		"exclusion": "Press the device ON/OFF switch one time. The LED will start blinking when the device is excluded.",
+		"reset": "1. Turn the device ON.\n2. Press and hold ON/OFF button for 20 seconds until the LED flashes for the third time.\n3. Release the ON/OFF button.\n4. The LED will start flashing rapidly, then blink slowly when reset is complete.",
+		"manual": "https://www.eaton.com/content/dam/eaton/products/wiring-devices-and-connectivity/wiring-devices/z-wave-plus/z-wave-plus-wireless-switch-accessory-switch-rf9601-rf9617-instruction-sheet.pdf"
+	}
+}

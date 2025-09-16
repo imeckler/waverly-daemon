@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Codeatelier GmbH",
+	"manufacturerId": "0x0349",
+	"label": "ESTMK-Z-WAV",
+	"description": "Homee Z-Wave Cube Green",
+	"devices": [
+		{
+			"productType": "0x0013",
+			"productId": "0x3900",
+			"zwaveAllianceId": 3630
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "1. Open the [Devices] tab in the homee app\n2. Press the plus icon [+] on the top right\n3. Select the purple button and press [START]",
+		"exclusion": "1. Go to device settings (tap pencil icon in device detail screen)\n2. Press the remove button at the bottom\n3. Activate learn mode on the device within 60 seconds",
+		"reset": "1. Open the homee settings (homee icon > gear icon)\n2. Navigate to [Cubes] > [Z-Wave]\n3. Select [Reset Cube] and confirm\n\nNote: This resets only the Z-Wave cube. Connected devices must be reset manually according to their manuals",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3630/V-2homee-anleitung-compressed.pdf"
+	}
+}

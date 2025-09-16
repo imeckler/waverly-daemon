@@ -1,0 +1,255 @@
+{
+	"manufacturer": "Elexa Consumer Products Inc.",
+	"manufacturerId": "0x021f",
+	"label": "DMS01",
+	"description": "Dome Wireless Siren",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0088"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Basic Set",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Notification Report",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Primary Notification Volume",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Low",
+					"value": 1
+				},
+				{
+					"label": "Medium",
+					"value": 2
+				},
+				{
+					"label": "High",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "2",
+			"label": "Primary Notification Length",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "30 seconds",
+					"value": 1
+				},
+				{
+					"label": "1 minute",
+					"value": 2
+				},
+				{
+					"label": "5 minutes",
+					"value": 3
+				},
+				{
+					"label": "Forever",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "3",
+			"label": "Secondary Notification Length",
+			"valueSize": 1,
+			"unit": "cycles",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 1,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Forever",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "4",
+			"label": "Secondary Notification Volume",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Low",
+					"value": 1
+				},
+				{
+					"label": "Medium",
+					"value": 2
+				},
+				{
+					"label": "High",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "5",
+			"label": "Primary Notification Sound",
+			"valueSize": 1,
+			"defaultValue": 9,
+			"allowManualEntry": false,
+			/* eslint-disable @zwave-js/consistent-config-string-case */
+			"options": [
+				{
+					"label": "Ding dong",
+					"value": 1
+				},
+				{
+					"label": "Für Elise",
+					"value": 2
+				},
+				{
+					"label": "Westminster Chime",
+					"value": 3
+				},
+				{
+					"label": "Dingdongdingdongdingdong",
+					"value": 4
+				},
+				{
+					"label": "William Tell Overture",
+					"value": 5
+				},
+				{
+					"label": "Classical",
+					"value": 6
+				},
+				{
+					"label": "Weeooeeooeeooeeoo",
+					"value": 7
+				},
+				{
+					"label": "Err-err-err-err-err",
+					"value": 8
+				},
+				{
+					"label": "Beepbeepbeepbeep",
+					"value": 9
+				},
+				{
+					"label": "beeeep-beeeep-beeeep",
+					"value": 10
+				}
+			]
+			/* eslint-enable @zwave-js/consistent-config-string-case */
+		},
+		{
+			"#": "6",
+			"label": "Secondary Notification Sound",
+			"valueSize": 1,
+			"defaultValue": 10,
+			"allowManualEntry": false,
+			/* eslint-disable @zwave-js/consistent-config-string-case */
+			"options": [
+				{
+					"label": "Ding dong",
+					"value": 1
+				},
+				{
+					"label": "Für Elise",
+					"value": 2
+				},
+				{
+					"label": "Westminster Chime",
+					"value": 3
+				},
+				{
+					"label": "Dingdongdingdongdingdong",
+					"value": 4
+				},
+				{
+					"label": "William Tell Overture",
+					"value": 5
+				},
+				{
+					"label": "Classical",
+					"value": 6
+				},
+				{
+					"label": "Weeooeeooeeooeeoo",
+					"value": 7
+				},
+				{
+					"label": "Err-err-err-err-err",
+					"value": 8
+				},
+				{
+					"label": "Beepbeepbeepbeep",
+					"value": 9
+				},
+				{
+					"label": "beeeep-beeeep-beeeep",
+					"value": 10
+				}
+			]
+			/* eslint-enable @zwave-js/consistent-config-string-case */
+		},
+		{
+			"#": "7",
+			"label": "Toggle Notification Sound",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Primary notification",
+					"value": 1
+				},
+				{
+					"label": "Secondary notification",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "8",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Primary Notification: Flash LED"
+		},
+		{
+			"#": "9",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Secondary Notification: Flash LED"
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Remove the back cover by twisting it clockwise.\n2. Remove the battery tabs.\n3. Press the connect button quickly 3 times in a row.\n4. The LED ring will flash five times indicating inclusion.",
+		"exclusion": "1. Remove the back cover from the main body.\n2. Press the connect button quickly 3 times in a row.\n3. The LED ring will flash five times indicating exclusion.",
+		"reset": "1. Remove the back cover and confirm that your siren is powered up.\n2. Press and hold the connect button for at least 10 seconds then release.\n3. A flashing light indicates a successful factory reset."
+	}
+}

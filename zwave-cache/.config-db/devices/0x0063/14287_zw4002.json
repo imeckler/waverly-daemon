@@ -1,0 +1,53 @@
+{
+	"manufacturer": "GE",
+	"manufacturerId": "0x0063",
+	"label": "14287 / ZW4002",
+	"description": "In-Wall Fan Speed Control, 500S",
+	"devices": [
+		{
+			"productType": "0x4944",
+			"productId": "0x3131",
+			"zwaveAllianceId": [2103, 2506]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Basic Set",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Double Tap",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"$if": "firmwareVersion >= 5.24",
+			"$import": "~/templates/master_template.json#led_indicator_three_options_inverted"
+		},
+		{
+			"#": "4",
+			"$import": "~/templates/master_template.json#orientation"
+		}
+	],
+	"compat": {
+		"mapBasicSet": "event"
+	},
+	"metadata": {
+		"inclusion": "Press and release the top or bottom of the rocker.",
+		"exclusion": "Press and release the top or bottom of the rocker.",
+		"reset": "1. Quickly press top button three times then immediately press the bottom button three times.\n2. The LED will flash ON/OFF 5 times when completed successfully.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2506/Binder2.pdf"
+	}
+}

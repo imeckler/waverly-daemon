@@ -1,0 +1,36 @@
+{
+	"manufacturer": "Philio Technology Corp",
+	"manufacturerId": "0x013c",
+	"label": "PSR03-C",
+	"description": "Panic Button",
+	"devices": [
+		{
+			"productType": "0x0008",
+			"productId": "0x0027",
+			"zwaveAllianceId": 1407
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 4,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "10",
+			"$import": "templates/philio_template.json#battery_report_interval_30m"
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the key three times within 1.5 seconds.",
+		"exclusion": "Press the key three times within 1.5 seconds.",
+		"reset": "1. Press and hold the key four times within 1.5 seconds, keeping it held on the 4th press\n2. Wait for the LED to light up for 3 seconds, then turn off\n3. Release the key within 2 seconds after the LED turns off",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1407/PSR03_ABC_version_Manual.pdf"
+	}
+}

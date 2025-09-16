@@ -1,0 +1,22 @@
+{
+	"manufacturer": "Connected Object",
+	"manufacturerId": "0x011b",
+	"label": "EEDOMUS+",
+	// eslint-disable-next-line @zwave-js/consistent-config-string-case
+	"description": "eedomus",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0001",
+			"zwaveAllianceId": 3582
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "1. Click on Configuration\n2. Select Add or remove a device\n3. Choose Advanced Z-Wave functions\n4. Select Reset Z-Wave controller",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3582/eedomus_guide_en.pdf"
+	}
+}

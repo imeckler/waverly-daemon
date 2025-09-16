@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Quby",
+	"manufacturerId": "0x0130",
+	"label": "QB3.X",
+	"description": "Display QB3",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0003",
+			"zwaveAllianceId": 3820
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "1. Go to the 'Network functionality' tab and press either the 'Classic' or 'NWI' button under the 'Learn Mode' header.\n2. Press the 'Start' button to start the learn mode.\n3. Enter the first 5 digits of the DSK on the including node.\n4. Press the 'Close' button to close the dialog when completed.",
+		"exclusion": "1. Go to the 'Network functionality' tab and press the 'Exclude' button.\n2. Press the 'Start' button to start the exclusion process.\n3. Press the 'Close' button to close the dialog when completed.",
+		"reset": "1. Go to the 'Network functionality' tab and press the 'Factory Reset' button.\n2. Press the 'Reset' button in the dialog to reset all Z-Wave functionality to factory defaults.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3820/QB3%20documentation%20v1_2.pdf"
+	}
+}

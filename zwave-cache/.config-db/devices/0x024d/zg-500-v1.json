@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Z-works Inc.",
+	"manufacturerId": "0x024d",
+	"label": "ZG-500-V1",
+	"description": "LiveConnect Center",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0001",
+			"zwaveAllianceId": 1667
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "Press and hold the hardware button for over 10 seconds to trigger the reset. You can also use the GUI button labeled \"Resets the Chip\".",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1667/InstructionManual_v4.pdf"
+	}
+}

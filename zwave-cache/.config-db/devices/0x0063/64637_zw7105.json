@@ -1,0 +1,44 @@
+{
+	"manufacturer": "Jasco",
+	"manufacturerId": "0x0063",
+	"label": "64637 / ZW7105",
+	"description": "LED A19 Bulb, 500S",
+	"devices": [
+		{
+			"productType": "0x4c42",
+			"productId": "0x3036",
+			"zwaveAllianceId": 4255
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "templates/jasco_template.json#default_dim_level"
+		},
+		{
+			"#": "10",
+			"label": "Dimming Rate",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 10,
+			"defaultValue": 0
+		}
+	],
+	"metadata": {
+		"inclusion": "Turn on power to the socket. The LED smart bulb is automatically added within 30 seconds and flashes twice when added.",
+		"exclusion": "1. Start with the bulb powered off at the wall switch. 2. Turn on the light switch. 3. The smart bulb will flash twice when removed.",
+		"reset": "1. Starting with the bulb on, turn the switch off, pause one second and turn on again. 2. Repeat three times for a total of four cycles. 3. The smart bulb flashes twice when reset.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4255/64637%20QSG.pdf"
+	}
+}

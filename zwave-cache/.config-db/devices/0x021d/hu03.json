@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Shenzhen Kaadas Intelligent Technology Co., Ltd.",
+	"manufacturerId": "0x021d",
+	"label": "HU03",
+	"description": "Digital Mortise Door Lock",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0003",
+			"zwaveAllianceId": [3838, 4035]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "1. Enter master mode (press ** + Master PIN Code + #)\n2. Wait for 2 green lights and 2 beeps\n3. Press '8+1+#' to enter Inclusion mode\n4. Wait for 2 green lights and 2 beeps",
+		"exclusion": "1. Enter master mode (press ** + Master PIN Code + #)\n2. Wait for 2 green lights and 2 beeps\n3. Press '8+2+#' to enter Exclusion mode\n4. Wait for 2 green lights and 2 beeps",
+		"reset": "1. Open the door and unlock the lock\n2. Open the battery box and locate the reset button\n3. Press and hold the reset button with a pointed object for 5 seconds until you hear the voice guide",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4035/HU04-Product%20Manual%20V1.0.pdf"
+	}
+}

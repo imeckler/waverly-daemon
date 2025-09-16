@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Telular",
+	"manufacturerId": "0x017e",
+	"label": "TGFX-HUB1",
+	"description": "FlexHub",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0002",
+			"zwaveAllianceId": 2567
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "Use a pin or paper clip to press the recessed Reset button for 15 seconds. The LEDs will show a marquee pattern indicating the factory reset is complete.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2567/FlexHub%20Installation.pdf"
+	}
+}

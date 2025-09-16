@@ -1,0 +1,66 @@
+{
+	"manufacturer": "Fakro",
+	"manufacturerId": "0x0085",
+	"label": "ZWS12",
+	"description": "Chain Actuator - Window Opener",
+	"devices": [
+		{
+			"productType": "0x0002",
+			"productId": "0x0011",
+			"zwaveAllianceId": 2477
+		},
+		{
+			"productType": "0x0002",
+			"productId": "0x0111"
+		},
+		{
+			"productType": "0x0002",
+			"productId": "0x0116"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "7",
+			"label": "Motor Speed I",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 4,
+			"defaultValue": 2
+		},
+		{
+			"#": "8",
+			"label": "Motor Speed II (Rain Sensor)",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 4,
+			"defaultValue": 2
+		},
+		{
+			"#": "12",
+			"$import": "templates/fakro_template.json#calibration"
+		},
+		{
+			"#": "13",
+			"$import": "templates/fakro_template.json#shutter_response_to_basic_set_0xff"
+		},
+		{
+			"#": "15",
+			"label": "Close After Time",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 120,
+			"defaultValue": 0
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Turn the power OFF and ON 3 times (OFF-ON-OFF-ON-OFF-ON) with no more than 20 seconds between each step. 2. Wait up to 10 minutes for automatic inclusion. 3. Alternatively, press the programming button P for 1 second.",
+		"exclusion": "Press the programming button P for 1 second.",
+		"reset": "Press the programming button P 5 times quickly.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2477/170511%20ZWS12%20User%20Manual.pdf"
+	}
+}

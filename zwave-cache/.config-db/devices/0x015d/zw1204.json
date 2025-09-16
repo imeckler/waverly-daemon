@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Willis Electric Co., Ltd.",
+	"manufacturerId": "0x015d",
+	"label": "ZW1204",
+	"description": "Flood Sensor",
+	"devices": [
+		{
+			"productType": "0x2003",
+			"productId": "0xc41c",
+			"zwaveAllianceId": 2672
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press up and release the toggle.",
+		"exclusion": "Press up and release the toggle.",
+		"reset": "Press and hold the top button for at least 3 seconds while inserting the batteries.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2672/ZW1204-Manual171128.pdf"
+	}
+}

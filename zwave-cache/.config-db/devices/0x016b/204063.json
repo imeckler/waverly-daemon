@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Echostar",
+	"manufacturerId": "0x016b",
+	"label": "204063",
+	"description": "SAGE",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0002",
+			"zwaveAllianceId": 1422
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "1. Navigate to the Advanced Z-Wave tile\n2. Press these buttons on the remote in sequence: <332211>\n3. Navigate to the Factory Reset tile\n4. Select the System Reset option\n5. Confirm the reset in the popup\n6. To reset the remote, hold down the Lights and Back buttons together for 15 seconds",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1422/SAGE%20Z-Wave%20Product%20Document.pdf"
+	}
+}

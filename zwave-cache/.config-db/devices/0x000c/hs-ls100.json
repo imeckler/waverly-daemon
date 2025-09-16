@@ -1,0 +1,82 @@
+{
+	"manufacturer": "HomeSeer Technologies",
+	"manufacturerId": "0x000c",
+	"label": "HS-LS100+",
+	"description": "Z-Wave Plus Leak Sensor",
+	"devices": [
+		{
+			"productType": "0x0201",
+			"productId": "0x000a",
+			"zwaveAllianceId": 2735
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "14",
+			"$import": "templates/homeseer_template.json#enable_basic_set_command"
+		},
+		{
+			"#": "15",
+			"$import": "templates/homeseer_template.json#basic_set_value"
+		},
+		{
+			"#": "17",
+			"$import": "~/templates/master_template.json#base_0-255_nounit",
+			"label": "Flood Alarm Interval",
+			"unit": "minutes",
+			"defaultValue": 5
+		},
+		{
+			"#": "18",
+			"$import": "templates/homeseer_template.json#enable_shock_alarm"
+		},
+		{
+			"#": "19",
+			"label": "Temperature Report Interval",
+			"valueSize": 1,
+			"unit": "1/10 minutes",
+			"minValue": 3,
+			"maxValue": 240,
+			"defaultValue": 144,
+			"unsigned": true
+		},
+		{
+			"#": "20",
+			"label": "Temperature (High) Alarm Trigger Threshold",
+			"valueSize": 2,
+			"unit": "0.1 °F",
+			"minValue": -670,
+			"maxValue": 2570,
+			"defaultValue": 1040
+		},
+		{
+			"#": "22",
+			"label": "Temperature (Low) Trigger Threshold",
+			"valueSize": 2,
+			"unit": "0.1 °F",
+			"minValue": -670,
+			"maxValue": 2570,
+			"defaultValue": 320
+		},
+		{
+			"#": "24",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Enable / Disable Blinking LED",
+			"defaultValue": 1
+		},
+		{
+			"#": "32",
+			"$import": "templates/homeseer_template.json#low_battery_level"
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Open the cover.\n2. Press the Z-button once for non-secure or three times quickly for secure inclusion.\n3. The LED blinks fast.",
+		"exclusion": "1. Open the cover.\n2. Press the Z-button three times quickly.\n3. The LED blinks fast.",
+		"reset": "1. Power on the device.\n2. Press and hold the Z-button for more than 20 seconds.\n3. When the LED stays on for 2 seconds, release the button.",
+		"manual": "https://docs.homeseer.com/products/hs-ls100-user-guide"
+	}
+}

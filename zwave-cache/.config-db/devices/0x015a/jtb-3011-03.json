@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Jin Tao Bao",
+	"manufacturerId": "0x015a",
+	"label": "JTB-3011-03",
+	"description": "3CH Touch Wall Switch",
+	"devices": [
+		{
+			"productType": "0x3011",
+			"productId": "0x0003",
+			"zwaveAllianceId": 2591
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press and hold the leftmost touch icon (channel 1) for 2 seconds. The RF LED on the right bottom will flash during inclusion.",
+		"exclusion": "Press and hold the leftmost touch icon (channel 1) for 2 seconds. The RF LED on the right bottom will flash during exclusion.",
+		"reset": "Remove the device from the network to restore factory default settings.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2591/JTB-3011-03-Manual_20171030_Ver_1_1.pdf"
+	}
+}

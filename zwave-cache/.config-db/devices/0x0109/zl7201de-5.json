@@ -1,0 +1,30 @@
+{
+	"manufacturer": "Vision Security",
+	"manufacturerId": "0x0109",
+	"label": "ZL7201DE-5",
+	"description": "Plug-In On/Off Module",
+	"devices": [
+		{
+			"productType": "0x2007",
+			"productId": "0x0706",
+			"zwaveAllianceId": 1083
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Group 1",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"metadata": {
+		"inclusion": "Press the program switch 3 times within 2 seconds.",
+		"exclusion": "Press the program switch 3 times within 2 seconds.",
+		"reset": "Press the program switch, then power on and hold for 5 seconds before releasing the switch.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1083/ZL%207261-5_%20Power%20Monitor_20140814.pdf"
+	}
+}

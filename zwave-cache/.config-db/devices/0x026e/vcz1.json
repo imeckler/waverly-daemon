@@ -1,0 +1,35 @@
+{
+	"manufacturer": "Springs Window Fashions",
+	"manufacturerId": "0x026e",
+	"label": "VCZ1",
+	"description": "Two Button Remote",
+	"devices": [
+		{
+			"productType": "0x5643",
+			"productId": "0x5a31",
+			"zwaveAllianceId": 1786
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press and hold the programming button until the LED light bar begins to flash green then release the button.",
+		"exclusion": "Press and hold the programming button until the LED light bar begins to flash green then release the button.",
+		"reset": "Press and hold the programming button until the LEDs stop blinking. LEDs will blink green, amber, red, and then finally turn off (about 15 seconds).",
+		"wakeup": "Press and release the programming button one time.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1786/Graber%20Virtual%20Cord%20Owner's%20Manual.pdf"
+	},
+	"compat": {
+		// The device reports version 0 for the Central Scene command class
+		"commandClasses": {
+			"add": {
+				"Central Scene": {
+					"isSupported": true,
+					"version": 1
+				}
+			}
+		}
+	}
+}

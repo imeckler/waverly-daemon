@@ -1,0 +1,21 @@
+{
+	"manufacturer": "GE",
+	"manufacturerId": "0x0063",
+	"label": "34176 / ZW5306",
+	"description": "Portable 4-Scene Controller, 500S",
+	"devices": [
+		{
+			"productType": "0x4843",
+			"productId": "0x3035",
+			"zwaveAllianceId": 3056
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "1. Press and hold the UP button on Scene 1 and Scene 3 for 3 seconds. The LED will slowly flash every second.\n2. Press and hold the DOWN button on Scene 2 and Scene 4 for 3 seconds. The LED will quickly flash 3 times.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3056/34176-QSG-v1.2%20(1).pdf"
+	}
+}

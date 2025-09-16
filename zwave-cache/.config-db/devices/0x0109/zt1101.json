@@ -1,0 +1,26 @@
+{
+	"manufacturer": "Vision Security",
+	"manufacturerId": "0x0109",
+	"label": "ZT1101",
+	"description": "Keyfob",
+	"devices": [
+		{
+			"productType": "0x1002",
+			"productId": "0x0202",
+			"zwaveAllianceId": 1706
+		},
+		{
+			"productType": "0x201b",
+			"productId": "0x1b02",
+			"zwaveAllianceId": 1327
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "Press all 4 buttons together for 10 seconds. The LED will turn red for 2 seconds, then green for 2 seconds. A fast flashing red LED indicates reset is complete.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1706/ZT1101-5%20Keyfob_R1_20150703.pdf"
+	}
+}

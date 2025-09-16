@@ -1,0 +1,21 @@
+{
+	"manufacturer": "HomeSeer Technologies",
+	"manufacturerId": "0x000c",
+	"label": "HT-SEL",
+	"description": "HomeSeer HomeTroller-SEL",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0003",
+			"zwaveAllianceId": [1308, 1309, 1310, 1311, 1314]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "1. Access the Interfaces page from the UI.\n2. Click on the Z-Wave plug-in link to go to the diagnostics page.\n3. Press the Factory Reset button at the top of the page.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1314/A2-Link-manual.pdf"
+	}
+}

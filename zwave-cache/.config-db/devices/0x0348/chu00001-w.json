@@ -1,0 +1,21 @@
+{
+	"manufacturer": "KUNDO xT GmbH",
+	"manufacturerId": "0x0348",
+	"label": "CHU00001-W",
+	"description": "Central Home Unit",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0001",
+			"zwaveAllianceId": 2761
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "Open the Configuration User Interface and log in. In the Main Menu under \"More\", select \"Reset network\" to start the reset operation.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2761/Manual_final_2.pdf"
+	}
+}
