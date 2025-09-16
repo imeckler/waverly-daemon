@@ -19,6 +19,7 @@ class SaunaManager {
 // and as new bookings or cancellations occur, the server should send them.
 //
 // Initialize usage polling service
+/*
 const usageService = new UsagePollingService(
   process.env.RISO_ADMIN_URL || 'http://192.168.1.100/admin',
   {
@@ -27,6 +28,7 @@ const usageService = new UsagePollingService(
   },
   parseInt(process.env.POLLING_INTERVAL_MINUTES || '5') * 60 * 1000
 );
+*/
 
 // Store references for graceful shutdown
 let wsClient: any = null;
@@ -37,7 +39,7 @@ process.on('SIGINT', async () => {
   if (wsClient) {
     wsClient.disconnect();
   }
-  await usageService.stop();
+  // await usageService.stop();
   process.exit(0);
 });
 
@@ -46,7 +48,7 @@ process.on('SIGTERM', async () => {
   if (wsClient) {
     wsClient.disconnect();
   }
-  await usageService.stop();
+  // await usageService.stop();
   process.exit(0);
 });
 
@@ -59,19 +61,21 @@ const driver = new Driver('/dev/serial/by-id/usb-Zooz_800_Z-Wave_Stick_533D00424
 driver.disableStatistics();
 
 // Start usage polling service
+/*
 usageService.start().then(() => {
   console.log('Usage polling service started successfully');
 }).catch((error) => {
   console.error('Failed to start usage polling service:', error);
 });
+*/
 
 driver.start().then(async () => {
   return driver.on('all nodes ready', () => {
     console.log('All Z-Wave nodes are ready');
     const lockNode = driver.controller.nodes.get(2);
-    if (lockNode == undefined) { 
+    if (lockNode == undefined) {
       console.error('Lock node (node 2) not found');
-      exit(1); 
+      exit(1);
     }
 
     console.log('Lock node found, initializing lock manager...');
@@ -79,14 +83,14 @@ driver.start().then(async () => {
     // Initialize lock manager with WebSocket connection
     const serverUrl = process.env.BOOKING_SERVER_URL || 'ws://localhost:8080';
     const { manager, wsClient: lockWsClient } = runLockManager(lockNode, serverUrl);
-    
+
     // Store reference for graceful shutdown
     wsClient = lockWsClient;
 
     // Get ALL values for the node (for debugging)
     const allValues = lockNode.getDefinedValueIDs();
     console.log(`Lock has ${allValues.length} defined values`);
-    
+
     // Get specific User Code values
     const userCodeValues = allValues.filter(v => v.commandClass === 99); // User Code CC
     console.log(`Found ${userCodeValues.length} user code-related values`);
