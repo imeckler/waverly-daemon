@@ -8,6 +8,7 @@ import { exit } from 'process';
 import { UsagePollingService } from './usagePollingService';
 import { TranslatedValueID, Driver, isTransportServiceEncapsulation, ZWaveNode } from 'zwave-js';
 import { runLockManager } from './lockManager';
+import * as fs from 'fs';
 
 class SaunaManager {
   static TARGET_TEMP = 180;
@@ -53,7 +54,8 @@ process.on('SIGTERM', async () => {
 });
 
 //const driver = new Driver('/dev/serial/by-id/usb-Zooz_800_Z-Wave_Stick_533D004242-if00', {
-const driver = new Driver('/dev/ttyACM0', {
+const device = fs.existsSync('/dev/zwave') ? '/dev/zwave' : '/dev/serial/by-id/usb-Zooz_800_Z-Wave_Stick_533D004242-if00';
+const driver = new Driver(device, {
   storage: {
     cacheDir: './zwave-cache'
   }
