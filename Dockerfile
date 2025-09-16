@@ -25,7 +25,6 @@ RUN mkdir -p ./zwave-cache
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S appuser -u 1001
 # Add user to dialout group for serial port access
-RUN addgroup -g 20 dialout
 RUN adduser appuser dialout
 
 # Give the user access to the zwave-cache directory
