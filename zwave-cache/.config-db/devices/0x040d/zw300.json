@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Delaney Hardware",
+	"manufacturerId": "0x040d",
+	"label": "ZW300",
+	"description": "Smartlock",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0001",
+			"zwaveAllianceId": 3074
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "1. Press Enter on the lock\n2. Enter programming code and confirm\n3. Enter 9 and confirm\n4. Two long beeps indicate successful programming, three short beeps indicate failure",
+		"exclusion": "1. Press Enter on the lock\n2. Enter programming code and confirm\n3. Enter 9 and confirm\n4. Two long beeps indicate successful programming, three short beeps indicate failure",
+		"reset": "Press and hold the R button for more than 5 seconds until you hear 3 long beeps",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3074/ZW300%20Smartlock%20Manual_Sept2018%20v2.pdf"
+	}
+}

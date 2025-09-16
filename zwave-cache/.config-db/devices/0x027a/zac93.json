@@ -1,0 +1,27 @@
+{
+	"manufacturer": "Zooz",
+	"manufacturerId": "0x027a",
+	"label": "ZAC93",
+	"description": "800 Series Long Range GPIO Module",
+	"devices": [
+		{
+			"productType": "0x0004",
+			"productId": "0x0611"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		// 700/800 series firmware bugs that affect multiple controllers
+		"comments": [
+			// https://www.support.getzooz.com/kb/article/1158-zooz-ota-firmware-files/
+			// 1.40 = SDK 7.22.0. No fixed version available yet.
+			{
+				"$if": "firmwareVersion <= 1.40",
+				"$import": "~/templates/master_template.json#8xx_firmware_bug_pre_7_22_1"
+			}
+		]
+	}
+}

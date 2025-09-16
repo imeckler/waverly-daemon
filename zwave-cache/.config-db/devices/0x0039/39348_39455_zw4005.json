@@ -1,0 +1,101 @@
+{
+	"manufacturer": "Honeywell",
+	"manufacturerId": "0x0039",
+	"label": "39348 / 39455 / ZW4005",
+	"description": "In-Wall Paddle Switch, 500S",
+	"devices": [
+		{
+			"productType": "0x4952",
+			"productId": "0x3036",
+			"zwaveAllianceId": [2689, 3745]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Single Press",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Double Tap",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"label": "LED Indicator",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "LED on when switch is off",
+					"value": 0
+				},
+				{
+					"label": "LED on when switch is on",
+					"value": 1
+				},
+				{
+					"label": "LED always off",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "4",
+			"label": "Invert Switch",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "No",
+					"value": 0
+				},
+				{
+					"label": "Yes",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "19",
+			"label": "Alternate Exclusion",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Press any button on the switch",
+					"value": 0
+				},
+				{
+					"label": "Press two times on button and two times off button",
+					"value": 1
+				}
+			]
+		}
+	],
+	"compat": {
+		"mapBasicReport": false,
+		"mapBasicSet": "event"
+	},
+	"metadata": {
+		"inclusion": "Press and release the top or bottom of the switch rocker.",
+		"exclusion": "Press and release the top of the switch rocker.",
+		"reset": "1. Quickly press the top button 3 times\n2. Immediately press the bottom button 3 times\n3. The LED will flash ON/OFF 5 times when reset is complete",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3745/39455_HQSG_v3.pdf"
+	}
+}

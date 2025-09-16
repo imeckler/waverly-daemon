@@ -1,0 +1,52 @@
+{
+	"manufacturer": "Good Way Technology Co., Ltd.",
+	"manufacturerId": "0x0068",
+	"label": "TD13320",
+	"description": "Smart Meter Switch",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0006",
+			"zwaveAllianceId": 2115
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Meter Report Interval",
+			"valueSize": 2,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 30
+		},
+		{
+			"#": "2",
+			"label": "Night Light Mode",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "3",
+			"label": "Night Light Color Value",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the button 3 times. The LED will show a solid blue light when successful.",
+		"exclusion": "Press the button 3 times. The LED will flash green once for 1 second when successful.",
+		"reset": "Press the button 3 times within 2 seconds, then hold it for more than 3 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2115/TD13320_UserManual_2016_12_13.pdf"
+	}
+}

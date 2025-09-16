@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Delaney Hardware",
+	"manufacturerId": "0x040d",
+	"label": "ZW100",
+	"description": "Megapixel Z-Wave IP Camera",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0003",
+			"zwaveAllianceId": 3072
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "Open the App mCamviewZ+ and go to Home Settings > Camera settings > Admin > Z-Wave administrator page, then click Z-Wave Reset",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3072/ZW100%20Quick%20Install%20Guide%20AND%20User%20Manual.pdf"
+	}
+}

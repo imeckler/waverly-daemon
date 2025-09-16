@@ -1,0 +1,29 @@
+{
+	"manufacturer": "GE",
+	"manufacturerId": "0x0063",
+	"label": "14288 / ZW1002",
+	"description": "In-Wall Outlet, TR, 500S",
+	"devices": [
+		{
+			"productType": "0x4952",
+			"productId": "0x3133",
+			"zwaveAllianceId": 2732
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"$import": "~/templates/master_template.json#led_indicator_three_options"
+		}
+	],
+	"metadata": {
+		"inclusion": "Press and release the Program Button.",
+		"exclusion": "Press and release the Program Button.",
+		"reset": "Press the button 3 times, then press and hold the button for at least 3 seconds. The LED will blink 5 times to confirm.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2236/14288%20QSG%20v1.pdf"
+	}
+}

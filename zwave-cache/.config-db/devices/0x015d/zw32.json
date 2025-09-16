@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Willis Electric Co., Ltd.",
+	"manufacturerId": "0x015d",
+	"label": "ZW32",
+	"description": "Smart Outlet",
+	"devices": [
+		{
+			"productType": "0x0115",
+			"productId": "0x201c",
+			"zwaveAllianceId": 1713
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Triple press the front button.",
+		"exclusion": "Triple press the front button.",
+		"reset": "Remove the device from the network to reset it to factory default.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1713/ZW32manual0527.pdf"
+	}
+}

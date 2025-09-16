@@ -1,0 +1,139 @@
+{
+	"manufacturer": "Sensative AB",
+	"manufacturerId": "0x019a",
+	"label": "11-01-022",
+	"description": "Strips Guard 700",
+	"devices": [
+		{
+			"productType": "0x0004",
+			"productId": "0x0004",
+			"zwaveAllianceId": [4155, 4160, 4300, 4441, 4447]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Notification Type",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Binary Sensor Report & Notification Report (Access control)",
+					"value": 0
+				},
+				{
+					"label": "Notification Report (Access control)",
+					"value": 1
+				},
+				{
+					"label": "Notification Report (Home security)",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "2",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "LED Indicator",
+			"defaultValue": 1
+		},
+		{
+			"#": "15",
+			"label": "Send Supervision Commands",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Events with S2 encapsulation only",
+					"value": 0
+				},
+				{
+					"label": "Only door open alarm reports",
+					"value": 1
+				},
+				{
+					"label": "Unsolicited reports",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "16",
+			"label": "Supervision Report Wait Time",
+			"valueSize": 2,
+			"unit": "ms",
+			"minValue": 500,
+			"maxValue": 30000,
+			"defaultValue": 10000
+		},
+		{
+			"#": "17",
+			"label": "Number of Failed Event Retries",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 5,
+			"defaultValue": 1,
+			"options": [
+				{
+					"label": "No retries",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "18",
+			"label": "Failed Event Retry Interval",
+			"valueSize": 1,
+			"unit": "seconds",
+			"minValue": 1,
+			"maxValue": 60,
+			"defaultValue": 6
+		},
+		{
+			"#": "19",
+			"label": "Heartbeat Interval",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 5,
+			"maxValue": 70,
+			"defaultValue": 70
+		},
+		{
+			"#": "22",
+			"label": "Security Level",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Standard",
+					"value": 0
+				},
+				{
+					"label": "High",
+					"value": 1
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "Move the magnet towards and away from the rounded edge, then repeat 3 times. A long LED blink indicates successful inclusion.",
+		"exclusion": "Move the magnet towards and away from the rounded edge, then repeat 3 times. A long LED blink indicates successful exclusion.",
+		"reset": "1. Move the magnet towards and away from the rounded edge\n2. Repeat 3 times\n3. On the 3rd repetition, keep the magnet at the rounded edge for 10 seconds\n4. A long LED signal indicates success",
+		"wakeup": "1. Place a magnet at the rounded edge\n2. When the LED blinks, move the magnet away\n3. Repeat a total of 3 times within 10 seconds\n4. A LED blink indicates success",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4300/Strips%20Drip%20700%20manual.pdf"
+	}
+}

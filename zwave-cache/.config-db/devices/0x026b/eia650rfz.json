@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Ei Electronics",
+	"manufacturerId": "0x026b",
+	"label": "EIA650RFZ",
+	"description": "Z-Wave Photoelectric Smoke Alarm",
+	"devices": [
+		{
+			"productType": "0x0004",
+			"productId": "0x0004",
+			"zwaveAllianceId": [2222, 2228]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press the button on the wireless module for 1 second.",
+		"exclusion": "Press the button on the wireless module for 1 second.",
+		"reset": "Press and hold the button for 10 seconds. After 5 seconds the LED starts flashing and after another 5 seconds there is a short beep signaling the successful reset.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2228/B18579R3SMOKEZWAVEUCUS.pdf"
+	}
+}

@@ -1,0 +1,94 @@
+{
+	"manufacturer": "Yale",
+	"manufacturerId": "0x0129",
+	"label": "YDM3109A",
+	"description": "Smart Lock",
+	"devices": [
+		{
+			// Malaysian version
+			"productType": "0xc006",
+			"productId": "0x5904",
+			"zwaveAllianceId": 4723
+		},
+		{
+			// New Zealand / Australian version
+			"productType": "0xc006",
+			"productId": "0x1904"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"compat": {
+		"alarmMapping": [
+			{
+				"$import": "templates/yale_template.json#alarm_map_keypad_limit"
+			},
+			{
+				"$import": "templates/yale_template.json#alarm_map_manual_unlock"
+			},
+			{
+				"$import": "templates/yale_template.json#alarm_map_rf_unlock"
+			},
+			{
+				"$import": "templates/yale_template.json#alarm_map_keypad_unlock"
+			},
+			{
+				"$import": "templates/yale_template.json#alarm_map_manual_lock"
+			},
+			{
+				"$import": "templates/yale_template.json#alarm_map_rf_lock"
+			},
+			{
+				"$import": "templates/yale_template.json#alarm_map_keypad_lock"
+			},
+			{
+				"$import": "templates/yale_template.json#alarm_map_deadbolt_jammed"
+			},
+			{
+				"$import": "templates/yale_template.json#alarm_map_low_battery"
+			},
+			{
+				"$import": "templates/yale_template.json#alarm_map_critical_battery"
+			},
+			{
+				"$import": "templates/yale_template.json#alarm_map_auto_relock"
+			},
+			{
+				"$import": "templates/yale_template.json#alarm_map_rfid_unlock"
+			},
+			{
+				// Interior "Forced Lock/Privacy Switch" set to ON position.
+				//
+				// Translating this to a "Home Monitoring" / "Home occupied"
+				// notification, due to lack of a suitable standardized representation.
+				"from": { "alarmType": 155, "alarmLevel": 0 },
+				"to": {
+					"notificationType": 22,
+					"notificationEvent": 2
+				}
+			},
+			{
+				// Interior "Forced Lock/Privacy Switch" set to OFF position.
+				//
+				// Translating this to a "Home Monitoring" / "Home occupied"
+				// notification, due to lack of a suitable standardized representation.
+				"from": {
+					"alarmType": 155,
+					"alarmLevel": 1
+				},
+				"to": {
+					"notificationType": 22,
+					"notificationEvent": 0
+				}
+			}
+		]
+	},
+	"metadata": {
+		"inclusion": "1. Enter Master Code\n2. Press 'R' then '9' then '#' then '1' then '#'\n3. Note: Only available in advanced mode",
+		"exclusion": "1. Enter Master Code\n2. Press 'R' then '9' then '#' then '3' then '#'\n3. Enter Master Code then '#'\n4. Note: Only available in advanced mode",
+		"reset": "1. Press and hold the factory reset key behind the lock body\n2. Remove the battery for more than 5 seconds then reinstall it\n3. Wait 5 seconds then release the factory reset key",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=cert_portal/certs/459/DoorLockManualforYDM3109A_4.docx"
+	}
+}

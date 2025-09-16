@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Alarm.com",
+	"manufacturerId": "0x0094",
+	"label": "ADC-NK-100T",
+	"description": "Hub",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0102",
+			"zwaveAllianceId": 1760
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "1. After entering Advanced Mode, press and hold the Enrollment button for 10 seconds.\n2. When the reset process has begun, the Status Light will blink orange slowly and the Hub will beep five times.\n3. To cancel, immediately press and release the Enrollment button within the first five seconds.\n4. When complete, the Status Light will shine solid orange for 10 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1760/ADC_BB_hub_user_manual_060316.pdf"
+	}
+}

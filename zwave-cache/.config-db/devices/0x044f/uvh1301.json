@@ -1,0 +1,27 @@
+{
+	"manufacturer": "GE",
+	"manufacturerId": "0x044f",
+	"label": "UVH1301",
+	"description": "Kitchen Hub",
+	"devices": [
+		{
+			"productType": "0x1100",
+			"productId": "0x0001",
+			"zwaveAllianceId": 4285
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		}
+	},
+	"metadata": {
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4285/zwave%20manual%20fixed.pdf"
+	}
+}

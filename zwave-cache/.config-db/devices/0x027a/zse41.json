@@ -1,0 +1,84 @@
+{
+	"manufacturer": "Zooz",
+	"manufacturerId": "0x027a",
+	"label": "ZSE41",
+	"description": "Open/Close XS Sensor",
+	"devices": [
+		{
+			"productType": "0x7000",
+			"productId": "0xe001",
+			"zwaveAllianceId": 4276
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 3,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "On/Off",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/templates/master_template.json#enable_led_indicator",
+			"defaultValue": 1
+		},
+		{
+			"#": "3",
+			"$import": "templates/zooz_template.json#battery_report_threshold"
+		},
+		{
+			"#": "4",
+			"$import": "templates/zooz_template.json#low_battery_alarm_threshold"
+		},
+		{
+			"#": "5",
+			"label": "Sensor Behavior",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Normally closed (Report open when magnet is away)",
+					"value": 0
+				},
+				{
+					"label": "Normally open (Report open when magnet is near)",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "6",
+			"$import": "~/templates/master_template.json#base_0-3600",
+			"label": "Group 2: On Delay",
+			"unit": "seconds"
+		},
+		{
+			"#": "7",
+			"$import": "~/templates/master_template.json#base_0-3600",
+			"label": "Group 2: Off Delay",
+			"unit": "seconds"
+		}
+	],
+	"compat": {
+		// The device sends Configuration CC info reports in 4-byte chunks, causing each query to block the network for roughly 1.5 seconds.
+		"skipConfigurationNameQuery": true,
+		"skipConfigurationInfoQuery": true
+	},
+	"metadata": {
+		"inclusion": "Click the Z-Wave button 3 times as quickly as possible. The LED indicator will start flashing and turn off once inclusion is completed.",
+		"exclusion": "Click the Z-Wave button 3 times as quickly as possible. The LED indicator will start flashing and turn off when exclusion is complete.",
+		"reset": "1. Click the Z-Wave button twice and hold it the third time for 10 seconds\n2. The LED indicator will blink continuously\n3. Immediately click the Z-Wave button twice more to finalize the reset\n4. The LED indicator will flash 3 times to confirm a successful reset",
+		"wakeup": "Click the Z-Wave button 4 times quickly. The LED indicator will flash twice to confirm the device is awake.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4276/zooz-zse41-manual-online.pdf"
+	}
+}

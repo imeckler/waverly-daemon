@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Springs Window Fashions",
+	"manufacturerId": "0x026e",
+	"label": "MCZ1",
+	"description": "Multi-Channel Remote Control",
+	"devices": [
+		{
+			"productType": "0x4d43",
+			"productId": "0x5a31",
+			"zwaveAllianceId": 2819
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "1. On the remote, press and hold the MENU/RIGHT button to enter the menu.\n2. Select ZWAVE > RESET.\n3. With LIKE NEW? selected, press and hold the MENU/RIGHT button until the screen no longer tells you to wait.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2819/P2_79083-01_18-8215_MotorizationManual.pdf"
+	}
+}

@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Vision Security",
+	"manufacturerId": "0x0109",
+	"label": "ZS5101US-5",
+	"description": "Wireless Shock Sensor",
+	"devices": [
+		{
+			"productType": "0x2003",
+			"productId": "0x0308",
+			"zwaveAllianceId": 2099
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press the program switch for at least 1 second. The LED should go off if successful.",
+		"exclusion": "Press the program switch for at least 1 second.",
+		"reset": "1. Push the tamper switch\n2. Insert the battery while holding the tamper switch\n3. Hold the tamper switch for 5 seconds\n4. Remove and reinsert the battery to complete the reset\n\nThe LED will turn solid on during the reset process.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2099/ZS%205101-5_V1_20160427.pdf"
+	}
+}

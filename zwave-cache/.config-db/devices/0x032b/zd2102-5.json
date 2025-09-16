@@ -1,0 +1,43 @@
+{
+	"manufacturer": "Anchor Tech",
+	"manufacturerId": "0x032b",
+	"label": "ZD2102-5",
+	"description": "Door Sensor",
+	"devices": [
+		{
+			"productType": "0x2001",
+			"productId": "0x0106",
+			"zwaveAllianceId": [2249, 2250]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Configuration - External Switch",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "Enable",
+					"value": 255
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the program switch.",
+		"exclusion": "Press the program switch for at least 1 second.",
+		"reset": "1. Trigger the rear cover switch to send the Alarm Report\n2. Trigger the reed switch (close & open) 5 times in 10 seconds",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2249/ZD%202102_10252013.pdf"
+	}
+}

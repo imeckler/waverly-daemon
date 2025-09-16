@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Wink Inc.",
+	"manufacturerId": "0x017f",
+	"label": "PWHUB-WH01",
+	"description": "Wink Hub",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0001",
+			"zwaveAllianceId": [1061, 1990, 2169]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "Navigate to the HUB's settings menu and access the Z-Wave Controls interface. Press the \"Reset Z-Wave\" button to remove all nodes and reset the Z-Wave radio.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2169/zwave_usermanual_161012_hub2.pdf"
+	}
+}

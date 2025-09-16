@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Resideo",
+	"manufacturerId": "0x041b",
+	"label": "TUXEDOW",
+	"description": "Chandelier",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0004",
+			"zwaveAllianceId": 3624
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press the Function Key on the device.",
+		"exclusion": "Press the Function Key on the device.",
+		"reset": "1. Press the Setup, System Setup and Advanced Setup icons\n2. Enter your Authorized Code and press the Keypad Reset icon\n3. Confirm with OK",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3624/800-25178B_QIG_TUXEDOW.pdf"
+	}
+}

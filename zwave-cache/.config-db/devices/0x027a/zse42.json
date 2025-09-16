@@ -1,0 +1,82 @@
+{
+	"manufacturer": "Zooz",
+	"manufacturerId": "0x027a",
+	"label": "ZSE42",
+	"description": "Water Leak XS Sensor",
+	"devices": [
+		{
+			"productType": "0x7000",
+			"productId": "0xe002",
+			"zwaveAllianceId": 4280
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 3,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "On/Off",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/templates/master_template.json#enable_led_indicator",
+			"defaultValue": 1
+		},
+		{
+			"#": "2",
+			"$import": "~/templates/master_template.json#base_0-3600",
+			"label": "Alarm Clear Delay",
+			"unit": "seconds"
+		},
+		{
+			"#": "3",
+			"$import": "templates/zooz_template.json#battery_report_threshold"
+		},
+		{
+			"#": "4",
+			"$import": "templates/zooz_template.json#low_battery_alarm_threshold"
+		},
+		{
+			"#": "5",
+			"label": "Group 2: Basic Set Commands",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "0xff (On) when water detected; 0x00 (Off) when cleared",
+					"value": 1
+				},
+				{
+					"label": "0x00 (Off) when water detected; 0xff (On) when cleared",
+					"value": 2
+				}
+			]
+		}
+	],
+	"compat": {
+		// The device sends Configuration CC info reports in 4-byte chunks, causing each query to block the network for roughly 1.5 seconds.
+		"skipConfigurationNameQuery": true,
+		"skipConfigurationInfoQuery": true
+	},
+	"metadata": {
+		"inclusion": "Click the Z-Wave button 3 times as quickly as possible. The LED indicator will start flashing and turn off once inclusion is completed.",
+		"exclusion": "Click the Z-Wave button 3 times as quickly as possible. The LED indicator will start flashing and turn off when exclusion is complete.",
+		"reset": "1. Click the Z-Wave button twice and hold it the third time for 10 seconds\n2. The LED indicator will blink continuously\n3. Immediately click the Z-Wave button twice more to finalize the reset\n4. The LED indicator will flash 3 times to confirm a successful reset",
+		"wakeup": "Click the Z-Wave button 4 times quickly. The LED indicator will flash twice to confirm the device is awake.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4280/zooz-zse42-manual.pdf"
+	}
+}

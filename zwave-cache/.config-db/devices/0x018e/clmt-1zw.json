@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Climax Technology, Ltd.",
+	"manufacturerId": "0x018e",
+	"label": "CLMT-1ZW",
+	"description": "Clamp Meter",
+	"devices": [
+		{
+			"productType": "0x0004",
+			"productId": "0x001d",
+			"zwaveAllianceId": 2255
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Plug the AC Input cable into the socket to power on the Clamp Meter, then press the Function Button 3 times within 1.5 seconds.",
+		"exclusion": "Press the Function Button 3 times within 1.5 seconds. The device will be removed from the Z-Wave network.",
+		"reset": "Press and hold the Function Button for 10 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2255/CLMT-1ZW%2020170301.docx"
+	}
+}

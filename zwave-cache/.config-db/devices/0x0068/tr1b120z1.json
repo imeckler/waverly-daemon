@@ -1,0 +1,64 @@
+{
+	"manufacturer": "Good Way Technology Co., Ltd.",
+	"manufacturerId": "0x0068",
+	"label": "TR1B120Z1",
+	"description": "Panic Button",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0016",
+			"zwaveAllianceId": 3124
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "LED Light Up Time",
+			"description": "Allowable range: 1-100, 127",
+			"valueSize": 1,
+			"unit": "seconds",
+			"minValue": 1,
+			"maxValue": 127,
+			"defaultValue": 127,
+			"options": [
+				{
+					"label": "Always on",
+					"value": 127
+				}
+			]
+		},
+		{
+			"#": "2",
+			"label": "Buzzer Beep Times",
+			"description": "0 : disable  1~100: sound 1~100 beeps (0.5s on, 0.5s off) 127: continue beep till cancel trigger",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 127,
+			"options": [
+				{
+					"label": "Buzzer disable",
+					"value": 0
+				},
+				{
+					"label": "Sound beep delay time",
+					"value": 100
+				},
+				{
+					"label": "Continue beep till cancel trigger",
+					"value": 127
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the button 3 times within 1.5 seconds. The LED will blink red 3 times when successful.",
+		"exclusion": "Press the button 3 times within 1.5 seconds. The LED will blink red 3 times when successful, then blink red for 30 seconds at one blink per two seconds.",
+		"reset": "Press the button 3 times within 1.5 seconds and hold the third press for 10 seconds until the LED blinks red.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3124/TR1B120Z1_Manual_V1.0_20181018-1.pdf"
+	}
+}

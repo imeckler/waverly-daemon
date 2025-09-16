@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Elexa Consumer Products Inc.",
+	"manufacturerId": "0x021f",
+	"label": "DMGW1",
+	"description": "Hub",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0001",
+			"zwaveAllianceId": 2178
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "Press and hold the main button on top of the Z-box for 10 seconds. Release the button when the LED quickly flashes red indicating reset.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2178/Z-Box%20End%20User%20Manual.pdf"
+	}
+}

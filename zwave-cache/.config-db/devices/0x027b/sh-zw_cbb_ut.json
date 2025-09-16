@@ -1,0 +1,21 @@
+{
+	"manufacturer": "White Rabbit",
+	"manufacturerId": "0x027b",
+	"label": "SH-ZW+CBB+UT",
+	"description": "White Rabbit Smart Hub",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0003",
+			"zwaveAllianceId": 2509
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "1. Click on the Z-Wave Toolbox link found on the Admin tab\n2. Press the Reset Defaults button\n3. Select Yes to confirm",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2509/white%20rabbit%20automation%20system%20user%20guide%20(1).pdf"
+	}
+}

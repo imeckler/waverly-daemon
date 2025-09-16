@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Winytechnology",
+	"manufacturerId": "0x0242",
+	"label": "03110101",
+	"description": "WTR-1000-11",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0011",
+			"zwaveAllianceId": 1664
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press the button switch 3 times in a row. Press 3 times again to cancel inclusion",
+		"exclusion": "1. Wait for green LED to light\n2. Press the button switch 3 times in a row",
+		"reset": "Press the Fn switch for over 2 minutes to reset network information",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1664/Repeater_Q_160205.pdf"
+	}
+}

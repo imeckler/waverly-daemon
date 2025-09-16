@@ -1,0 +1,52 @@
+{
+	"manufacturer": "Jin Tao Bao",
+	"manufacturerId": "0x015a",
+	"label": "JTB-3005-03",
+	"description": "Thermostat Control Panel",
+	"devices": [
+		{
+			"productType": "0x3005",
+			"productId": "0x0003",
+			"zwaveAllianceId": 2634
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Synchronization Cool and Heat Temperature Set-Point",
+			"description": "Synchronization cool and heat temperature set-point while one of it has been change by master controller",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No synchronization",
+					"value": 0
+				},
+				{
+					"label": "Synchronization",
+					"value": -128
+				}
+			]
+		},
+		{
+			"#": "2",
+			"label": "Inner Master Mcu Communication Address",
+			"description": "Should same as inner master mcu configuration",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 1
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the PB button on the back side 3 times within 1.5 seconds. The LED will flash during inclusion.",
+		"exclusion": "Press the PB button on the back side 3 times within 1.5 seconds. The LED will flash during exclusion.",
+		"reset": "Press and hold the PB button on the back side for 10 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2634/JTB-3005-03-Manual_20171016.pdf"
+	}
+}

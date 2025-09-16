@@ -1,0 +1,152 @@
+{
+	"manufacturer": "Enbrighten",
+	"manufacturerId": "0x0063",
+	"label": "38959 / ZW6306",
+	"description": "Flood+Freeze Sensor, 500S",
+	"devices": [
+		{
+			"productType": "0x4953",
+			"productId": "0x3231",
+			"zwaveAllianceId": 3642
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "19",
+			"$import": "templates/jasco_template.json#alternate_exclusion_h"
+		},
+		{
+			"#": "21",
+			"label": "Reverse Detection of Wet/Dry",
+			"description": "Only use with included probe",
+			"valueSize": 2,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Normal detection(Water detected)",
+					"value": 1
+				},
+				{
+					"label": "Reverse detection(Dry detected)",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "22",
+			"label": "Temperature Report Interval (When Battery Operated)",
+			"valueSize": 2,
+			"minValue": 5,
+			"maxValue": 1440,
+			"defaultValue": 60,
+			"options": [
+				{
+					"label": "Hourly",
+					"value": 60
+				},
+				{
+					"label": "6 hours",
+					"value": 360
+				},
+				{
+					"label": "12 hours",
+					"value": 720
+				},
+				{
+					"label": "Daily",
+					"value": 1440
+				}
+			]
+		},
+		{
+			"#": "23",
+			"label": "Battery Report Interval",
+			"valueSize": 2,
+			"unit": "minutes",
+			"minValue": 5,
+			"maxValue": 1440,
+			"defaultValue": 1440,
+			"options": [
+				{
+					"label": "Hourly",
+					"value": 360
+				},
+				{
+					"label": "12 hours",
+					"value": 720
+				},
+				{
+					"label": "Daily",
+					"value": 1440
+				}
+			]
+		},
+		{
+			"#": "50",
+			"label": "Low Temp Alarm",
+			"description": "-4f to 122f",
+			"valueSize": 2,
+			"minValue": -4,
+			"maxValue": 122,
+			"defaultValue": 33
+		},
+		{
+			"#": "51",
+			"label": "High Temp Alarm",
+			"description": "-4f to 122f",
+			"valueSize": 1,
+			"minValue": -4,
+			"maxValue": 122,
+			"defaultValue": 104
+		},
+		{
+			"#": "52",
+			"label": "Temperature Report Interval (When USB Operated)",
+			"valueSize": 2,
+			"unit": "minutes",
+			"minValue": 5,
+			"maxValue": 360,
+			"defaultValue": 60
+		},
+		{
+			"#": "53",
+			"label": "Tamper Alert Configuration",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Red LED continuous flash and beeps",
+					"value": 1
+				},
+				{
+					"label": "Red LED flashes once, continuous beeps",
+					"value": 2
+				},
+				{
+					"label": "Red LED continuous flash, no beeps",
+					"value": 3
+				},
+				{
+					"label": "Red LED flash once, no beeps",
+					"value": 4
+				},
+				{
+					"label": "No LED, no beeps",
+					"value": 5
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Remove the top cover.\n2. Press and release the programming button. The red LED flashes quickly as it searches.\n3. If the LED stops flashing after 25 seconds, press the programming button again to manually restart the process.\n4. The red LED will activate for 3 seconds to confirm inclusion.\n5. Secure the top cover into place.",
+		"exclusion": "1. Press and release the programming button one time.\n2. The red LED will blink five times to indicate removal.\n3. Secure the top cover.",
+		"reset": "1. Press the programming button 10 times within 6 seconds (interval between presses cannot be longer than 1 second).\n2. The red LED will activate for 2 seconds, followed by three quick flashes.\n3. Secure the top cover into place.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3642/38959%20EnFrSp%20QSG%20v1.pdf"
+	}
+}

@@ -1,0 +1,33 @@
+{
+	"manufacturer": "Leviton",
+	"manufacturerId": "0x001d",
+	"label": "VRS15",
+	"description": "Scene Capable Switch On/Off",
+	"devices": [
+		{
+			"productType": "0x0301",
+			"productId": "0x0209"
+		},
+		{
+			"productType": "0x0301",
+			"productId": "0x0334",
+			"zwaveAllianceId": 814
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"metadata": {
+		"inclusion": "Press the push pad to turn on the switch. The Locator LED will turn OFF when inclusion is successful.",
+		"exclusion": "Press the push pad to turn on the switch. The locator LED will turn OFF when exclusion is successful.",
+		"reset": "1. Engage the air-gap switch by gently pressing the top of the push pad until the bottom lifts completely out of the frame and a click is heard\n2. Wait 5 seconds and then press the push pad back into the frame and hold until the locator LED turns Amber and then flashes Red"
+	}
+}

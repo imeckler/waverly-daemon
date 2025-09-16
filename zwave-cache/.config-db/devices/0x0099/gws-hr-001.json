@@ -1,0 +1,21 @@
+{
+	"manufacturer": "GreenWave Reality Inc.",
+	"manufacturerId": "0x0099",
+	"label": "GWS-HR-001",
+	"description": "AXON™ Home Router",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0xa001",
+			"zwaveAllianceId": 1609
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "1. Locate the red Reboot/Reset button on the backside of the router above the yellow RJ45 Ethernet ports.\n2. Press and hold the button for 3 seconds or longer.\n3. The router will reset and reboot automatically.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1609/Final%20INS11796-4-UserGuide%20-%202015-12-28.docx"
+	}
+}

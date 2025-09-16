@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Somfy",
+	"manufacturerId": "0x0047",
+	"label": "SY-IOT101",
+	"description": "Blind-Curtain Motor Controller",
+	"devices": [
+		{
+			"productType": "0x2018",
+			"productId": "0x1805",
+			"zwaveAllianceId": 2472
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "1. Press and hold the program switch for more than 5 seconds until the LED turns on\n2. Release the program switch\n3. The LED blinks 3 times when successful, or turns off if failed",
+		"exclusion": "1. Press and hold the program switch for more than 5 seconds until the LED turns on\n2. Release the program switch\n3. The LED blinks 3 times when successful, or turns off if failed",
+		"reset": "1. Press and hold the program switch for more than 10 seconds until the LED blinks\n2. Release the program switch\n3. The LED blinks 5 times when successful, or turns off if failed",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2472/User_Manual_z-wave%20curtain%20motor%20module_0712R.pdf"
+	}
+}

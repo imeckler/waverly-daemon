@@ -1,0 +1,101 @@
+{
+	"manufacturer": "HomeSeer Technologies",
+	"manufacturerId": "0x000c",
+	"label": "HS-HSM200",
+	"description": "Z-Wave Multi Sensor",
+	"devices": [
+		{
+			"productType": "0x0004",
+			"productId": "0x0001"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Control Lights",
+			"maxNodes": 4
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Off Delay After Motion",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 10,
+			"options": [
+				{
+					"label": "Disable, only send motion triggers",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "2",
+			"label": "Dim Level",
+			"description": "Allowable range: 0-99, 255",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 255,
+			"unsigned": true
+		},
+		{
+			"#": "3",
+			"label": "Light Level Report Interval",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 60,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "4",
+			"label": "Temperature Report Interval",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 60,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "5",
+			"label": "Temperature Calibration",
+			"valueSize": 1,
+			"unit": "0.1 °F",
+			"minValue": -128,
+			"maxValue": 127,
+			"defaultValue": 0
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the button on the side once. The LED blinks blue.",
+		"exclusion": "Press the button on the side once.",
+		"reset": "Power on the device. Press and hold the side button for 60 seconds.",
+		"manual": "https://docs.homeseer.com/products/hsm200-user-guide"
+	}
+}

@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Vera Control",
+	"manufacturerId": "0x008c",
+	"label": "VERAEDGE",
+	"description": "Smart Home Controller",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0023",
+			"zwaveAllianceId": [1741, 1758, 3198]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "Press the reset button for 20 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3198/Z-Wave_Overview%20and_QSG_VeraEdge.pdf"
+	}
+}

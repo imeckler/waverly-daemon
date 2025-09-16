@@ -1,0 +1,78 @@
+{
+	"manufacturer": "Inovelli",
+	"manufacturerId": "0x031e",
+	"label": "LZW41",
+	"description": "Tunable White Smart Bulb",
+	"devices": [
+		{
+			"productType": "0x0006",
+			"productId": "0x0001",
+			"zwaveAllianceId": 3614
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "2",
+			"label": "State After Power Outage",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "On",
+					"value": 0
+				},
+				{
+					"label": "Previous state",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "80",
+			"label": "Notifications to Associated Devices",
+			"description": "What notifications should be sent to associated devices when the state of the LED bulb is changed",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "Multilevel Switch Report",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "81",
+			"label": "Color Temperature (Warm White)",
+			"valueSize": 2,
+			"unit": "K",
+			"minValue": 2700,
+			"maxValue": 4999,
+			"defaultValue": 2700
+		},
+		{
+			"#": "82",
+			"label": "Color Temperature (Cool White)",
+			"valueSize": 2,
+			"unit": "K",
+			"minValue": 5000,
+			"maxValue": 6500,
+			"defaultValue": 6500
+		}
+	],
+	"metadata": {
+		"inclusion": "Turn power to the bulb on/off/on/off/on - the bulb will flash 3 times indicating inclusion mode. If successful, the bulb will blink once more",
+		"exclusion": "Turn power on/off/on/off/on/off/on (3 on, 2 off) - the bulb will blink 3 times. The bulb will blink once more when exclusion is successful",
+		"reset": "Power the bulb on/off 6 times (between 0.5-2 seconds each time). The bulb will flash twice to indicate factory reset",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3614/LZW41%20Manual.pdf"
+	}
+}

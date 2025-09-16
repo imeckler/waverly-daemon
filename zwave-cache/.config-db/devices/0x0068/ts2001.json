@@ -1,0 +1,45 @@
+{
+	"manufacturer": "Good Way Technology Co., Ltd.",
+	"manufacturerId": "0x0068",
+	"label": "TS2001",
+	"description": "Door/Window Sensor",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0009",
+			"zwaveAllianceId": 2087
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Battery Report Delay Time",
+			"description": "Minute",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 3,
+			"unsigned": true
+		},
+		{
+			"#": "2",
+			"label": "External Sensor Define",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the tamper button 3 times repeatedly. The LED will show a solid blue light when successful.",
+		"exclusion": "Press the tamper button 3 times repeatedly. The LED will flash blue 3 times for 1 second each when successful.",
+		"reset": "1. Press the tamper button 2 times\n2. On the third press, hold for 5 seconds",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2087/TS2001Z1_User%20Manual(Z-Wave%20plus)1209.pdf"
+	}
+}

@@ -1,0 +1,96 @@
+{
+	"manufacturer": "Secure Meters (UK) Ltd.",
+	"manufacturerId": "0x0059",
+	"label": "MAX10Z-737",
+	"description": "Beanbag Thermostat Receiver",
+	"devices": [
+		{
+			"productType": "0x0014",
+			"productId": "0x0001",
+			"zwaveAllianceId": 2395
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Setpoint Upper Limit (Endpoint 1)",
+			"description": "In degree centigrade",
+			"valueSize": 1,
+			"unit": "°C",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 35,
+			"unsigned": true
+		},
+		{
+			"#": "2",
+			"label": "Setpoint Lower Limit (Endpoint 1)",
+			"description": "In degree centigrade",
+			"valueSize": 1,
+			"unit": "°C",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 5,
+			"unsigned": true
+		},
+		{
+			"#": "3",
+			"label": "Button Override Duration",
+			"description": "In minutes",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 60,
+			"unsigned": true
+		},
+		{
+			"#": "4",
+			"label": "Relay State On Power (Switch Endpoint Only)",
+			"description": "Boolean",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 0
+		},
+		{
+			"#": "5",
+			"label": "Dynamic Endpoint 2 Device Type",
+			"description": "Value 0 = thermostat, 1 = binary switch",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 0
+		},
+		{
+			"#": "6",
+			"label": "Time Sync",
+			"description": "In 2 minutes steps",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 65,
+			"unsigned": true
+		},
+		{
+			"#": "7",
+			"label": "Heating Tpi Cycle",
+			"description": "Value 1 = 3 cycles per hour, 2 = 6 cycles per hour, 3 = 9 cycles per hour and 4 = 12 cycles per hour",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 4,
+			"defaultValue": 2
+		}
+	],
+	"metadata": {
+		"inclusion": "Hold the button on top for more than 2 seconds until the LED turns red, then release. The LED becomes solid white when successful.",
+		"exclusion": "Hold the button on top for more than 2 seconds until the LED turns red, then release. The LED flashes white when successful.",
+		"reset": "Press and hold the bottom button for about 4 seconds until the LED turns red, then release.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2395/BeanbagReceiverZWaveManual.pdf"
+	}
+}

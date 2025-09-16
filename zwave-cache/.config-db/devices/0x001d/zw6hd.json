@@ -1,0 +1,61 @@
+{
+	"manufacturer": "Leviton",
+	"manufacturerId": "0x001d",
+	"label": "ZW6HD",
+	"description": "Decora Smart 800 Series Dimmer",
+	"devices": [
+		{
+			"productType": "0x0041",
+			"productId": "0x0002",
+			"zwaveAllianceId": 4901
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "templates/leviton_template.json#fade_on_time_800_series"
+		},
+		{
+			"#": "2",
+			"$import": "templates/leviton_template.json#fade_off_time_800_series"
+		},
+		{
+			"#": "3",
+			"$import": "templates/leviton_template.json#minimum_dim_level_800_series"
+		},
+		{
+			"#": "4",
+			"$import": "templates/leviton_template.json#maximum_dim_level_800_series"
+		},
+		{
+			"#": "5",
+			"$import": "templates/leviton_template.json#preset_level_800_series"
+		},
+		{
+			"#": "6",
+			"$import": "templates/leviton_template.json#led_timeout_800_series"
+		},
+		{
+			"#": "7",
+			"$import": "templates/leviton_template.json#status_led_800_series"
+		},
+		{
+			"#": "8",
+			"$import": "templates/leviton_template.json#load_type_800_series"
+		},
+		{
+			"#": "9",
+			"$import": "templates/leviton_template.json#control_timing"
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Hold the control button for 7 seconds until the LED blinks amber\n2. Tap the top rocker 1 time\n3. The Status LED will quickly flash green",
+		"exclusion": "1. Hold the control button for 7 seconds until the LED blinks amber\n2. Tap the top rocker 1 time\n3. The Status LED will quickly flash green",
+		"reset": "Hold the top rocker for 14 seconds. After the first 7 seconds, the Status LED will turn amber, continue holding until the Status LED flashes red/amber then release.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=cert_portal/certs/633/DI-000-ZW6HD-02A-X4.pdf"
+	}
+}

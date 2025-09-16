@@ -1,0 +1,56 @@
+{
+	"manufacturer": "Enbrighten",
+	"manufacturerId": "0x0063",
+	"label": "46202 / ZW4009",
+	"description": "In-Wall Toggle Switch, QFSW, 500S",
+	"devices": [
+		{
+			"productType": "0x4952",
+			"productId": "0x3137",
+			"zwaveAllianceId": 4157
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Local Load",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Double Tap",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"$import": "~/templates/master_template.json#led_indicator_four_options"
+		},
+		{
+			"#": "4",
+			"$import": "~/templates/master_template.json#orientation"
+		},
+		{
+			"#": "19",
+			"$import": "templates/jasco_template.json#alternate_exclusion"
+		}
+	],
+	"compat": {
+		"mapBasicSet": "event"
+	},
+	"metadata": {
+		"inclusion": "Press up and release the toggle.",
+		"exclusion": "Press up and release the toggle.",
+		"reset": "Quickly press the up button three times then immediately press the down button three times. The LED will flash when completed successfully.",
+		"manual": "https://byjasco.com/media/manuals/46202-QSG-v1.pdf"
+	}
+}

@@ -1,0 +1,115 @@
+{
+	"manufacturer": "Schlage",
+	"manufacturerId": "0x003b",
+	"label": "JBE109",
+	"description": "J-Series by Schlage Z-Wave Keypad Deadbolt",
+	"devices": [
+		{
+			"productType": "0x0004",
+			"productId": "0x2109",
+			"zwaveAllianceId": [3925, 4134]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"label": "Beeper",
+			"valueSize": 1,
+			"defaultValue": 255,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable beeper",
+					"value": 0
+				},
+				{
+					"label": "Enable beeper",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "4",
+			"label": "Vacation Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable vacation mode",
+					"value": 0
+				},
+				{
+					"label": "Enable vacation mode",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "5",
+			"label": "Lock & Leave",
+			"valueSize": 1,
+			"defaultValue": 255,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable lock & leave",
+					"value": 0
+				},
+				{
+					"label": "Enable lock & leave",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "15",
+			"label": "Auto Lock",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable auto lock",
+					"value": 0
+				},
+				{
+					"label": "Enable auto lock",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "16",
+			"label": "User Code PIN Length",
+			"valueSize": 1,
+			"minValue": 4,
+			"maxValue": 8,
+			"defaultValue": 4
+		},
+		{
+			"#": "6",
+			"label": "User Slots",
+			"description": "This value represents a bitmask with 30 bits. Each bit represents a user slot. A value of 1 means that the slot is occupied.",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 1073741823,
+			"defaultValue": 0,
+			"readOnly": true
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Remove the battery cover of the deadbolt\n2. Press then release the button on the PCB\n3. Green LED indicates successful inclusion, red LED indicates failure",
+		"exclusion": "1. Remove the battery cover of the deadbolt\n2. Press then release the button on the PCB\n3. Green LED flashes 3 times when exclusion is successful",
+		"reset": "1. Press and hold the enrollment button until LED lights amber\n2. Continue holding for about 8 seconds until amber light turns off, then release\n3. Success is indicated by 3 long green blinks and 3 long beeps",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4134/J-Series%20UG-f1.pdf"
+	}
+}

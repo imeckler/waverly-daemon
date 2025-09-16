@@ -1,0 +1,29 @@
+{
+	"manufacturer": "Yale",
+	"manufacturerId": "0x0129",
+	"label": "YDM4109+",
+	"description": "Digital Door Lock",
+	"devices": [
+		{
+			"productType": "0xc700",
+			"productId": "0x0005",
+			"zwaveAllianceId": 3449
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "5",
+			"$import": "templates/yale_template.json#language_asia"
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Touch keypad with palm\n2. Enter User code in Normal Mode only. Enter Master code if operating Master Mode.\n3. Press 'I' button for Registration from inside the battery cover\n4. Press 9,#,1,# on the keypad in sequence\n5. Press 'I' button after 'Ding dong dang' melody plays",
+		"exclusion": "1. Touch keypad with palm\n2. Enter User code in Normal Mode only. Enter Master code if operating Master Mode.\n3. Press 'I' button for Registration from inside the battery cover\n4. Press 9,#,3,# on the keypad in sequence\n5. Press 'I' button after 'Ding dong dang' melody plays",
+		"reset": "1. Touch keypad with palm\n2. Enter User code in Normal Mode only. Enter Master code if operating Master Mode.\n3. Press 'I' button for Registration from inside the battery cover\n4. Press 9,#,9,# on the keypad in sequence\n5. Press 'I' button after 'Ding dong dang' melody plays",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3449/YDM4109Plus_Quick%20Start%20Guide_190702.pdf"
+	}
+}

@@ -1,0 +1,30 @@
+{
+	"manufacturer": "SafeTech Products",
+	"manufacturerId": "0x023c",
+	"label": "QLDLZW",
+	"description": "Doorlock",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0002",
+			"zwaveAllianceId": 1451
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Group 1",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"metadata": {
+		"inclusion": "Push the Z-Wave button on The Doorlock.",
+		"exclusion": "Push the Z-Wave button on The Doorlock.",
+		"reset": "Hold the Z-Wave button down for 5 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1451/R003023_02-Doorlock%20Operating%20Instructions.pdf"
+	}
+}

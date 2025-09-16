@@ -1,0 +1,53 @@
+{
+	"manufacturer": "D-Link",
+	"manufacturerId": "0x0108",
+	"label": "DCH-Z310",
+	"description": "Smoke Detector",
+	"devices": [
+		{
+			"productType": "0x0002",
+			"productId": "0x001e",
+			"zwaveAllianceId": 1261
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "7",
+			"label": "Customer Function",
+			"description": "Customer function switch, using bit control",
+			"valueSize": 1,
+			"defaultValue": 4,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Notification Report",
+					"value": 4
+				},
+				{
+					"label": "Binary Sensor Report",
+					"value": 20
+				}
+			]
+		},
+		{
+			"#": "10",
+			"label": "Auto Report Battery Time",
+			"description": "The interval time for auto report the battery level",
+			"valueSize": 1,
+			"unit": "30 minutes",
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 12
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the button three times within 1.5 seconds.",
+		"exclusion": "Press the button three times within 1.5 seconds.",
+		"reset": "1. Press the button four times within 1.5 seconds and hold on the fourth press until the red LED lights up.\n2. After the red LED flashes 9 times, release the button within 2 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1261/DCH-Z310_Manual.pdf"
+	}
+}

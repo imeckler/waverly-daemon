@@ -1,0 +1,126 @@
+{
+	"manufacturer": "Vision Security",
+	"manufacturerId": "0x0109",
+	"label": "ZP3113-7",
+	"description": "4 in 1 PIR Sensor",
+	"devices": [
+		{
+			"productType": "0x2021",
+			"productId": "0x2112",
+			"zwaveAllianceId": [4099, 4314, 4315]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "On/Off",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/templates/master_template.json#temperature_scale_celsius_fahrenheit"
+		},
+		{
+			"#": "2",
+			"label": "Temperature Reporting Threshold",
+			"valueSize": 1,
+			"unit": "0.1 °C",
+			"minValue": 1,
+			"maxValue": 50,
+			"defaultValue": 30
+		},
+		{
+			"#": "3",
+			"label": "Humidity Reporting Threshold",
+			"description": "Allowable range: 5%-50%",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 50,
+			"defaultValue": 20,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "4",
+			"label": "Light Reporting Threshold",
+			"description": "Allowable range: 5%-50%",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 50,
+			"defaultValue": 25,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "5",
+			"label": "Motion Trigger Interval",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 1,
+			"maxValue": 127,
+			"defaultValue": 3
+		},
+		{
+			"#": "6",
+			"label": "Motion Sensitivity",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 7,
+			"defaultValue": 4
+		},
+		{
+			"#": "7",
+			"label": "LED Indicator",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Always off",
+					"value": 1
+				},
+				{
+					"label": "Flash - PIR/Temperature",
+					"value": 2
+				},
+				{
+					"label": "PIR only",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "8",
+			"label": "Message Failure Retry Limit",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 10,
+			"defaultValue": 3
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the program switch once. The LED indicator will flash during inclusion.",
+		"exclusion": "Press the program switch once.",
+		"reset": "1. Remove cover to trigger tamper switch.\n2. Press program switch 10 times within 10 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4314/ZP3113-7%204%20in%201%20PIR%20(Z-Wave%20certified)%20-%2020211004.pdf"
+	}
+}

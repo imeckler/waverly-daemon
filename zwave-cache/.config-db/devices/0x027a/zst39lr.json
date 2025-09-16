@@ -1,0 +1,27 @@
+{
+	"manufacturer": "Zooz",
+	"manufacturerId": "0x027a",
+	"label": "ZST39 LR",
+	"description": "800 Series Long Range USB Controller",
+	"devices": [
+		{
+			"productType": "0x0004",
+			"productId": "0x0610"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		// 700/800 series firmware bugs that affect multiple controllers
+		"comments": [
+			// https://www.support.getzooz.com/kb/article/1352-zst39-800-long-range-z-wave-stick-change-log/
+			// 1.50 = SDK 7.22.1
+			{
+				"$if": "firmwareVersion < 1.50",
+				"$import": "~/templates/master_template.json#8xx_firmware_bug_pre_7_22_1"
+			}
+		]
+	}
+}

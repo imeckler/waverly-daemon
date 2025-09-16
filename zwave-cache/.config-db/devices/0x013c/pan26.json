@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Philio Technology Corp",
+	"manufacturerId": "0x013c",
+	"label": "PAN26",
+	"description": "Smart Switch Box",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0073",
+			"zwaveAllianceId": 3603
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press the middle button three times within 2 seconds.",
+		"exclusion": "Press the middle button three times within 2 seconds.",
+		"reset": "Press and hold the middle button four times, keeping it held on the 4th press for 3-10 seconds, then release.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3603/PAN26%20manual-20190806.pdf"
+	}
+}

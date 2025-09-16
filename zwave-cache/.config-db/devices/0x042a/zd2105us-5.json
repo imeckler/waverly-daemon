@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Great Connection System Pte. Ltd.",
+	"manufacturerId": "0x042a",
+	"label": "ZD2105US-5",
+	"description": "Recessed Door/ Window Sensor",
+	"devices": [
+		{
+			"productType": "0x2022",
+			"productId": "0x2202",
+			"zwaveAllianceId": 3583
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press the program switch of ZD2105.",
+		"exclusion": "Press the program switch of ZD2105 for 1 second.",
+		"reset": "1. Trigger the rear cover switch to send the Alarm Report\n2. Trigger the reed switch (close & open) 5 times in 10 seconds",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3583/ZD2105-5%20GCS.pdf"
+	}
+}

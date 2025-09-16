@@ -1,0 +1,30 @@
+{
+	"manufacturer": "Climax Technology, Ltd.",
+	"manufacturerId": "0x018e",
+	"label": "SRAC-23ZW",
+	"description": "",
+	"devices": [
+		{
+			"productType": "0x0002",
+			"productId": "0x0001",
+			"zwaveAllianceId": 1755
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Group 1",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"metadata": {
+		"inclusion": "1. Plug the Siren into a power socket\n2. The LED indicator will flash twice\n3. Press the Test Button 3 times within 1.5 seconds\n4. The Siren will emit 1 long beep and LED will flash once if successful",
+		"exclusion": "Press the Test Button 3 times within 1.5 seconds. The Siren will be removed from the Z-Wave network.",
+		"reset": "Press and hold the Test Button for ~10 seconds until the LED starts to flash twice. The siren will emit 2 short beeps.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1755/SRAC-23B-ZW%2020151228.doc"
+	}
+}

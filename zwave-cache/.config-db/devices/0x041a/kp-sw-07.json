@@ -1,0 +1,62 @@
+{
+	"manufacturer": "Keemple",
+	"manufacturerId": "0x041a",
+	"label": "KP-SW-07",
+	"description": "Light Switch 1 Channel",
+	"devices": [
+		{
+			"productType": "0x0100",
+			"productId": "0x0001",
+			"zwaveAllianceId": 3580
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Scene Control",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "21",
+			"$import": "~/templates/master_template.json#state_after_power_failure_prev_on_off",
+			"defaultValue": 0
+		},
+		{
+			"#": "24",
+			"label": "Load Status Change Reports",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enabled",
+					"value": 1
+				},
+				{
+					"label": "Enabled (Manual control only)",
+					"value": 2
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Connect the power supply\n2. Press and hold button 1 until the pink LED flashes slowly, then release (the blue LED flashes quickly)\n3. The LED will be steady blue when successfully connected",
+		"exclusion": "1. Power on the switch\n2. Press and hold button 1 until the pink LED flashes slowly, then release (the blue LED flashes quickly)\n3. The LED will be steady blue when exclusion is successful",
+		"reset": "1. Ensure the switch is powered\n2. Press and hold button 1 for 20 seconds\n3. Release the button when the pink LED is always on",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3580/KP-SW-07user%20manual.pdf"
+	}
+}

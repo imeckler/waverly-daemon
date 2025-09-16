@@ -1,0 +1,80 @@
+{
+	"manufacturer": "Jasco",
+	"manufacturerId": "0x0063",
+	"label": "56590 / ZW3012",
+	"description": "In-Wall Paddle Dimmer, No Ntrl, 700S",
+	"devices": [
+		{
+			"productType": "0x4944",
+			"productId": "0x3334",
+			"zwaveAllianceId": 4190
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Single Press",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Double Tap",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "16",
+			"$import": "templates/jasco_template.json#switch_mode"
+		},
+		{
+			"#": "19",
+			"$import": "templates/jasco_template.json#alternate_exclusion"
+		},
+		{
+			"#": "3",
+			"$import": "~/templates/master_template.json#led_indicator_four_options"
+		},
+		{
+			"#": "30",
+			"$import": "templates/jasco_template.json#dim_threshold_min"
+		},
+		{
+			"#": "31",
+			"$import": "templates/jasco_template.json#dim_threshold_max"
+		},
+		{
+			"#": "32",
+			"$import": "templates/jasco_template.json#default_brightness_level"
+		},
+		{
+			"#": "4",
+			"$import": "~/templates/master_template.json#orientation"
+		},
+		{
+			"#": "6",
+			"$import": "templates/jasco_template.json#dim_rate"
+		},
+		{
+			"#": "84",
+			"$import": "templates/jasco_template.json#factory_default"
+		}
+	],
+	"compat": {
+		"mapBasicSet": "event"
+	},
+	"metadata": {
+		"inclusion": "Press and release the top or bottom of the smart dimmer.",
+		"exclusion": "Press and release the top or bottom of the smart dimmer.",
+		"reset": "1. Quickly press the top button three times, then immediately press the bottom button three times. 2. The LED will flash on/off five times when completed successfully.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4190/56590%20QSG%20v1.pdf"
+	}
+}

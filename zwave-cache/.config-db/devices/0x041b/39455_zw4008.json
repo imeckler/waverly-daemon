@@ -1,0 +1,86 @@
+{
+	"manufacturer": "Resideo",
+	"manufacturerId": "0x041b",
+	"label": "39455 / ZW4008",
+	"description": "In-Wall Paddle Switch, QFSW, 500S",
+	"devices": [
+		{
+			"productType": "0x4952",
+			"productId": "0x3036",
+			"zwaveAllianceId": 4169
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Single Press",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Double Tap",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"label": "LED Light",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "LED on when load is off",
+					"value": 0
+				},
+				{
+					"label": "LED on when light is turned on",
+					"value": 1
+				},
+				{
+					"label": "LED always off",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "4",
+			"$import": "~/templates/master_template.json#orientation"
+		},
+		{
+			"#": "19",
+			"label": "Alternate Exclusion",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Press any button on the switch",
+					"value": 0
+				},
+				{
+					"label": "Press on two times, then off two times",
+					"value": 1
+				}
+			]
+		}
+	],
+	"compat": {
+		"mapBasicSet": "event"
+	},
+	"metadata": {
+		"inclusion": "Press and release the top or bottom of the switch.",
+		"exclusion": "Press and release the top or bottom of the switch.",
+		"reset": "1. Quickly press the top button three times\n2. Immediately press the bottom button three times\n3. The LED will flash ON/OFF five times when completed successfully",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4169/39455_HQSG_v4.pdf"
+	}
+}
