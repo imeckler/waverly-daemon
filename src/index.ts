@@ -52,7 +52,8 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-const driver = new Driver('/dev/serial/by-id/usb-Zooz_800_Z-Wave_Stick_533D004242-if00', {
+//const driver = new Driver('/dev/serial/by-id/usb-Zooz_800_Z-Wave_Stick_533D004242-if00', {
+const driver = new Driver('/dev/ttyACM0', {
   storage: {
     cacheDir: './zwave-cache'
   }
