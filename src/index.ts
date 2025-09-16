@@ -79,7 +79,7 @@ driver.start().then(async () => {
     console.log('hello');
     console.log(driver.controller.nodes);
     driver.controller.nodes.forEach((node, i) => {
-      console.log('node ${i}');
+      console.log(`node ${i}`);
       const ids = node.getDefinedValueIDs();
       ids.forEach((valId, j) => {
         console.log(j);
