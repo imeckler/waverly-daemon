@@ -222,3 +222,9 @@
 {"k":"{\"nodeId\":6,\"commandClass\":113,\"endpoint\":0,\"property\":\"alarmType\"}","v":21,"ts":1753826379255}
 {"k":"{\"nodeId\":6,\"commandClass\":113,\"endpoint\":0,\"property\":\"alarmLevel\"}","v":1,"ts":1753826379257}
 {"k":"{\"nodeId\":6,\"commandClass\":98,\"endpoint\":0,\"property\":\"currentMode\"}","v":255,"ts":1753826379260}
+{"k":"{\"nodeId\":1,\"commandClass\":114,\"endpoint\":0,\"property\":\"manufacturerId\"}","v":634,"ts":1758073616600}
+{"k":"{\"nodeId\":1,\"commandClass\":114,\"endpoint\":0,\"property\":\"productType\"}","v":4,"ts":1758073616603}
+{"k":"{\"nodeId\":1,\"commandClass\":114,\"endpoint\":0,\"property\":\"productId\"}","v":1552,"ts":1758073616605}
+{"k":"{\"nodeId\":1,\"commandClass\":134,\"endpoint\":0,\"property\":\"firmwareVersions\"}","v":["1.60"],"ts":1758073616610}
+{"k":"{\"nodeId\":1,\"commandClass\":134,\"endpoint\":0,\"property\":\"zWaveProtocolVersion\"}","v":"7.23.2","ts":1758073616614}
+{"k":"{\"nodeId\":1,\"commandClass\":134,\"endpoint\":0,\"property\":\"sdkVersion\"}","v":"7.23.2","ts":1758073616618}

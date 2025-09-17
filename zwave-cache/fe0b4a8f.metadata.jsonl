@@ -656,3 +656,9 @@
 {"k":"{\"nodeId\":6,\"commandClass\":99,\"endpoint\":0,\"property\":\"userCode\",\"propertyKey\":29}","v":{"type":"string","readable":true,"writeable":true,"minLength":4,"maxLength":10,"label":"User Code (29)"}}
 {"k":"{\"nodeId\":6,\"commandClass\":99,\"endpoint\":0,\"property\":\"userIdStatus\",\"propertyKey\":30}","v":{"type":"number","readable":true,"writeable":true,"label":"User ID status (30)","states":{"0":"Available","1":"Enabled","2":"Disabled"}}}
 {"k":"{\"nodeId\":6,\"commandClass\":99,\"endpoint\":0,\"property\":\"userCode\",\"propertyKey\":30}","v":{"type":"string","readable":true,"writeable":true,"minLength":4,"maxLength":10,"label":"User Code (30)"}}
+{"k":"{\"nodeId\":1,\"commandClass\":114,\"endpoint\":0,\"property\":\"manufacturerId\"}","v":{"type":"number","readable":true,"writeable":false,"min":0,"max":65535,"label":"Manufacturer ID"}}
+{"k":"{\"nodeId\":1,\"commandClass\":114,\"endpoint\":0,\"property\":\"productType\"}","v":{"type":"number","readable":true,"writeable":false,"min":0,"max":65535,"label":"Product type"}}
+{"k":"{\"nodeId\":1,\"commandClass\":114,\"endpoint\":0,\"property\":\"productId\"}","v":{"type":"number","readable":true,"writeable":false,"min":0,"max":65535,"label":"Product ID"}}
+{"k":"{\"nodeId\":1,\"commandClass\":134,\"endpoint\":0,\"property\":\"firmwareVersions\"}","v":{"type":"string[]","readable":true,"writeable":false,"label":"Z-Wave chip firmware versions"}}
+{"k":"{\"nodeId\":1,\"commandClass\":134,\"endpoint\":0,\"property\":\"zWaveProtocolVersion\"}","v":{"type":"string","readable":true,"writeable":false,"label":"Z-Wave protocol version"}}
+{"k":"{\"nodeId\":1,\"commandClass\":134,\"endpoint\":0,\"property\":\"sdkVersion\"}","v":{"type":"string","readable":true,"writeable":false,"label":"SDK version"}}
