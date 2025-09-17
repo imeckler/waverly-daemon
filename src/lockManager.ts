@@ -74,8 +74,8 @@ export class LockManager {
     this.lock = lock;
     this.tree = new IntervalTree();
     this.codeToSlot = new Map();
-    // TODO: filter out the reserved codes
-    const codeOrStatus = lock.getDefinedValueIDs().filter(v => v.commandClass === 99 && v.propertyKey != 0);
+    // Code 1 (propertyKey == 1) is reserved and propertyKey 0 is special and used for modifying all the codes at once.
+    const codeOrStatus = lock.getDefinedValueIDs().filter(v => v.commandClass === 99 && v.propertyKey != 0 && v.propertyKey != 1);
     // propertyKey 0 is special and used for modifying all the codes.
     const codeValues = codeOrStatus.filter(v => v.property == 'userCode');
     const statusesByIndex = new Map<any, TranslatedValueID>();

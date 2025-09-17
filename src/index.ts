@@ -87,17 +87,6 @@ driver.start().then(async () => {
   return driver.on('all nodes ready', () => {
     console.log('All Z-Wave nodes are ready');
 
-    console.log('hello');
-    console.log(driver.controller.nodes);
-    driver.controller.nodes.forEach((node, i) => {
-      console.log(`node ${i}`);
-      const ids = node.getDefinedValueIDs();
-      ids.forEach((valId, j) => {
-        console.log(j);
-        console.log(valId.commandClass, valId.commandClassName, valId.property, valId.propertyKey, valId.propertyKeyName, valId.propertyName);
-      })
-    })
-
     const lockNode = driver.controller.nodes.get(6);
     if (lockNode == undefined) {
       console.error('Lock node (node 2) not found');
