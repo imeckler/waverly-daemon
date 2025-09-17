@@ -98,7 +98,7 @@ driver.start().then(async () => {
       })
     })
 
-    const lockNode = driver.controller.nodes.get(2);
+    const lockNode = driver.controller.nodes.get(6);
     if (lockNode == undefined) {
       console.error('Lock node (node 2) not found');
       exit(1);
