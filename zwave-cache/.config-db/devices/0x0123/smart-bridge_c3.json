@@ -1,0 +1,21 @@
+{
+	"manufacturer": "IWATSU",
+	"manufacturerId": "0x0123",
+	"label": "SMART-BRIDGE C3",
+	"description": "Smart-BRIDGE C3",
+	"devices": [
+		{
+			"productType": "0x8001",
+			"productId": "0x0002",
+			"zwaveAllianceId": 2581
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "Hold down the hardware INIT switch for over 3 seconds. Press 'Reset the Chip' in the GUI.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2581/InstructionManual_3GGW_20170925.pdf"
+	}
+}

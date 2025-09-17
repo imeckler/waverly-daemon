@@ -1,0 +1,36 @@
+{
+	"manufacturer": "Philio Technology Corp",
+	"manufacturerId": "0x013c",
+	"label": "PSG04",
+	"description": "Z-Wave CO Sensor",
+	"devices": [
+		{
+			"productType": "0x0002",
+			"productId": "0x0071",
+			"zwaveAllianceId": 3672
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Auto Report Battery Time",
+			"description": "Units of 30 minute",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the button three times within 1.5 seconds.",
+		"exclusion": "Press the button three times within 1.5 seconds.",
+		"reset": "1. Press the button four times within 1.5 seconds and hold on the fourth press\n2. After 3 seconds, release the button within 2 seconds",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3672/PSG04_UserManual-V1.pdf"
+	}
+}

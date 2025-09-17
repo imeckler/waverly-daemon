@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Mercury Corporation",
+	"manufacturerId": "0x022d",
+	"label": "MC03-611ZM",
+	"description": "IoT Home Manager Hub(LTE Type)",
+	"devices": [
+		{
+			"productType": "0x0100",
+			"productId": "0x0301",
+			"zwaveAllianceId": 2503
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "Press the reset button until all LEDs are off, then the device will automatically reboot",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2503/IoThubLTE_forMarketCerti_Manual_20170628.pdf"
+	}
+}

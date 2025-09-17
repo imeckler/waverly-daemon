@@ -1,0 +1,21 @@
+{
+	"manufacturer": "AdTrustMedia LLC dba: eZLO",
+	"manufacturerId": "0x025b",
+	"label": "ZL-100",
+	"description": "Worlds Smallest Hub",
+	"devices": [
+		{
+			"productType": "0x0002",
+			"productId": "0x0001",
+			"zwaveAllianceId": [3073, 3823, 3843, 3848, 3868]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "1. Click the gear icon on the left sidebar.\n2. Click Reset hub to default.\n3. Click Yes when prompted to confirm, or No if you decide not to reset the ZL-100.\n4. If you confirm the ZL-100 reset request, it returns to its default settings.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3868/New%20Ezlo%20PlugHub%20Product%20Manual%20(1)%20(1).pdf"
+	}
+}

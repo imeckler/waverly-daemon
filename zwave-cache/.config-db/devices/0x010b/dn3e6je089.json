@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Sharp",
+	"manufacturerId": "0x010b",
+	"label": "IoT Gateway",
+	"description": "IoT Gateway",
+	"devices": [
+		{
+			"productType": "0x4561",
+			"productId": "0x0089",
+			"zwaveAllianceId": 2999
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "1. Tap the Setting button in the mobile application.\n2. Select \"Reset\" and press 'RESET' button in Factory Default Reset dialog.\n3. All LEDs will blink when reset is complete.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2999/UsersGuide_20180627.pdf"
+	}
+}

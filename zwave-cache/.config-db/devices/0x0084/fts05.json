@@ -1,0 +1,53 @@
+{
+	"manufacturer": "FortrezZ LLC",
+	"manufacturerId": "0x0084",
+	"label": "FTS05",
+	"description": "Flood & Temperature Sensor",
+	"devices": [
+		{
+			"productType": "0x0073",
+			"productId": "0x020b",
+			"zwaveAllianceId": 2524
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Temperature Low Threshold",
+			"description": "-10 deg to 69 deg c",
+			"valueSize": 1,
+			"minValue": -10,
+			"maxValue": 69,
+			"defaultValue": 4
+		},
+		{
+			"#": "2",
+			"label": "Temperature High Threshold",
+			"description": "-9 deg to 70 deg c",
+			"valueSize": 1,
+			"minValue": -9,
+			"maxValue": 70,
+			"defaultValue": 70
+		},
+		{
+			"#": "4",
+			"label": "Water Alarm Association Mode",
+			"description": "240 or 0",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 240,
+			"defaultValue": 240,
+			"unsigned": true
+		}
+	],
+	"metadata": {
+		"inclusion": "Briefly press the switch once. The LED will blink 2 quick blinks when complete.",
+		"exclusion": "Press and hold the switch for approximately 2 seconds, then release. The LED will blink 4 quick blinks when complete.",
+		"reset": "Press and hold the program button for longer than 15 seconds. The LED will flash approximately 30 times when complete.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2524/FTS05-usermanual.pdf"
+	}
+}

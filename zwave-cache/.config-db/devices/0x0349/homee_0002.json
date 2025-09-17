@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Codeatelier GmbH",
+	"manufacturerId": "0x0349",
+	"label": "HOMEE–0002",
+	"description": "Homee Z-Wave Cube",
+	"devices": [
+		{
+			"productType": "0x0013",
+			"productId": "0x3700",
+			"zwaveAllianceId": 3133
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "1. Open the homee settings (homee icon > gear icon)\n2. Navigate to [Cubes] > [Z-Wave]\n3. Select [Reset Cube] and confirm\n\nNote: This resets only the Z-Wave cube. Connected devices must be reset manually according to their manuals",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3133/homee-anleitung.pdf"
+	}
+}

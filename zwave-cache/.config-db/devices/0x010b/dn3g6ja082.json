@@ -1,0 +1,43 @@
+{
+	"manufacturer": "Sharp",
+	"manufacturerId": "0x010b",
+	"label": "DN3G6JA082",
+	"description": "Open/Close Sensor",
+	"devices": [
+		{
+			"productType": "0x4761",
+			"productId": "0x0082",
+			"zwaveAllianceId": 2979
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "2",
+			"label": "Enable Switch",
+			"description": "Enable switch of \"alarm notification\" report",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Open/Close off",
+					"value": 0
+				},
+				{
+					"label": "Open/Close on",
+					"value": 1
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Insert a CR123A battery and LED blinks.\n2. Press the button for over 3 seconds and release.\n3. LED turns off when completed.",
+		"exclusion": "1. Press the button for over 3 seconds and release.\n2. LED blinks when completed.",
+		"reset": "Press the button for more than 10 seconds and release.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2979/UsersGuide%20DN3G6JA082%20rev1.pdf"
+	}
+}

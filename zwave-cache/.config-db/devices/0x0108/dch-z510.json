@@ -1,0 +1,57 @@
+{
+	"manufacturer": "D-Link",
+	"manufacturerId": "0x0108",
+	"label": "DCH-Z510",
+	"description": "Siren",
+	"devices": [
+		{
+			"productType": "0x0004",
+			"productId": "0x000a",
+			"zwaveAllianceId": 1262
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "29",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Alarm",
+			"defaultValue": 0
+		},
+		{
+			"#": "31",
+			"label": "Alarm Duration",
+			"description": "Play alarm sound duration, 1 tick is 30 seconds. 0 means never auto stop.",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 0
+		},
+		{
+			"#": "7",
+			"label": "Customer Function",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Notification Report",
+					"value": 0
+				},
+				{
+					"label": "Binary Sensor Report",
+					"value": 16
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the tamper key three times within 1.5 seconds. The LED will light for 1 second.",
+		"exclusion": "Press the tamper key three times within 1.5 seconds.",
+		"reset": "1. Press the tamper key four times within 1.5 seconds and hold on the fourth press until the LED lights up.\n2. After 3 seconds the LED will turn off.\n3. Release the tamper key within 2 seconds. The LED will light for 1 second if successful or flash once if unsuccessful.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1262/DCH-Z510_Manual.pdf"
+	}
+}

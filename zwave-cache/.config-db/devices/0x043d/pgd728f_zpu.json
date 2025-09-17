@@ -1,0 +1,40 @@
+{
+	"manufacturer": "Lockly",
+	"manufacturerId": "0x043d",
+	"label": "PGD728F ZPU",
+	"description": "Smart Lock - Secure Plus",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0001",
+			"zwaveAllianceId": [
+				4689,
+				4712
+			]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Fingerprint Module",
+			"defaultValue": 0
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Remove the battery compartment cover\n2. Press the Program button to enter programming mode\n3. Select '2HB' to enter hub action menu\n4. Select 'AD' and wait for inclusion to complete",
+		"exclusion": "1. Press the Program button to enter programming mode\n2. Select '2HB' to enter hub action menu\n3. Select 'DE' and wait for exclusion to complete",
+		"reset": "Press and hold the reset button for at least 3 seconds. Make sure the doorlock is not synced to a smartphone before resetting."
+	}
+}

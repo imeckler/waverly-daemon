@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Zooz",
+	"manufacturerId": "0x027a",
+	"label": "ZSE02",
+	"description": "Motion Sensor",
+	"devices": [
+		{
+			"productType": "0x0500",
+			"productId": "0x0003",
+			"zwaveAllianceId": 1743
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press and release the Z-Wave button twice quickly (to lock and unlock it).",
+		"exclusion": "Press and release the Z-Wave button twice quickly (to lock and unlock it).",
+		"reset": "Press the Z-Wave button 6 times quickly (3 lock-unlock cycles).",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1743/zooz-z-wave-motion-sensor-zse02-manual.pdf"
+	}
+}

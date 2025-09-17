@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Willis Electric Co., Ltd.",
+	"manufacturerId": "0x015d",
+	"label": "ZW1502",
+	"description": "2 Outlet Power Strip",
+	"devices": [
+		{
+			"productType": "0x0621",
+			"productId": "0xf21c",
+			"zwaveAllianceId": 1597
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press up and release the toggle.",
+		"exclusion": "Press up and release the toggle.",
+		"reset": "Press and hold the top button for at least 3 seconds while plugging the smart switch into a receptacle.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1597/ZW1502-Manual0130.pdf"
+	}
+}

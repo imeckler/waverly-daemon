@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Vision Security",
+	"manufacturerId": "0x0109",
+	"label": "ZA1011EU-5",
+	"description": "Z-Wave Gateway",
+	"devices": [
+		{
+			"productType": "0x1005",
+			"productId": "0x0501",
+			"zwaveAllianceId": 3417
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "1. Select the 'Reset Locally' button.\n2. Confirm the dialog.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3417/ZA1011EU-5_UserManual.pdf"
+	}
+}

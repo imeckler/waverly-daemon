@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Climax Technology, Ltd.",
+	"manufacturerId": "0x018e",
+	"label": "IR-16ZW",
+	"description": "Z-Wave Motion Sensor",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0002",
+			"zwaveAllianceId": [1313, 2076]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "1. Pull out the battery insulator\n2. The LED will flash for 30 seconds while the PIR warms up\n3. After the LED turns off, press the Function Button 3 times within 1.5 seconds\n4. Press and release the Tamper Switch once after inclusion",
+		"exclusion": "Press the Function Button 3 times within 1.5 seconds. The device will be removed from the Z-Wave network.",
+		"reset": "Press and hold the Function Button for 12 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2076/IR-16SLZW_IRP-16SLZW_20161109.doc"
+	}
+}

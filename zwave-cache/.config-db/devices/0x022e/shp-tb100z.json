@@ -1,0 +1,30 @@
+{
+	"manufacturer": "Samsung SDS",
+	"manufacturerId": "0x022e",
+	"label": "SHP-TB100Z",
+	"description": "SMART BUTTON",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0003",
+			"zwaveAllianceId": 1366
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Group 1",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"metadata": {
+		"inclusion": "Press the function button once. The LED will blink 3 times if successful.",
+		"exclusion": "Press the function button 3 times quickly. The LED will blink 5 times if successful.",
+		"reset": "Press and hold the function button for 10 seconds. The LED will blink once if successful.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1366/[CEF17853]%20SHP-TB100Z%20Manual_fn.pdf"
+	}
+}

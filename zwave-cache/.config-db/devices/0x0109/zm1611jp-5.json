@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Vision Security",
+	"manufacturerId": "0x0109",
+	"label": "ZM1611JP-5",
+	"description": "U-Bell",
+	"devices": [
+		{
+			"productType": "0x2005",
+			"productId": "0x05a0",
+			"zwaveAllianceId": 3572
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press and hold the program switch for at least 3 seconds. The LED should go off after successful inclusion or flash if not included.",
+		"exclusion": "Press and hold the program switch for at least 3 seconds. The LED will flash after exclusion.",
+		"reset": "Press and hold the program switch for at least 5 seconds, power on until the LED turns on, then release the switch.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3572/ZM1611-5%20USER%20MANUAL.pdf"
+	}
+}

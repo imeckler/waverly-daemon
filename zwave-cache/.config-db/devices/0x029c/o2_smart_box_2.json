@@ -1,0 +1,30 @@
+{
+	"manufacturer": "SoftAtHome",
+	"manufacturerId": "0x029c",
+	"label": "O2",
+	"description": "O2 Smart Box 2",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0002",
+			"zwaveAllianceId": 4476
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 3,
+			"isLifeline": true
+		}
+	},
+	"metadata": {
+		"inclusion": "In the Add new device section of the O2 Smart Box smartphone app, select the device type to activate inclusion mode.",
+		"exclusion": "In the device details of the O2 Smart Box smartphone app, select \"Unpair device\" to enter exclusion mode and follow the displayed instructions.",
+		"reset": "Select Factory Reset from the Advanced drop-down menu in the WebUI or from the settings section in the O2 Smart Box app.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4476/sb2_manual%20(1).pdf"
+	}
+}

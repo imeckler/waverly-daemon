@@ -1,0 +1,23 @@
+{
+	"manufacturer": "NYSEARCH",
+	"manufacturerId": "0x038e",
+	"label": "TFW-01",
+	"description": "NortheastGas Association Wireless Methane Gas Detector",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0001",
+			"zwaveAllianceId": 2995
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press and hold the inclusion/exclusion button on the side of the detector for at least 5 seconds. The blue light will begin to flash during pairing and turn solid when inclusion is complete.",
+		"exclusion": "Press and hold the inclusion/exclusion button on the side of the detector for at least 5 seconds. The blue light will begin to flash and go out when the device is removed.",
+		"reset": "This device will perform a factory reset when the exclusion process is followed.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2995/Wireless%20Detector%20Manual%20Rev%20H.pdf"
+	}
+}

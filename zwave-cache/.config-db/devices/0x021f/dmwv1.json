@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Elexa Consumer Products Inc.",
+	"manufacturerId": "0x021f",
+	"label": "DMWV1",
+	"description": "Dome Water Main Shut Off",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0002",
+			"zwaveAllianceId": 2158
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press the open/close button quickly 3 times in a row. The LED will stop blinking and stay on continuously upon successful inclusion.",
+		"exclusion": "Press the open/close button quickly 3 times in a row.",
+		"reset": "Press and hold the open/close button for at least 10 seconds then release. A flashing light indicates a successful factory reset.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2158/Dome%20Water%20Main%20Shut-Off%20Advanced%20Manual.pdf"
+	}
+}

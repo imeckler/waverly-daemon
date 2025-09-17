@@ -1,0 +1,63 @@
+{
+	"manufacturer": "Climax Technology, Ltd.",
+	"manufacturerId": "0x018e",
+	"label": "BX-35ZW",
+	"description": "Bellbox",
+	"devices": [
+		{
+			"productType": "0x0002",
+			"productId": "0x0011",
+			"zwaveAllianceId": 2431
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Alarm Length",
+			"description": "1 minute to 10 minutes",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 1,
+			"maxValue": 10,
+			"defaultValue": 10
+		},
+		{
+			"#": "2",
+			"label": "Alarm LED Flash",
+			"description": "0:disable, 1: enable",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 1
+		},
+		{
+			"#": "3",
+			"label": "Comfort LED",
+			"valueSize": 1,
+			"unit": "10 seconds",
+			"minValue": 0,
+			"maxValue": 250,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "4",
+			"label": "Tamper",
+			"description": "0:disable, 1: enable",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 1
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Insert two 1.5V D-Cell alkaline batteries with correct polarity\n2. The Bellbox will emit a 2-tone beep\n3. Press the Function Button 3 times within 1.5 seconds",
+		"exclusion": "Press the Function Button 3 times within 1.5 seconds. The Bellbox will be removed from the Z-Wave network.",
+		"reset": "Press and hold the Function button for 10 seconds. All LEDs will flash once.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2431/BX-35-ZW_20170508.pdf"
+	}
+}

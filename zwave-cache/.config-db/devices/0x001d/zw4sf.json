@@ -1,0 +1,46 @@
+{
+	"manufacturer": "Leviton",
+	"manufacturerId": "0x001d",
+	"label": "ZW4SF",
+	"description": "4 Speed Fan Controller",
+	"devices": [
+		{
+			"productType": "0x0038",
+			"productId": "0x0002",
+			"zwaveAllianceId": 3832
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"$import": "~/templates/master_template.json#minimum_dim_level_1-99",
+			"defaultValue": 10
+		},
+		{
+			"#": "4",
+			"$import": "~/templates/master_template.json#maximum_dim_level_0-100"
+		},
+		{
+			"#": "5",
+			"$import": "templates/leviton_template.json#preset_level"
+		},
+		{
+			"#": "6",
+			"$import": "templates/leviton_template.json#led_timeout"
+		},
+		{
+			"#": "7",
+			"$import": "templates/leviton_template.json#locator_led"
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Hold the button for 7 seconds until the status light turns amber, then release\n2. Tap the top of the paddle one time\n3. The status light will quickly flash green",
+		"exclusion": "1. Hold the button for 7 seconds until the status light turns amber, then release\n2. Tap the top of the paddle one time\n3. The status light will quickly flash green",
+		"reset": "Hold the top of the paddle for 14 seconds. The status light will quickly flash red/amber.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3832/Draft%20ZW4SF%203-25-20.pdf"
+	}
+}

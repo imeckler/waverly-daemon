@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Eaton",
+	"manufacturerId": "0x001a",
+	"label": "HOMECT",
+	"description": "Eaton's Home Automation Hub",
+	"devices": [
+		{
+			"productType": "0x0000",
+			"productId": "0x0001",
+			"zwaveAllianceId": 2637
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "1. Locate the recessed push button on the Home automation hub.\n2. Insert the paper clip and press the button down, holding for 20 seconds.\n3. Remove the paper clip and observe the LED behavior.\n4. The LED indicators alternate red and blue, then flash red in 0.5 second intervals when in AP mode.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2637/User%20manual%20and%20Quick%20Start%20Guide.pdf"
+	}
+}

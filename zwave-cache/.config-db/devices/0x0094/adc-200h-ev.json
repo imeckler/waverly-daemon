@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Alarm.com",
+	"manufacturerId": "0x0094",
+	"label": "ADC-200H-EV",
+	"description": "Interlogix Simon XT/i Radio Module",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0101",
+			"zwaveAllianceId": 1686
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "1. Enter System Programming.\n2. Select Interactive Services.\n3. Select Z-Wave.\n4. Select Add Device.\n5. Trigger a device to add it to the network.\n6. When a device is added successfully, the panel will beep.",
+		"exclusion": "1. Enter System Programming.\n2. Select Interactive Services.\n3. Select Z-Wave.\n4. Select Delete Device.\n5. Trigger a device to remove it from the network.\n6. When a device is deleted successfully and its network information is erased, the panel will beep.",
+		"reset": "1. Navigate to the Equipment page.\n2. Click the 'emPower Devices' tab.\n3. Open the 'Advanced Z-Wave Commands' menu by clicking the button below the Equipment List.\n4. Click on the 'Reset To Factory Default' button.\n5. Allow 3 minutes for the associated commands to go through and for the module to act on them.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1686/SimonXT_XTi_VoLTEModule_InstallGuide_EN_ZWVP.pdf"
+	}
+}

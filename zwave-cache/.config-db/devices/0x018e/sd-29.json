@@ -1,0 +1,28 @@
+{
+	"manufacturer": "Climax Technology, Ltd.",
+	"manufacturerId": "0x018e",
+	"label": "SD-29",
+	"description": "Smoke Detector",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0017",
+			"zwaveAllianceId": 3926
+		},
+		{
+			"productType": "0x0003",
+			"productId": "0x0018",
+			"zwaveAllianceId": 3867
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "1. Insert three 3V CR123 batteries with correct polarity\n2. The Smoke Detector will sound 2 short beeps and Red LED will flash\n3. Wait for the 1-minute warm-up period\n4. Press the Function button 3 times within 1.5 seconds\n5. The Smoke Detector will emit a 2-tone beep and LED will turn on briefly\n6. Wait for calibration to complete (indicated by 2-tone beep and Red LED turning off)",
+		"exclusion": "Press the Function button 3 times within 1.5 seconds. The Smoke Detector will be removed from the Z-wave network.",
+		"reset": "1. Remove the batteries from the Smoke Detector\n2. Press and hold the Function button\n3. While holding the Function button, re-insert the batteries and wait for 20 seconds",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3926/SD-29-AC-ZW%20series_2020713.pdf"
+	}
+}

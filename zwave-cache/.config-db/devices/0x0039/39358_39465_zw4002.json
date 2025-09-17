@@ -1,0 +1,61 @@
+{
+	"manufacturer": "Honeywell",
+	"manufacturerId": "0x0039",
+	"label": "39358 / 39465 / ZW4002",
+	"description": "In-Wall Fan Speed Control, 500S",
+	"devices": [
+		{
+			"productType": "0x4944",
+			"productId": "0x3131",
+			"zwaveAllianceId": 2725
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Group 1",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Group 2",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Double Tap",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "4",
+			"label": "Invert Switch",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Default",
+					"value": 0
+				},
+				{
+					"label": "Invert",
+					"value": 1
+				}
+			]
+		}
+	],
+	"compat": {
+		"mapBasicSet": "event"
+	},
+	"metadata": {
+		"inclusion": "Press and release the top or bottom of the fan control rocker.",
+		"exclusion": "Press and release the top or bottom of the fan control rocker.",
+		"reset": "1. Quickly press the top button 3 times\n2. Immediately press the bottom button 3 times\n3. The LED will flash ON/OFF 5 times when reset is complete",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2725/39358-HQSG-v1-para.pdf"
+	}
+}

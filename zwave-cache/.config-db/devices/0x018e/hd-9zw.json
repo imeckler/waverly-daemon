@@ -1,0 +1,38 @@
+{
+	"manufacturer": "Climax Technology, Ltd.",
+	"manufacturerId": "0x018e",
+	"label": "HD-9ZW",
+	"description": "Heat Detector",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0002",
+			"zwaveAllianceId": [1427, 1809]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Group 1",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Group 2",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Group 3",
+			"maxNodes": 5
+		}
+	},
+	"metadata": {
+		"inclusion": "1. Insert 3 AA batteries into the battery compartment with correct polarity\n2. HD-9 will emit a 2-tone beep\n3. Press the Test Button 3 times within 1.5 seconds\n4. HD-9 will emit another 2-tone beep",
+		"exclusion": "Press the Test Button 3 times within 1.5 seconds. The Heat Detector will be removed from the Z-Wave network.",
+		"reset": "1. Press and hold the Test Button\n2. While holding the Test Button, power on the Heat Detector\n3. Wait for 10 seconds to complete factory reset",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1427/HD-9ZW%2020150911.doc"
+	}
+}

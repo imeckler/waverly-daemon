@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Vera Control",
+	"manufacturerId": "0x008c",
+	"label": "VERASECURE",
+	"description": "Advanced Smart Home Security Controller",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0025",
+			"zwaveAllianceId": [2283, 3197]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "Reset to Network defaults: Press the Reset button 3 times in 6 seconds.\n\nFactory Reset: Press the Reset button 6 times in 6 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3197/QSG_Z-Wave_Overview_VeraSecure.pdf"
+	}
+}

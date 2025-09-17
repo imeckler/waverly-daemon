@@ -1,0 +1,123 @@
+{
+	"manufacturer": "Wenzhou MTLC Electric Appliances Co., Ltd.",
+	"manufacturerId": "0x011a",
+	"label": "ZW500DM",
+	"description": "In-Wall Smart Meter Dimmer Switch",
+	"devices": [
+		{
+			"productType": "0x0111",
+			"productId": "0x0201",
+			"zwaveAllianceId": 1848
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Notifications",
+			"description": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "StatusReport",
+			"description": "Send basic report",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "PowerReport",
+			"description": "PowerReport: Send meter power report",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "LED Is On When Load Is On",
+			"description": "Synchronization of load power and LED indicator",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Power on, LED off",
+					"value": 0
+				},
+				{
+					"label": "Power on, LED on",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "8",
+			"label": "Instant Energy Autosend Interval",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "9",
+			"label": "Instant Power Autosend Interval",
+			"description": "Instant Power Autosend interval (send SENSOR_MULTILEVEL_REPORT)",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "10",
+			"label": "Accumulated Energy Autosend Interval",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "11",
+			"label": "Enable Automatic Notifications",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Not report (METER_REPORT)",
+					"value": 0
+				},
+				{
+					"label": "Send (METER_REPORT) only",
+					"value": 1
+				},
+				{
+					"label": "Send (SENSOR_MULTI_LEVEL_REPORT) only",
+					"value": 2
+				},
+				{
+					"label": "Send both",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "12",
+			"label": "Minimum Change in Wattage Triggering Report",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 10,
+			"unsigned": true
+		}
+	],
+	"metadata": {
+		"inclusion": "Flick the paddle 3 times within 1.5 seconds.",
+		"exclusion": "Flick the paddle 3 times within 1.5 seconds. LED will blink when the module is powered.",
+		"reset": "1. Flick the program button 3 times within 1.5 seconds\n2. Press once and hold for 2 seconds",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1848/ZW500DM-CC%202016%205.19.pdf"
+	}
+}

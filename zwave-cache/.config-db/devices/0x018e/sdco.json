@@ -1,0 +1,32 @@
+{
+	"manufacturer": "Climax Technology, Ltd.",
+	"manufacturerId": "0x018e",
+	"label": "SDCO",
+	"description": "Smoke and Carbon Monoxide Detector",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0014",
+			"zwaveAllianceId": 3724
+		},
+		{
+			"productType": "0x0003",
+			"productId": "0x0015",
+			"zwaveAllianceId": 3670
+		},
+		{
+			"productType": "0x0003",
+			"productId": "0x001a"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "1. Press down on the red tab and insert three new batteries with the red tab in horizontal position\n2. Replace the battery compartment cover\n3. You will hear 'Welcome, Smoke Alarm and Carbon Monoxide Detector'\n4. Press the button 3 times within 1.5 seconds\n5. The SDCO will emit a 2-tone beep",
+		"exclusion": "Press the button 3 times within 1.5 seconds. The SDCO will be removed from the Z-Wave network.",
+		"reset": "Press and hold the button for 20 seconds. Release when you hear 3 beeps.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3724/SDCO-1-RhTH-SC-Batt-ZW_191127.pdf"
+	}
+}

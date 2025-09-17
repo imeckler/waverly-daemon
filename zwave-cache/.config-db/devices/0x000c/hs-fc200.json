@@ -1,0 +1,90 @@
+{
+	"manufacturer": "HomeSeer Technologies",
+	"manufacturerId": "0x000c",
+	"label": "HS-FC200+",
+	"description": "Scene Capable Fan Control Switch",
+	"devices": [
+		{
+			"productType": "0x0203",
+			"productId": "0x0001",
+			"zwaveAllianceId": 2957
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"$import": "templates/homeseer_template.json#led_indicator"
+		},
+		{
+			"#": "4",
+			"$import": "~/templates/master_template.json#orientation"
+		},
+		{
+			"#": "5",
+			"$import": "templates/homeseer_template.json#fan_type"
+		},
+		{
+			"#": "13",
+			"$import": "templates/homeseer_template.json#status_mode"
+		},
+		{
+			"#": "14",
+			"$import": "templates/homeseer_template.json#led_colors",
+			"label": "Default LED Color"
+		},
+		{
+			"#": "21",
+			"$import": "templates/homeseer_template.json#status_mode_choices",
+			"label": "Status Mode LED 1 Color"
+		},
+		{
+			"#": "22",
+			"$import": "templates/homeseer_template.json#status_mode_choices",
+			"label": "Status Mode LED 2 Color"
+		},
+		{
+			"#": "23",
+			"$import": "templates/homeseer_template.json#status_mode_choices",
+			"label": "Status Mode LED 3 Color"
+		},
+		{
+			"#": "24",
+			"$import": "templates/homeseer_template.json#status_mode_choices",
+			"label": "Status Mode LED 4 Color"
+		},
+		{
+			"#": "30",
+			"$import": "templates/homeseer_template.json#blink_frequency"
+		},
+		{
+			"#": "31[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Enable / Disable Blinking - LED 1"
+		},
+		{
+			"#": "31[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Enable / Disable Blinking - LED 2"
+		},
+		{
+			"#": "31[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Enable / Disable Blinking - LED 3"
+		},
+		{
+			"#": "31[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Enable / Disable Blinking - LED 4"
+		}
+	],
+	"metadata": {
+		"inclusion": "Tap the top of the paddle once to turn the switch on. Tap the top of the paddle three times.",
+		"exclusion": "Tap the top of the paddle once to turn the switch on. Tap the top of the paddle three times.",
+		"reset": "Turn the switch on by tapping the top of the paddle once. Quickly tap the top of the paddle three times, then quickly tap the bottom of the paddle three times.",
+		"manual": "https://homeseer.com/guides/HS-FC200-Manual.pdf"
+	}
+}

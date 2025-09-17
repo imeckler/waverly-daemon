@@ -1,0 +1,29 @@
+{
+	"manufacturer": "Schneider Electric",
+	"manufacturerId": "0x0447",
+	"label": "SQR62101WHZ",
+	"description": "Z-Wave Plug-In",
+	"devices": [
+		{
+			"productType": "0x0111",
+			"productId": "0x1101",
+			"zwaveAllianceId": 3922
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/templates/master_template.json#led_indicator_two_options"
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the program button 3 times within 1.5s (the interval between each press is less than 0.5s).",
+		"exclusion": "Press the program button 3 times within 1.5s (the interval between each press is less than 0.5s).",
+		"reset": "1. Press the program button 3 times quickly\n2. Press and hold the program button for more than 10 seconds",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3922/GDE77980%20Z-Wave%20plug%20user%20manual_English%20version.pdf"
+	}
+}

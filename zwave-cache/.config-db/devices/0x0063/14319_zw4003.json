@@ -1,0 +1,48 @@
+{
+	"manufacturer": "Jasco",
+	"manufacturerId": "0x0063",
+	"label": "14319 / ZW4003",
+	"description": "In-Wall Toggle Switch, 500S",
+	"devices": [
+		{
+			"productType": "0x4952",
+			"productId": "0x3131",
+			"zwaveAllianceId": [1840, 2539]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Local Load",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Double Tap",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "4",
+			"$import": "~/templates/master_template.json#orientation"
+		}
+	],
+	"compat": {
+		"mapBasicSet": "event"
+	},
+	"metadata": {
+		"inclusion": "Press up and release on the toggle",
+		"exclusion": "Press up and release on the toggle",
+		"reset": "Quickly press the up button 3 times, then immediately press the down button 3 times",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2539/Binder1.pdf"
+	}
+}

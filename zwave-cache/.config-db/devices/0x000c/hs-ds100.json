@@ -1,0 +1,37 @@
+{
+	"manufacturer": "HomeSeer Technologies",
+	"manufacturerId": "0x000c",
+	"label": "HS-DS100+",
+	"description": "Z-Wave Door/Window Sensor",
+	"devices": [
+		{
+			"productType": "0x0201",
+			"productId": "0x0008",
+			"zwaveAllianceId": [2148, 2958]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "14",
+			"$import": "templates/homeseer_template.json#enable_basic_set_command"
+		},
+		{
+			"#": "15",
+			"$import": "templates/homeseer_template.json#basic_set_value"
+		},
+		{
+			"#": "32",
+			"$import": "templates/homeseer_template.json#low_battery_level"
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Insert the AAA battery\n2. Triple or single short press the Z-button\n3. The LED will blink less than 5 seconds and then keep on for 3 seconds if successful",
+		"exclusion": "1. Insert the AAA battery\n2. Triple click the Z-button\n3. The LED will turn off within 1 second if successful",
+		"reset": "1. Insert the AAA battery\n2. Press and hold the Z button for more than 20 seconds\n3. The LED will keep on until the Z-button is released",
+		"manual": "https://docs.homeseer.com/products/hs-ds100-user-guide"
+	}
+}

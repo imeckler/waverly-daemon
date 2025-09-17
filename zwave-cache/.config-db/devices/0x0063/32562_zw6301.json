@@ -1,0 +1,29 @@
+{
+	"manufacturer": "Jasco",
+	"manufacturerId": "0x0063",
+	"label": "32562 / ZW6301",
+	"description": "Hinge PIN Door Sensor, 500S",
+	"devices": [
+		{
+			"productType": "0x4953",
+			"productId": "0x3031",
+			"zwaveAllianceId": 1795
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "20",
+			"$import": "templates/jasco_template.json#report_method"
+		}
+	],
+	"metadata": {
+		"inclusion": "Press and release the program button on the device.",
+		"exclusion": "Press and release the program button on the device.",
+		"reset": "Press the program button 10 times within 6 seconds. The LED will blink for 3 seconds if successful.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1795/32562-1%20EnFrSp%20QSG%20-%20Combined.pdf"
+	}
+}

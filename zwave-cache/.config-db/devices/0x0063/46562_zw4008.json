@@ -1,0 +1,52 @@
+{
+	"manufacturer": "Jasco",
+	"manufacturerId": "0x0063",
+	"label": "46562 / ZW4008",
+	"description": "In-Wall Paddle Switch, QFSW, 500S",
+	"devices": [
+		{
+			"productType": "0x4952",
+			"productId": "0x3136",
+			"zwaveAllianceId": [3357, 4142]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Local Load",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Double Tap",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"$import": "~/templates/master_template.json#led_indicator_four_options"
+		},
+		{
+			"#": "19",
+			"$import": "templates/jasco_template.json#alternate_exclusion"
+		}
+	],
+	"compat": {
+		"mapBasicSet": "event"
+	},
+	"metadata": {
+		"inclusion": "Press and release the top or bottom of the smart switch (rocker).",
+		"exclusion": "Press and release the top or bottom of the smart switch (rocker).",
+		"reset": "Quickly press the top button three times then immediately press the bottom button three times. The LED will flash five times when completed successfully.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4142/46562%20EnFrSp%20QSG%20v3.pdf"
+	}
+}

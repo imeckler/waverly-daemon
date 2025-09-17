@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Vera Control",
+	"manufacturerId": "0x008c",
+	"label": "NHUB100",
+	"description": "Standard Controller",
+	"devices": [
+		{
+			"productType": "0x0037",
+			"productId": "0x0023",
+			"zwaveAllianceId": 2280
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "Press the reset button for 20 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2280/NHUB100_QSG_Z-Wave_Overwiew.pdf"
+	}
+}

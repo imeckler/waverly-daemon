@@ -1,0 +1,30 @@
+{
+	"manufacturer": "HomeSeer Technologies",
+	"manufacturerId": "0x000c",
+	"label": "HS-WV100+",
+	"description": "Valve Controller",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0002",
+			"zwaveAllianceId": 1845
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 4,
+			"isLifeline": true
+		}
+	},
+	"metadata": {
+		"inclusion": "Press the Add/Remove button on the side. The device is included when the valve responds.",
+		"exclusion": "Press the Add/Remove button on the side. The device is excluded when the valve responds.",
+		"reset": "1. Press and hold the Add/Remove button on the side for 15 seconds.\n2. The device is reset when the valve cycles.",
+		"manual": "https://docs.homeseer.com/products/hs-wv100-user-guide"
+	}
+}

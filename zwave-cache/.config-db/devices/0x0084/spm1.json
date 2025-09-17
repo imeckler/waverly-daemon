@@ -1,0 +1,23 @@
+{
+	"manufacturer": "FortrezZ LLC",
+	"manufacturerId": "0x0084",
+	"label": "SPM1",
+	"description": "Sump Pump Module",
+	"devices": [
+		{
+			"productType": "0x0093",
+			"productId": "0x0114",
+			"zwaveAllianceId": 2211
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Briefly press the switch once. The LED will blink when the inclusion completes.",
+		"exclusion": "Briefly press the switch once, then release. The LED will blink when the exclusion completes.",
+		"reset": "Press the program switch 3 times quickly.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2211/SPM1%20Manual%20v5-1.docx"
+	}
+}

@@ -1,0 +1,33 @@
+{
+	"manufacturer": "Vision Security",
+	"manufacturerId": "0x0109",
+	"label": "ZS6101",
+	"description": "Smoke Detector",
+	"devices": [
+		{
+			"productType": "0x2004",
+			"productId": "0x0403"
+		},
+		{
+			"productType": "0x2004",
+			"productId": "0x04a4",
+			"zwaveAllianceId": [1064, 1085]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Alarm Messages",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"metadata": {
+		"inclusion": "Press the program switch for at least 1 second. The LED should go off if successful.",
+		"exclusion": "Press the program switch for at least 1 second. The red LED will flash continuously if successful.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1085/ZS%206101-5_ZS6102-5%20%20Smoke%20Detector.pdf"
+	}
+}

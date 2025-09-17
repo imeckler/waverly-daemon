@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Somfy",
+	"manufacturerId": "0x0047",
+	"label": "Z2RTSEU-5",
+	"description": "Z-WAVE2RTS Interface",
+	"devices": [
+		{
+			"productType": "0x3001",
+			"productId": "0x0b01",
+			"zwaveAllianceId": [1913, 2760]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Press the Z-Wave PROG button 3 times quickly. The Z-Wave LED turns off when successful.",
+		"exclusion": "1. Power on the device\n2. Press the Z-Wave PROG button 3 times quickly\n3. The Z-Wave LED flashes when successful",
+		"reset": "1. Power off the device\n2. Press and hold the Z-Wave PROG button\n3. Power on the device and wait for 10 seconds\n4. The Z-Wave LED flashes when successful",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2760/Product%20user%20manual%20AU%20version%20v1.1.pdf"
+	}
+}

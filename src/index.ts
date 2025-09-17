@@ -57,6 +57,16 @@ process.on('SIGTERM', async () => {
 // const device = fs.existsSync('/dev/zwave') ? '/dev/zwave' : '/dev/serial/by-id/usb-Zooz_800_Z-Wave_Stick_533D004242-if00';
 const device = '/dev/zwave';
 const driver = new Driver(device, {
+  securityKeys: {
+    S2_Unauthenticated: Buffer.from('13B96916151EC4CA3D77ACC3172192DF', 'hex'),
+    S2_Authenticated: Buffer.from('A7DB49DD6B56241D0546E79C31B9F754', 'hex'),
+    S2_AccessControl: Buffer.from('518A862A10E17916E5DEC4C658C2E4DF', 'hex'),
+    S0_Legacy: Buffer.from('859944F70CA0D853C4780EDEB48B9669', 'hex'),
+  },
+  securityKeysLongRange: {
+    S2_Authenticated: Buffer.from('7132A23DCDE55F851CC9C5ECE94BA129', 'hex'),
+    S2_AccessControl: Buffer.from('01D29357F3D6C7EBBA5C201588D49EB8', 'hex'),
+  },
   storage: {
     cacheDir: './zwave-cache'
   }

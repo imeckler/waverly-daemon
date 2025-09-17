@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Willis Electric Co., Ltd.",
+	"manufacturerId": "0x015d",
+	"label": "ZEN21",
+	"description": "Zooz Z-Wave On / Off Light Switch",
+	"devices": [
+		{
+			"productType": "0x0111",
+			"productId": "0x231c",
+			"zwaveAllianceId": 1945
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Tap the switch on and off quickly 3 times.",
+		"exclusion": "Tap the switch on and off quickly 3 times.",
+		"reset": "Exclude the device from the network to reset it to factory defaults.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1945/zooz-z-wave-plus-on-off-switch-zen21-manual.pdf"
+	}
+}

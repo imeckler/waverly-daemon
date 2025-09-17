@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Alarm.com",
+	"manufacturerId": "0x0094",
+	"label": "HT-138S",
+	"description": "xDSL / GFAST GW",
+	"devices": [
+		{
+			"productType": "0x0012",
+			"productId": "0x0112",
+			"zwaveAllianceId": 3298
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "1. Visit the Alarm.com dealer site.\n2. Navigate to the Equipment page.\n3. Click the emPower Devices tab.\n4. Open the Advanced Z-Wave Commands menu below the Equipment List.\n5. Click Add Z-Wave Devices.\n6. Trigger a device to add it to the network.",
+		"exclusion": "1. Visit the Alarm.com dealer site.\n2. Navigate to the Equipment page.\n3. Click the emPower Devices tab.\n4. Open the Advanced Z-Wave Commands menu below the Equipment List.\n5. Click Remove Z-Wave Devices.\n6. Trigger a device to remove it from the network.",
+		"reset": "1. Log into the Partner Portal at https://alarmadmin.alarm.com/default.aspx and select a customer.\n2. Navigate to the 'Equipment' page.\n3. Click the 'emPower Devices' tab.\n4. Expand the 'Advanced Z-Wave Commands' box.\n5. Click the 'Remove All Z-Wave Devices' button.\n6. Allow 3 minutes for the associated commands to go through and for the device to act on them.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3298/Alarm.com%20Gateway-Supplemental%20Z-WaveDocumentation%20V5%20-%20Bezeq.pdf"
+	}
+}

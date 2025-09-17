@@ -1,0 +1,92 @@
+{
+	"manufacturer": "Philio Technology Corp",
+	"manufacturerId": "0x013c",
+	"label": "PAD15",
+	"description": "2 Wire Dimmer",
+	"devices": [
+		{
+			"productType": "0x0005",
+			"productId": "0x007e",
+			"zwaveAllianceId": [4209, 4216, 4217, 4248, 4256, 4257, 4261, 4264, 4268]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Switch Set",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Enable S1",
+					"value": 0
+				},
+				{
+					"label": "Enable S1 & S2",
+					"value": 1
+				},
+				{
+					"label": "Dimmer up/down",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "2",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_prev_on"
+		},
+		{
+			"#": "3",
+			"label": "Send Multilevel Switch Reports",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "Enable",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "4",
+			"label": "Maximum Level",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 99,
+			"defaultValue": 99
+		},
+		{
+			"#": "5",
+			"label": "Minimum Level",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 98,
+			"defaultValue": 0
+		},
+		{
+			"#": "6",
+			"label": "Basic Duration Set",
+			"valueSize": 1,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 2
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the include button three times within 3 seconds.",
+		"exclusion": "Press the include button three times within 3 seconds.",
+		"reset": "1. Press the include button four times within 3 seconds and hold on the fourth press\n2. Keep pressing for 3 seconds until the LED turns off\n3. Release the button within 2 seconds",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/4209/PAD15_UserManual_V3.pdf"
+	}
+}

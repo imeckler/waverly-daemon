@@ -1,0 +1,35 @@
+{
+	"manufacturer": "LG U+",
+	"manufacturerId": "0x022c",
+	"label": "OSR-01",
+	"description": "Open Sensor",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0001",
+			"zwaveAllianceId": [1382, 1608]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Battery Report Period",
+			"valueSize": 1,
+			"unit": "15 minutes",
+			"minValue": 1,
+			"maxValue": 255,
+			"defaultValue": 24,
+			"unsigned": true
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Press and hold the Inclusion/Exclusion button for 5 seconds.\n2. The LED will turn on after 5 seconds.\n3. Release the button to start inclusion for 30 seconds.\n4. The LED will blink 3 times if inclusion is successful.",
+		"exclusion": "1. Press and hold the Inclusion/Exclusion button for 5 seconds.\n2. The LED will turn on after 5 seconds.\n3. Release the button to start exclusion.\n4. The LED will blink 3 times if exclusion is successful.",
+		"reset": "1. Press and hold the Inclusion/Exclusion button for 10 seconds.\n2. The LED will blink while holding the button.\n3. Release the button to start factory reset.\n4. The LED will blink 5 times when reset is complete.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1382/Open_Sensor_Manual.docx"
+	}
+}

@@ -1,0 +1,39 @@
+{
+	"manufacturer": "SafeTech Products",
+	"manufacturerId": "0x023c",
+	"label": "QBBIOZW",
+	"description": "Quickbox - Home Edition",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0001",
+			"zwaveAllianceId": 1347
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Group 1",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Group 2",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"3": {
+			"label": "Group 3",
+			"maxNodes": 5
+		}
+	},
+	"metadata": {
+		"inclusion": "Push the Z-Wave button on The Quickbox.",
+		"exclusion": "Push the Z-Wave button on The Quickbox.",
+		"reset": "Hold the Z-Wave button for 5 seconds.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1347/Quickbox%20Quickstart%20Guide.pdf"
+	}
+}

@@ -1,0 +1,43 @@
+{
+	"manufacturer": "Sharp",
+	"manufacturerId": "0x010b",
+	"label": "DN3G6JA084",
+	"description": "Motion Detect Sensor",
+	"devices": [
+		{
+			"productType": "0x4761",
+			"productId": "0x0084",
+			"zwaveAllianceId": 2980
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "2",
+			"label": "Enable Switch",
+			"description": "Enable switch of \"alarm notification\" report",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Motion detect off",
+					"value": 0
+				},
+				{
+					"label": "Motion detect on",
+					"value": 1
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Insert a CR123A battery and LED blinks.\n2. Press the button for over 3 seconds and release.\n3. LED turns off when completed.",
+		"exclusion": "1. Press the button for over 3 seconds and release.\n2. LED blinks when completed.",
+		"reset": "Press the button for more than 10 seconds and release.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2980/UsersGuide%20DN3G6JA084%20rev1.pdf"
+	}
+}

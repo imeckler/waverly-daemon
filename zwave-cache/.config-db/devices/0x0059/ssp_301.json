@@ -1,0 +1,51 @@
+{
+	"manufacturer": "Secure Meters (UK) Ltd.",
+	"manufacturerId": "0x0059",
+	"label": "SSP 301",
+	"description": "SSP",
+	"devices": [
+		{
+			"productType": "0x000e",
+			"productId": "0x0001",
+			"zwaveAllianceId": [1174, 1253]
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Delta Based Switch Status Reporting",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 1,
+			"unsigned": true
+		},
+		{
+			"#": "2",
+			"label": "Time Interval Based Switch Status Reporting",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0
+		},
+		{
+			"#": "3",
+			"label": "LED Configuration",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		}
+	],
+	"metadata": {
+		"inclusion": "Press and hold the button for 4 to 7 seconds, then release (LED flashes twice per second during process, turns off when successful).",
+		"exclusion": "Press and hold the button for 4 to 7 seconds, then release (LED flashes once per second when successful).",
+		"reset": "Power cycle the device, then press and hold the button for 7-11 seconds within 60 seconds of power cycle.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1174/SSP%20301%20resize%20for%20web%20final.pdf"
+	}
+}

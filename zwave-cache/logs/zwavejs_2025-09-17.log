@@ -1,0 +1,1414 @@
+2025-09-17 02:13:52.009 DRIVER   ███████╗        ██╗    ██╗  █████╗  ██╗   ██╗ ███████╗          ██╗ ███████╗
+                                 ╚══███╔╝        ██║    ██║ ██╔══██╗ ██║   ██║ ██╔════╝          ██║ ██╔════╝
+                                   ███╔╝  █████╗ ██║ █╗ ██║ ███████║ ██║   ██║ █████╗            ██║ ███████╗
+                                  ███╔╝   ╚════╝ ██║███╗██║ ██╔══██║ ╚██╗ ██╔╝ ██╔══╝       ██   ██║ ╚════██║
+                                 ███████╗        ╚███╔███╔╝ ██║  ██║  ╚████╔╝  ███████╗     ╚█████╔╝ ███████║
+                                 ╚══════╝         ╚══╝╚══╝  ╚═╝  ╚═╝   ╚═══╝   ╚══════╝      ╚════╝  ╚══════╝
+2025-09-17 02:13:52.013 DRIVER   version 15.8.0
+2025-09-17 02:13:52.013 DRIVER   
+2025-09-17 02:13:52.014 DRIVER   starting driver...
+2025-09-17 02:13:52.014 DRIVER   opening serial port /dev/zwave
+2025-09-17 02:13:52.277 DRIVER   serial port opened
+2025-09-17 02:13:52.282 SERIAL » 0x15                                                                 (1 bytes)
+2025-09-17 02:13:53.285 DRIVER   loading configuration...
+2025-09-17 02:13:53.293 CONFIG   Using external configuration dir /usr/src/app/store/.config-db
+2025-09-17 02:13:53.295 CONFIG   version 15.8.0
+2025-09-17 02:13:53.564 DRIVER   beginning interview...
+2025-09-17 02:13:53.565 DRIVER   added request handler for SetLearnMode (0x50)...
+                                 1 registered
+2025-09-17 02:13:53.567 CNTRLR   querying Serial API capabilities...
+2025-09-17 02:13:53.629 DRIVER » [REQ] [GetSerialApiCapabilities]
+2025-09-17 02:13:53.630 SERIAL » 0x01030007fb                                                         (5 bytes)
+2025-09-17 02:13:53.635 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.639 SERIAL « 0x012b0107013c027a00040610f6873e88cf2bc05fe3d7fde0970f008000808680b (45 bytes)
+                                 a0d00700000ee7fc000000018
+2025-09-17 02:13:53.643 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.644 DRIVER « [RES] [GetSerialApiCapabilities]
+2025-09-17 02:13:53.645 CNTRLR   received API capabilities:
+                                   firmware version:    1.60
+                                   manufacturer ID:     0x027a
+                                   product type:        0x04
+                                   product ID:          0x0610
+                                   supported functions: 
+                                   · GetSerialApiInitData (0x02)
+                                   · SetApplicationNodeInformation (0x03)
+                                   · GetControllerCapabilities (0x05)
+                                   · SetSerialApiTimeouts (0x06)
+                                   · GetSerialApiCapabilities (0x07)
+                                   · SoftReset (0x08)
+                                   · GetProtocolVersion (0x09)
+                                   · SerialAPIStarted (0x0a)
+                                   · SerialAPISetup (0x0b)
+                                   · SetRFReceiveMode (0x10)
+                                   · SendNodeInformation (0x12)
+                                   · SendData (0x13)
+                                   · SendDataMulticast (0x14)
+                                   · GetControllerVersion (0x15)
+                                   · SendDataAbort (0x16)
+                                   · FUNC_ID_ZW_GET_RANDOM (0x1c)
+                                   · GetControllerId (0x20)
+                                   · UNKNOWN_FUNC_MEMORY_GET_BYTE (0x21)
+                                   · UNKNOWN_FUNC_MEMORY_PUT_BYTE (0x22)
+                                   · UNKNOWN_FUNC_MEMORY_GET_BUFFER (0x23)
+                                   · UNKNOWN_FUNC_MEMORY_PUT_BUFFER (0x24)
+                                   · EnterBootloader (0x27)
+                                   · UNKNOWN_FUNC_UNKNOWN_0x28 (0x28)
+                                   · GetNVMId (0x29)
+                                   · ExtNVMReadLongBuffer (0x2a)
+                                   · ExtNVMReadLongByte (0x2c)
+                                   · NVMOperations (0x2e)
+                                   · ClearTxTimers (0x37)
+                                   · GetTxTimers (0x38)
+                                   · ClearNetworkStats (0x39)
+                                   · GetNetworkStats (0x3a)
+                                   · GetBackgroundRSSI (0x3b)
+                                   · SetListenBeforeTalkThreshold (0x3c)
+                                   · ExtendedNVMOperations (0x3d)
+                                   · RemoveSpecificNodeIdFromNetwork (0x3f)
+                                   · GetNodeProtocolInfo (0x41)
+                                   · HardReset (0x42)
+                                   · AssignReturnRoute (0x46)
+                                   · DeleteReturnRoute (0x47)
+                                   · RequestNodeNeighborUpdate (0x48)
+                                   · ApplicationUpdateRequest (0x49)
+                                   · AddNodeToNetwork (0x4a)
+                                   · RemoveNodeFromNetwork (0x4b)
+                                   · AddPrimaryController (0x4d)
+                                   · AssignPriorityReturnRoute (0x4f)
+                                   · SetLearnMode (0x50)
+                                   · AssignSUCReturnRoute (0x51)
+                                   · RequestNetworkUpdate (0x53)
+                                   · SetSUCNodeId (0x54)
+                                   · DeleteSUCReturnRoute (0x55)
+                                   · GetSUCNodeId (0x56)
+                                   · SendSUCNodeId (0x57)
+                                   · AssignPrioritySUCReturnRoute (0x58)
+                                   · ExploreRequestInclusion (0x5e)
+                                   · ExploreRequestExclusion (0x5f)
+                                   · RequestNodeInfo (0x60)
+                                   · RemoveFailedNode (0x61)
+                                   · IsFailedNode (0x62)
+                                   · ReplaceFailedNode (0x63)
+                                   · undefined (0x65)
+                                   · RequestProtocolCCEncryption (0x68)
+                                   · undefined (0x69)
+                                   · undefined (0x6a)
+                                   · undefined (0x6b)
+                                   · undefined (0x6c)
+                                   · GetRoutingInfo (0x80)
+                                   · LockUnlockLastRoute (0x90)
+                                   · GetPriorityRoute (0x92)
+                                   · SetPriorityRoute (0x93)
+                                   · UNKNOWN_FUNC_UNKNOWN_0x98 (0x98)
+                                   · VirtualNodeSetNodeInfo (0xa0)
+                                   · VirtualNodeSendNodeInfo (0xa2)
+                                   · VirtualNodeSetLearnMode (0xa4)
+                                   · GetVirtualNodes (0xa5)
+                                   · IsVirtualNode (0xa6)
+                                   · BridgeApplicationCommand (0xa8)
+                                   · SendDataBridge (0xa9)
+                                   · SendDataMulticastBridge (0xab)
+                                   · undefined (0xac)
+                                   · GetLibrary (0xbd)
+                                   · SendTestFrame (0xbe)
+                                   · GetProtocolStatus (0xbf)
+                                   · StartWatchdog (0xd2)
+                                   · StopWatchdog (0xd3)
+                                   · SetMaximumRoutingAttempts (0xd4)
+                                   · SetMaxSmartStartInclusionRequestInterval (0xd6)
+                                   · undefined (0xd7)
+                                   · undefined (0xd8)
+                                   · Shutdown (0xd9)
+                                   · GetLongRangeNodes (0xda)
+                                   · GetLongRangeChannel (0xdb)
+                                   · SetLongRangeChannel (0xdc)
+                                   · SetLongRangeShadowNodeIDs (0xdd)
+                                   · Proprietary_DE (0xde)
+                                   · Proprietary_DF (0xdf)
+                                   · Proprietary_E7 (0xe7)
+                                   · Proprietary_E8 (0xe8)
+2025-09-17 02:13:53.647 CNTRLR   querying additional controller information...
+2025-09-17 02:13:53.648 DRIVER » [REQ] [GetSerialApiInitData]
+2025-09-17 02:13:53.648 SERIAL » 0x01030002fe                                                         (5 bytes)
+2025-09-17 02:13:53.651 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.656 SERIAL « 0x012501020a081d230000000000000000000000000000000000000000000000000 (39 bytes)
+                                 00000000800ed
+2025-09-17 02:13:53.657 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.658 DRIVER « [RES] [GetSerialApiInitData]
+2025-09-17 02:13:53.658 CNTRLR   received additional controller information:
+                                   Z-Wave API version:         1 (official)
+                                   Z-Wave chip type:           EFR32ZG23 / ZGM230S
+                                   node type                   Controller
+                                   controller role:            primary
+                                   controller is the SIS:      true
+                                   controller supports timers: false
+                                   Z-Wave Classic nodes:       1, 2, 6
+2025-09-17 02:13:53.658 CNTRLR   querying version info...
+2025-09-17 02:13:53.659 DRIVER » [REQ] [GetControllerVersion]
+2025-09-17 02:13:53.659 SERIAL » 0x01030015e9                                                         (5 bytes)
+2025-09-17 02:13:53.662 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.664 SERIAL « 0x011001155a2d5761766520372e3233000796                              (18 bytes)
+2025-09-17 02:13:53.665 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.665 DRIVER « [RES] [GetControllerVersion]
+2025-09-17 02:13:53.665 CNTRLR   received version info:
+                                   controller type: Bridge Controller
+                                   library version: Z-Wave 7.23
+2025-09-17 02:13:53.666 CNTRLR   querying protocol version info...
+2025-09-17 02:13:53.666 DRIVER » [REQ] [GetProtocolVersion]
+2025-09-17 02:13:53.666 SERIAL » 0x01030009f5                                                         (5 bytes)
+2025-09-17 02:13:53.669 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.671 SERIAL « 0x0119010900071702abcd34373837343432363466663934376539c0            (27 bytes)
+2025-09-17 02:13:53.672 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.672 DRIVER « [RES] [GetProtocolVersion]
+2025-09-17 02:13:53.673 CNTRLR   received protocol version info:
+                                   protocol type:             Z-Wave
+                                   protocol version:          7.23.2
+                                   appl. framework build no.: 43981
+                                   git commit hash:           34373837343432363466663934376539
+2025-09-17 02:13:53.673 CNTRLR   querying controller capabilities...
+2025-09-17 02:13:53.674 DRIVER » [REQ] [GetControllerCapabilities]
+2025-09-17 02:13:53.674 SERIAL » 0x01030005f9                                                         (5 bytes)
+2025-09-17 02:13:53.677 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.678 SERIAL « 0x010401051ce3                                                       (6 bytes)
+2025-09-17 02:13:53.678 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.679 DRIVER « [RES] [GetControllerCapabilities]
+2025-09-17 02:13:53.679 CNTRLR   received controller capabilities:
+                                   controller role:      Primary
+                                   is the SUC:           true
+                                   started this network: true
+                                   SIS is present:       true
+                                   was real primary:     true
+2025-09-17 02:13:53.679 CNTRLR   querying serial API setup capabilities...
+2025-09-17 02:13:53.680 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetSupportedCommands
+2025-09-17 02:13:53.680 SERIAL » 0x0104000b01f1                                                       (6 bytes)
+2025-09-17 02:13:53.683 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.686 SERIAL « 0x0116010b01ff9f80378000000080000000000000008000b5                  (24 bytes)
+2025-09-17 02:13:53.689 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.690 DRIVER « [RES] [SerialAPISetup]
+                                   command: GetSupportedCommands
+2025-09-17 02:13:53.691 CNTRLR   supported serial API setup commands:
+                                 · GetSupportedCommands
+                                 · SetTxStatusReport
+                                 · SetLongRangeMaximumTxPower
+                                 · SetPowerlevel
+                                 · GetLongRangeMaximumTxPower
+                                 · GetPowerlevel
+                                 · GetMaximumPayloadSize
+                                 · GetLongRangeMaximumPayloadSize
+                                 · SetPowerlevel16Bit
+                                 · GetPowerlevel16Bit
+                                 · GetSupportedRegions
+                                 · GetRegionInfo
+                                 · GetRFRegion
+                                 · SetRFRegion
+                                 · SetNodeIDType
+2025-09-17 02:13:53.691 CNTRLR   querying max. payload size...
+2025-09-17 02:13:53.692 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetMaximumPayloadSize
+2025-09-17 02:13:53.693 SERIAL » 0x0104000b10e0                                                       (6 bytes)
+2025-09-17 02:13:53.695 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.696 SERIAL « 0x0105010b102ece                                                     (7 bytes)
+2025-09-17 02:13:53.697 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.698 DRIVER « [RES] [SerialAPISetup]
+                                   command:              GetMaximumPayloadSize
+                                   maximum payload size: 46 bytes
+2025-09-17 02:13:53.698 CNTRLR   maximum payload size: 46 bytes
+2025-09-17 02:13:53.699 CNTRLR   supported Z-Wave features: 
+                                   · SmartStart
+2025-09-17 02:13:53.699 CNTRLR   Querying supported RF regions and their information...
+2025-09-17 02:13:53.700 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetSupportedRegions
+2025-09-17 02:13:53.701 SERIAL » 0x0104000b15e5                                                       (6 bytes)
+2025-09-17 02:13:53.703 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.706 SERIAL « 0x0111010b150c0001020305060708090b2021f2                            (19 bytes)
+2025-09-17 02:13:53.706 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.707 DRIVER « [RES] [SerialAPISetup]
+                                   command: GetSupportedRegions
+2025-09-17 02:13:53.708 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetRegionInfo
+                                   region:  Europe
+2025-09-17 02:13:53.708 SERIAL » 0x0105000b1600e7                                                     (7 bytes)
+2025-09-17 02:13:53.711 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.712 SERIAL « 0x0107010b160001fe1b                                                 (9 bytes)
+2025-09-17 02:13:53.713 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.713 DRIVER « [RES] [SerialAPISetup]
+                                   command:             GetRegionInfo
+                                   region:              Europe
+                                   supports Z-Wave:     true
+                                   supports Long Range: false
+2025-09-17 02:13:53.714 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetRegionInfo
+                                   region:  USA
+2025-09-17 02:13:53.715 SERIAL » 0x0105000b1601e6                                                     (7 bytes)
+2025-09-17 02:13:53.717 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.718 SERIAL « 0x0107010b160101fe1a                                                 (9 bytes)
+2025-09-17 02:13:53.718 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.719 DRIVER « [RES] [SerialAPISetup]
+                                   command:             GetRegionInfo
+                                   region:              USA
+                                   supports Z-Wave:     true
+                                   supports Long Range: false
+2025-09-17 02:13:53.720 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetRegionInfo
+                                   region:  Australia/New Zealand
+2025-09-17 02:13:53.720 SERIAL » 0x0105000b1602e5                                                     (7 bytes)
+2025-09-17 02:13:53.722 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.723 SERIAL « 0x0107010b160201fe19                                                 (9 bytes)
+2025-09-17 02:13:53.723 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.724 DRIVER « [RES] [SerialAPISetup]
+                                   command:             GetRegionInfo
+                                   region:              Australia/New Zealand
+                                   supports Z-Wave:     true
+                                   supports Long Range: false
+2025-09-17 02:13:53.725 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetRegionInfo
+                                   region:  Hong Kong
+2025-09-17 02:13:53.725 SERIAL » 0x0105000b1603e4                                                     (7 bytes)
+2025-09-17 02:13:53.727 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.728 SERIAL « 0x0107010b160301fe18                                                 (9 bytes)
+2025-09-17 02:13:53.728 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.729 DRIVER « [RES] [SerialAPISetup]
+                                   command:             GetRegionInfo
+                                   region:              Hong Kong
+                                   supports Z-Wave:     true
+                                   supports Long Range: false
+2025-09-17 02:13:53.729 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetRegionInfo
+                                   region:  India
+2025-09-17 02:13:53.730 SERIAL » 0x0105000b1605e2                                                     (7 bytes)
+2025-09-17 02:13:53.733 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.733 SERIAL « 0x0107010b160501fe1e                                                 (9 bytes)
+2025-09-17 02:13:53.734 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.734 DRIVER « [RES] [SerialAPISetup]
+                                   command:             GetRegionInfo
+                                   region:              India
+                                   supports Z-Wave:     true
+                                   supports Long Range: false
+2025-09-17 02:13:53.734 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetRegionInfo
+                                   region:  Israel
+2025-09-17 02:13:53.735 SERIAL » 0x0105000b1606e1                                                     (7 bytes)
+2025-09-17 02:13:53.737 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.739 SERIAL « 0x0107010b160601fe1d                                                 (9 bytes)
+2025-09-17 02:13:53.740 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.741 DRIVER « [RES] [SerialAPISetup]
+                                   command:             GetRegionInfo
+                                   region:              Israel
+                                   supports Z-Wave:     true
+                                   supports Long Range: false
+2025-09-17 02:13:53.742 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetRegionInfo
+                                   region:  Russia
+2025-09-17 02:13:53.743 SERIAL » 0x0105000b1607e0                                                     (7 bytes)
+2025-09-17 02:13:53.746 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.747 SERIAL « 0x0107010b160701fe1c                                                 (9 bytes)
+2025-09-17 02:13:53.748 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.748 DRIVER « [RES] [SerialAPISetup]
+                                   command:             GetRegionInfo
+                                   region:              Russia
+                                   supports Z-Wave:     true
+                                   supports Long Range: false
+2025-09-17 02:13:53.750 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetRegionInfo
+                                   region:  China
+2025-09-17 02:13:53.750 SERIAL » 0x0105000b1608ef                                                     (7 bytes)
+2025-09-17 02:13:53.753 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.755 SERIAL « 0x0107010b160801fe13                                                 (9 bytes)
+2025-09-17 02:13:53.756 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.757 DRIVER « [RES] [SerialAPISetup]
+                                   command:             GetRegionInfo
+                                   region:              China
+                                   supports Z-Wave:     true
+                                   supports Long Range: false
+2025-09-17 02:13:53.758 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetRegionInfo
+                                   region:  USA (Long Range)
+2025-09-17 02:13:53.759 SERIAL » 0x0105000b1609ee                                                     (7 bytes)
+2025-09-17 02:13:53.762 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.763 SERIAL « 0x0107010b16090301ef                                                 (9 bytes)
+2025-09-17 02:13:53.764 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.765 DRIVER « [RES] [SerialAPISetup]
+                                   command:             GetRegionInfo
+                                   region:              USA (Long Range)
+                                   supports Z-Wave:     true
+                                   supports Long Range: true
+                                   includes region:     USA
+2025-09-17 02:13:53.766 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetRegionInfo
+                                   region:  Europe (Long Range)
+2025-09-17 02:13:53.766 SERIAL » 0x0105000b160bec                                                     (7 bytes)
+2025-09-17 02:13:53.769 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.770 SERIAL « 0x0107010b160b0300ec                                                 (9 bytes)
+2025-09-17 02:13:53.771 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.771 DRIVER « [RES] [SerialAPISetup]
+                                   command:             GetRegionInfo
+                                   region:              Europe (Long Range)
+                                   supports Z-Wave:     true
+                                   supports Long Range: true
+                                   includes region:     Europe
+2025-09-17 02:13:53.772 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetRegionInfo
+                                   region:  Japan
+2025-09-17 02:13:53.772 SERIAL » 0x0105000b1620c7                                                     (7 bytes)
+2025-09-17 02:13:53.775 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.776 SERIAL « 0x0107010b162001fe3b                                                 (9 bytes)
+2025-09-17 02:13:53.777 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.777 DRIVER « [RES] [SerialAPISetup]
+                                   command:             GetRegionInfo
+                                   region:              Japan
+                                   supports Z-Wave:     true
+                                   supports Long Range: false
+2025-09-17 02:13:53.778 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetRegionInfo
+                                   region:  Korea
+2025-09-17 02:13:53.778 SERIAL » 0x0105000b1621c6                                                     (7 bytes)
+2025-09-17 02:13:53.780 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.781 SERIAL « 0x0107010b162101fe3a                                                 (9 bytes)
+2025-09-17 02:13:53.782 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.782 DRIVER « [RES] [SerialAPISetup]
+                                   command:             GetRegionInfo
+                                   region:              Korea
+                                   supports Z-Wave:     true
+                                   supports Long Range: false
+2025-09-17 02:13:53.782 CNTRLR   supported regions:
+                                 · Europe
+                                 · USA
+                                 · Australia/New Zealand
+                                 · Hong Kong
+                                 · India
+                                 · Israel
+                                 · Russia
+                                 · China
+                                 · USA (Long Range) · superset of USA · ZWLR
+                                 · Europe (Long Range) · superset of Europe · ZWLR
+                                 · Japan
+                                 · Korea
+2025-09-17 02:13:53.783 CNTRLR   Querying configured RF region...
+2025-09-17 02:13:53.783 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetRFRegion
+2025-09-17 02:13:53.784 SERIAL » 0x0104000b20d0                                                       (6 bytes)
+2025-09-17 02:13:53.786 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.787 SERIAL « 0x0105010b2009d9                                                     (7 bytes)
+2025-09-17 02:13:53.787 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.788 DRIVER « [RES] [SerialAPISetup]
+                                   command: GetRFRegion
+                                   region:  USA (Long Range)
+2025-09-17 02:13:53.788 CNTRLR   The controller is using RF region USA (Long Range)
+2025-09-17 02:13:53.788 CNTRLR   Querying configured max. Long Range powerlevel...
+2025-09-17 02:13:53.789 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetLongRangeMaximumTxPower
+2025-09-17 02:13:53.789 SERIAL » 0x0104000b05f5                                                       (6 bytes)
+2025-09-17 02:13:53.792 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.792 SERIAL « 0x0106010b05008c7a                                                   (8 bytes)
+2025-09-17 02:13:53.793 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.793 DRIVER « [RES] [SerialAPISetup]
+                                   command:            GetLongRangeMaximumTxPower
+                                   max. TX power (LR): 14.0 dBm
+2025-09-17 02:13:53.794 CNTRLR   The max. LR powerlevel is 14.0 dBm
+2025-09-17 02:13:53.794 CNTRLR   Querying configured Long Range channel information...
+2025-09-17 02:13:53.795 DRIVER » [REQ] [GetLongRangeChannel]
+2025-09-17 02:13:53.795 SERIAL » 0x010300db27                                                         (5 bytes)
+2025-09-17 02:13:53.797 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.799 SERIAL « 0x010501db011031                                                     (7 bytes)
+2025-09-17 02:13:53.800 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.801 DRIVER « [RES] [GetLongRangeChannel]
+2025-09-17 02:13:53.802 CNTRLR   received Z-Wave Long Range channel information:
+                                   channel:                         A
+                                   supports auto channel selection: true
+2025-09-17 02:13:53.802 CNTRLR   Performing soft reset...
+2025-09-17 02:13:53.804 DRIVER » [REQ] [SoftReset]
+2025-09-17 02:13:53.804 SERIAL » 0x01030008f4                                                         (5 bytes)
+2025-09-17 02:13:53.807 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.808 CNTRLR   Waiting for the controller to reconnect...
+2025-09-17 02:13:53.809 DRIVER   all queues idle
+2025-09-17 02:13:53.905 SERIAL « 0x010e000a07000100000001031d0000e2                                  (16 bytes)
+2025-09-17 02:13:53.907 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.909 DRIVER « [REQ] [SerialAPIStarted]
+                                   wake up reason:        SoftwareReset
+                                   watchdog enabled:      false
+                                   generic device class:  0x00
+                                   specific device class: 0x00
+                                   always listening:      false
+                                   supports Long Range:   true
+2025-09-17 02:13:53.911 CNTRLR   reconnected and restarted
+2025-09-17 02:13:53.912 CNTRLR   Starting hardware watchdog...
+2025-09-17 02:13:53.915 CNTRLR   Switching serial API to 16-bit node IDs...
+2025-09-17 02:13:53.917 CNTRLR   querying Z-Wave Long Range capabilities...
+2025-09-17 02:13:53.921 DRIVER   one or more queues busy
+2025-09-17 02:13:53.922 DRIVER » [REQ] [StartWatchdog]
+2025-09-17 02:13:53.922 SERIAL » 0x010300d22e                                                         (5 bytes)
+2025-09-17 02:13:53.925 DRIVER » [REQ] [SerialAPISetup]
+                                   command:      SetNodeIDType
+                                   node ID type: 16 bit
+2025-09-17 02:13:53.926 SERIAL » 0x0105000b800273                                                     (7 bytes)
+2025-09-17 02:13:53.927 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.929 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.931 SERIAL « 0x0105010b800171                                                     (7 bytes)
+2025-09-17 02:13:53.933 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.934 DRIVER « [RES] [SerialAPISetup]
+                                   command: SetNodeIDType
+                                   success: true
+2025-09-17 02:13:53.935 CNTRLR   Switching to 16-bit node IDs successful
+2025-09-17 02:13:53.935 DRIVER » [REQ] [GetLongRangeNodes]
+2025-09-17 02:13:53.936 SERIAL » 0x010400da0021                                                       (6 bytes)
+2025-09-17 02:13:53.939 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.951 SERIAL « 0x018601da00008000000000000000000000000000000000000000000000000000 (136 bytes)
+                                 000000000000000000000000000000000000000000000000000000000000000000000000000000
+                                 000000000000000000000000000000000000000000000000000000000000000000000000000000
+                                 0000000000000000000000000000000000000000000000000022
+2025-09-17 02:13:53.953 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.953 DRIVER « [RES] [GetLongRangeNodes]
+2025-09-17 02:13:53.955 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetLongRangeMaximumPayloadSize
+2025-09-17 02:13:53.955 SERIAL » 0x0104000b11e1                                                       (6 bytes)
+2025-09-17 02:13:53.958 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.959 SERIAL « 0x0105010b119475                                                     (7 bytes)
+2025-09-17 02:13:53.960 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.960 DRIVER « [RES] [SerialAPISetup]
+                                   command:              GetLongRangeMaximumPayloadSize
+                                   maximum payload size: 148 bytes
+2025-09-17 02:13:53.961 CNTRLR   received Z-Wave Long Range capabilities:
+                                   max. payload size: 148 bytes
+                                   nodes:             
+2025-09-17 02:13:53.961 CNTRLR   Switching serial API to 16-bit node IDs...
+2025-09-17 02:13:53.962 DRIVER » [REQ] [SerialAPISetup]
+                                   command:      SetNodeIDType
+                                   node ID type: 16 bit
+2025-09-17 02:13:53.963 SERIAL » 0x0105000b800273                                                     (7 bytes)
+2025-09-17 02:13:53.966 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.967 SERIAL « 0x0105010b800171                                                     (7 bytes)
+2025-09-17 02:13:53.968 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.968 DRIVER « [RES] [SerialAPISetup]
+                                   command: SetNodeIDType
+                                   success: true
+2025-09-17 02:13:53.969 CNTRLR   Switching to 16-bit node IDs successful
+2025-09-17 02:13:53.969 CNTRLR   querying controller IDs...
+2025-09-17 02:13:53.971 DRIVER » [REQ] [GetControllerId]
+2025-09-17 02:13:53.971 SERIAL » 0x01030020dc                                                         (5 bytes)
+2025-09-17 02:13:53.973 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.974 SERIAL « 0x01090120fe0b4a8f0001e6                                            (11 bytes)
+2025-09-17 02:13:53.975 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.976 DRIVER « [RES] [GetControllerId]
+                                   home ID:     0xfe0b4a8f
+                                   own node ID: 1
+2025-09-17 02:13:53.976 CNTRLR   received controller IDs:
+                                   home ID:     0xfe0b4a8f
+                                   own node ID: 1
+2025-09-17 02:13:53.976 CNTRLR   Enabling TX status report...
+2025-09-17 02:13:53.977 DRIVER » [REQ] [SerialAPISetup]
+                                   command: SetTxStatusReport
+                                   enabled: true
+2025-09-17 02:13:53.977 SERIAL » 0x0105000b02ff0c                                                     (7 bytes)
+2025-09-17 02:13:53.979 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.980 SERIAL « 0x0105010b0201f3                                                     (7 bytes)
+2025-09-17 02:13:53.981 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.981 DRIVER « [RES] [SerialAPISetup]
+                                   command: SetTxStatusReport
+                                   success: true
+2025-09-17 02:13:53.981 CNTRLR   Enabling TX status report successful...
+2025-09-17 02:13:53.982 CNTRLR   finding SUC...
+2025-09-17 02:13:53.982 DRIVER » [REQ] [GetSUCNodeId]
+2025-09-17 02:13:53.982 SERIAL » 0x01030056aa                                                         (5 bytes)
+2025-09-17 02:13:53.984 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.985 SERIAL « 0x010501560001ac                                                     (7 bytes)
+2025-09-17 02:13:53.985 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:53.986 DRIVER « [RES] [GetSUCNodeId]
+2025-09-17 02:13:53.986 CNTRLR   This is the SUC
+2025-09-17 02:13:53.987 DRIVER   all queues idle
+2025-09-17 02:13:54.026 DRIVER   Cache file for homeId 0xfe0b4a8f found, attempting to restore the network from
+                                  cache...
+2025-09-17 02:13:54.029 CNTRLR   [Node 002] No device config found
+2025-09-17 02:13:54.056 CNTRLR   [Node 006] Embedded device config loaded
+2025-09-17 02:13:54.057 DRIVER   Restoring the network from cache was successful!
+2025-09-17 02:13:54.058 CNTRLR   [Node 001] [Manufacturer Specific] manufacturerId: metadata updated
+2025-09-17 02:13:54.059 CNTRLR   [Node 001] [Manufacturer Specific] productType: metadata updated
+2025-09-17 02:13:54.059 CNTRLR   [Node 001] [Manufacturer Specific] productId: metadata updated
+2025-09-17 02:13:54.060 CNTRLR   [Node 001] [~] [Manufacturer Specific] manufacturerId: 634 => 634
+2025-09-17 02:13:54.060 CNTRLR   [Node 001] [~] [Manufacturer Specific] productType: 4 => 4
+2025-09-17 02:13:54.061 CNTRLR   [Node 001] [~] [Manufacturer Specific] productId: 1552 => 1552
+2025-09-17 02:13:54.061 CNTRLR   [Node 001] [Version] firmwareVersions: metadata updated
+2025-09-17 02:13:54.061 CNTRLR   [Node 001] [~] [Version] firmwareVersions: 1.60 => 1.60
+2025-09-17 02:13:54.062 CNTRLR   [Node 001] [Version] zWaveProtocolVersion: metadata updated
+2025-09-17 02:13:54.062 CNTRLR   [Node 001] [~] [Version] zWaveProtocolVersion: "7.23.2" => "7.23.2"
+2025-09-17 02:13:54.062 CNTRLR   [Node 001] [Version] sdkVersion: metadata updated
+2025-09-17 02:13:54.063 CNTRLR   [Node 001] [~] [Version] sdkVersion: "7.23.2" => "7.23.2"
+2025-09-17 02:13:54.067 CNTRLR   [Node 001] Embedded device config loaded
+2025-09-17 02:13:54.067 CNTRLR   Interview completed
+2025-09-17 02:13:54.067 DRIVER   Network key for S0 configured, enabling S0 security manager...
+2025-09-17 02:13:54.068 DRIVER   At least one network key for S2 configured, enabling S2 security manager...
+2025-09-17 02:13:54.071 DRIVER   At least one network key for Z-Wave Long Range configured, enabling security m
+                                 anager...
+2025-09-17 02:13:54.072 DRIVER   driver ready
+2025-09-17 02:13:54.073 DRIVER   Checking for configuration updates...
+2025-09-17 02:13:54.080 CNTRLR   [Node 001] The node is alive.
+2025-09-17 02:13:54.081 CNTRLR   [Node 001] The node is ready to be used
+2025-09-17 02:13:54.095 CNTRLR   Interviewing nodes and/or determining their status: 6, 2
+2025-09-17 02:13:54.096 CNTRLR » [Node 006] pinging the node...
+2025-09-17 02:13:54.098 CNTRLR » [Node 002] pinging the node...
+2025-09-17 02:13:54.099 DRIVER   one or more queues busy
+2025-09-17 02:13:54.099 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetPowerlevel16Bit
+2025-09-17 02:13:54.099 SERIAL » 0x0104000b13e3                                                       (6 bytes)
+2025-09-17 02:13:54.102 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:54.104 SERIAL « 0x0108010b13006400008a                                              (10 bytes)
+2025-09-17 02:13:54.105 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:54.105 DRIVER « [RES] [SerialAPISetup]
+                                   command:               GetPowerlevel16Bit
+                                   normal powerlevel:     10.0 dBm
+                                   output power at 0 dBm: 0.0 dBm
+2025-09-17 02:13:54.106 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetRFRegion
+2025-09-17 02:13:54.106 SERIAL » 0x0104000b20d0                                                       (6 bytes)
+2025-09-17 02:13:54.175 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:54.176 SERIAL « 0x0105010b2009d9                                                     (7 bytes)
+2025-09-17 02:13:54.176 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:54.176 DRIVER « [RES] [SerialAPISetup]
+                                   command: GetRFRegion
+                                   region:  USA (Long Range)
+2025-09-17 02:13:54.177 DRIVER » [REQ] [SerialAPISetup]
+                                   command: GetLongRangeMaximumTxPower
+2025-09-17 02:13:54.177 SERIAL » 0x0104000b05f5                                                       (6 bytes)
+2025-09-17 02:13:54.179 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:54.180 SERIAL « 0x0106010b05008c7a                                                   (8 bytes)
+2025-09-17 02:13:54.181 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:54.181 DRIVER « [RES] [SerialAPISetup]
+                                   command:            GetLongRangeMaximumTxPower
+                                   max. TX power (LR): 14.0 dBm
+2025-09-17 02:13:54.183 DRIVER » [Node 006] [REQ] [SendDataBridge]
+                                 │ source node id:   1
+                                 │ transmit options: 0x01
+                                 │ callback id:      36
+                                 └─[NoOperationCC]
+2025-09-17 02:13:54.183 SERIAL » 0x010f00a90001000601000100000000247a                                (17 bytes)
+2025-09-17 02:13:54.188 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:54.191 SERIAL « 0x010401a90152                                                       (6 bytes)
+2025-09-17 02:13:54.191 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:54.192 DRIVER « [RES] [SendDataBridge]
+                                   was sent: true
+2025-09-17 02:13:54.551 DRIVER   No configuration update available...
+2025-09-17 02:13:55.390 SERIAL « 0x011d00a92400007700ab7f7f7f7f01010400000000420100007f7f7f7f7f8b    (31 bytes)
+2025-09-17 02:13:55.393 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:55.395 DRIVER « [REQ] [SendDataBridge]
+                                   callback id:            36
+                                   transmit status:        OK, took 1190 ms
+                                   routing attempts:       1
+                                   protocol & route speed: Z-Wave, 40 kbit/s
+                                   routing scheme:         NLWR
+                                   ACK RSSI:               -85 dBm
+                                   ACK channel no.:        1
+                                   TX channel no.:         1
+                                   beam:                   1000 ms
+2025-09-17 02:13:55.397 CNTRLR   [Node 006] The node is alive.
+2025-09-17 02:13:55.397 CNTRLR   [Node 006] The node is ready to be used
+2025-09-17 02:13:55.436 CNTRLR   Retrieving priority route to node 6...
+2025-09-17 02:13:55.438 CNTRLR « [Node 006] ping successful
+2025-09-17 02:13:55.438 DRIVER » [Node 002] [REQ] [SendDataBridge]
+                                 │ source node id:   1
+                                 │ transmit options: 0x01
+                                 │ callback id:      37
+                                 └─[NoOperationCC]
+2025-09-17 02:13:55.438 SERIAL » 0x010f00a90001000201000100000000257f                                (17 bytes)
+2025-09-17 02:13:55.444 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:55.448 SERIAL « 0x010401a90152                                                       (6 bytes)
+2025-09-17 02:13:55.448 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:55.448 DRIVER « [RES] [SendDataBridge]
+                                   was sent: true
+2025-09-17 02:13:58.872 SERIAL « 0x011d00a925010155007f7f7f7f7f00010100000000420300007f7f7f7f7f7a    (31 bytes)
+2025-09-17 02:13:58.874 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:58.875 DRIVER « [REQ] [SendDataBridge]
+                                   callback id:            37
+                                   transmit status:        NoAck, took 3410 ms
+                                   routing attempts:       3
+                                   protocol & route speed: Z-Wave, 40 kbit/s
+                                   routing scheme:         Direct
+                                   TX channel no.:         1
+                                   beam:                   1000 ms
+2025-09-17 02:13:58.878 CNTRLR   [Node 002] The node did not respond after 1 attempts, it is presumed dead
+2025-09-17 02:13:58.879 CNTRLR   [Node 002] The node is dead.
+2025-09-17 02:13:58.879 CNTRLR   All nodes are ready to be used
+2025-09-17 02:13:58.888 CNTRLR   [Node 002] ping failed: The node did not acknowledge the command (ZW0204)
+2025-09-17 02:13:58.889 DRIVER » [REQ] [GetPriorityRoute]
+                                   node ID: 6
+2025-09-17 02:13:58.890 SERIAL » 0x0105009200066e                                                     (7 bytes)
+2025-09-17 02:13:58.911 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:13:58.913 SERIAL « 0x010b0192000601000000000262                                        (13 bytes)
+2025-09-17 02:13:58.914 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:13:58.915 DRIVER « [RES] [GetPriorityRoute]
+                                   node ID:     6
+                                   route kind:  LWR
+                                   repeaters:   none
+                                   route speed: 40k
+2025-09-17 02:13:58.916 DRIVER   all queues idle
+2025-09-17 02:13:59.923 DRIVER   Usage statistics sent - next transmission scheduled in 23 hours.
+2025-09-17 02:14:03.919 DRIVER   one or more queues busy
+2025-09-17 02:14:03.921 DRIVER » [REQ] [GetBackgroundRSSI]
+2025-09-17 02:14:03.922 SERIAL » 0x0103003bc7                                                         (5 bytes)
+2025-09-17 02:14:03.926 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:14:03.928 SERIAL « 0x0107013b9f98989ec3                                                 (9 bytes)
+2025-09-17 02:14:03.930 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:14:03.932 DRIVER « [RES] [GetBackgroundRSSI]
+                                   channel 0: -97 dBm
+                                   channel 1: -104 dBm
+                                   channel 2: -104 dBm
+                                   channel 3: -98 dBm
+2025-09-17 02:14:03.934 DRIVER   all queues idle
+2025-09-17 02:14:33.918 DRIVER   one or more queues busy
+2025-09-17 02:14:33.920 DRIVER » [REQ] [GetBackgroundRSSI]
+2025-09-17 02:14:33.920 SERIAL » 0x0103003bc7                                                         (5 bytes)
+2025-09-17 02:14:33.924 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:14:33.926 SERIAL « 0x0107013b9a9797a1f9                                                 (9 bytes)
+2025-09-17 02:14:33.927 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:14:33.930 DRIVER « [RES] [GetBackgroundRSSI]
+                                   channel 0: -102 dBm
+                                   channel 1: -105 dBm
+                                   channel 2: -105 dBm
+                                   channel 3: -95 dBm
+2025-09-17 02:14:33.931 DRIVER   all queues idle
+2025-09-17 02:15:03.919 DRIVER   one or more queues busy
+2025-09-17 02:15:03.921 DRIVER » [REQ] [GetBackgroundRSSI]
+2025-09-17 02:15:03.922 SERIAL » 0x0103003bc7                                                         (5 bytes)
+2025-09-17 02:15:03.928 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:15:03.929 SERIAL « 0x0107013b999696a0fb                                                 (9 bytes)
+2025-09-17 02:15:03.931 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:15:03.932 DRIVER « [RES] [GetBackgroundRSSI]
+                                   channel 0: -103 dBm
+                                   channel 1: -106 dBm
+                                   channel 2: -106 dBm
+                                   channel 3: -96 dBm
+2025-09-17 02:15:03.934 DRIVER   all queues idle
+2025-09-17 02:15:19.513 DRIVER   one or more queues busy
+2025-09-17 02:15:19.516 DRIVER » [Node 006] [REQ] [SendDataBridge]
+                                 │ source node id:   1
+                                 │ transmit options: 0x25
+                                 │ callback id:      42
+                                 └─[Security2CCNonceGet]
+                                     sequence number: 205
+2025-09-17 02:15:19.517 SERIAL » 0x011100a900010006039f01cd25000000002a1f                            (19 bytes)
+2025-09-17 02:15:19.521 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:15:19.524 SERIAL « 0x010401a90152                                                       (6 bytes)
+2025-09-17 02:15:19.525 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:15:19.526 DRIVER « [RES] [SendDataBridge]
+                                   was sent: true
+2025-09-17 02:15:20.754 SERIAL « 0x011d00a92a00007a00a97f7f7f7f01010300000000420100007f7f7f7f7f8d    (31 bytes)
+2025-09-17 02:15:20.755 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:15:20.756 DRIVER « [REQ] [SendDataBridge]
+                                   callback id:            42
+                                   transmit status:        OK, took 1220 ms
+                                   routing attempts:       1
+                                   protocol & route speed: Z-Wave, 40 kbit/s
+                                   routing scheme:         LWR
+                                   ACK RSSI:               -87 dBm
+                                   ACK channel no.:        1
+                                   TX channel no.:         1
+                                   beam:                   1000 ms
+2025-09-17 02:15:20.771 SERIAL « 0x012200a80000010006149f029501726a79caa25d120701ac47742e74c8c500a90 (36 bytes)
+                                 07f7f4e
+2025-09-17 02:15:20.773 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:15:20.775 DRIVER « [Node 006] [REQ] [BridgeApplicationCommand]
+                                 │ RSSI: -87 dBm
+                                 └─[Security2CCNonceReport]
+                                     sequence number:  149
+                                     SOS:              true
+                                     MOS:              false
+                                     receiver entropy: 0x726a79caa25d120701ac47742e74c8c5
+2025-09-17 02:15:20.778 DRIVER » [Node 006] [REQ] [SendDataBridge]
+                                 │ source node id:   1
+                                 │ transmit options: 0x25
+                                 │ callback id:      43
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 206
+                                   │ extensions:
+                                   │ · type: SPAN
+                                   │   sender EI: 0xe54ba3988cd07bd3633c30d95b892cf0
+                                   └─[ConfigurationCCSet]
+                                       parameter #:      16
+                                       reset to default: false
+                                       value size:       1
+                                       value format:     SignedInteger
+                                       value:            6
+2025-09-17 02:15:20.778 SERIAL » 0x013100a900010006239f03ce011241e54ba3988cd07bd3633c30d95b892cf017b (51 bytes)
+                                 0998bccac1e11032bf315d925000000002b59
+2025-09-17 02:15:20.786 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:15:20.788 SERIAL « 0x010401a90152                                                       (6 bytes)
+2025-09-17 02:15:20.789 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:15:20.789 DRIVER « [RES] [SendDataBridge]
+                                   was sent: true
+2025-09-17 02:15:20.814 SERIAL « 0x011d00a92b00000200a97f7f7f7f01010300000000020100007f7f7f7f7fb4    (31 bytes)
+2025-09-17 02:15:20.815 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:15:20.815 DRIVER « [REQ] [SendDataBridge]
+                                   callback id:            43
+                                   transmit status:        OK, took 20 ms
+                                   routing attempts:       1
+                                   protocol & route speed: Z-Wave, 40 kbit/s
+                                   routing scheme:         LWR
+                                   ACK RSSI:               -87 dBm
+                                   ACK channel no.:        1
+                                   TX channel no.:         1
+2025-09-17 02:15:21.321 DRIVER   all queues idle
+2025-09-17 02:15:22.332 DRIVER   one or more queues busy
+2025-09-17 02:15:22.336 DRIVER » [Node 006] [REQ] [SendDataBridge]
+                                 │ source node id:   1
+                                 │ transmit options: 0x25
+                                 │ callback id:      44
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 207
+                                   └─[ConfigurationCCGet]
+                                       parameter #: 16
+2025-09-17 02:15:22.336 SERIAL » 0x011d00a9000100060f9f03cf009afb12184941c88aefa2f825000000002c8d    (31 bytes)
+2025-09-17 02:15:22.341 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:15:22.344 SERIAL « 0x010401a90152                                                       (6 bytes)
+2025-09-17 02:15:22.345 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:15:22.346 DRIVER « [RES] [SendDataBridge]
+                                   was sent: true
+2025-09-17 02:15:22.365 SERIAL « 0x011d00a92c00000200a97f7f7f7f01010300000000020100007f7f7f7f7fb3    (31 bytes)
+2025-09-17 02:15:22.366 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:15:22.366 DRIVER « [REQ] [SendDataBridge]
+                                   callback id:            44
+                                   transmit status:        OK, took 20 ms
+                                   routing attempts:       1
+                                   protocol & route speed: Z-Wave, 40 kbit/s
+                                   routing scheme:         LWR
+                                   ACK RSSI:               -87 dBm
+                                   ACK channel no.:        1
+                                   TX channel no.:         1
+2025-09-17 02:15:29.749 SERIAL « 0x011f00a80000010006119f039600d79b4c2f447339d3b4d8a0fa3800ac007f7f0 (33 bytes)
+                                 4
+2025-09-17 02:15:29.756 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:15:29.758 CNTRLR   [Node 006] [~] [Configuration] 16: 6 => 6                         [Endpoint 0]
+2025-09-17 02:15:29.759 DRIVER « [Node 006] [REQ] [BridgeApplicationCommand]
+                                 │ RSSI: -84 dBm
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 150
+                                   │ security class:  S2_AccessControl
+                                   └─[ConfigurationCCReport]
+                                       parameter #: 16
+                                       value size:  1
+                                       value:       6
+2025-09-17 02:15:29.760 DRIVER   all queues idle
+2025-09-17 02:15:30.335 SERIAL « 0x012300a80000010006159f039700a9b43d9e2565b2bd2b41d6f639671d59b700a (37 bytes)
+                                 c007f7fd7
+2025-09-17 02:15:30.339 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:15:30.341 CNTRLR   [Node 006] [~] [Configuration] 16: 6 => 6                         [Endpoint 0]
+2025-09-17 02:15:30.342 DRIVER « [Node 006] [REQ] [BridgeApplicationCommand]
+                                 │ RSSI: -84 dBm
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 151
+                                   │ security class:  S2_AccessControl
+                                   └─[SupervisionCCGet]
+                                     │ session id:      31
+                                     │ request updates: false
+                                     └─[ConfigurationCCReport]
+                                         parameter #: 16
+                                         value size:  1
+                                         value:       6
+2025-09-17 02:15:30.354 DRIVER   one or more queues busy
+2025-09-17 02:15:30.356 DRIVER » [Node 006] [REQ] [SendDataBridge]
+                                 │ source node id:   1
+                                 │ transmit options: 0x00
+                                 │ callback id:      45
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 208
+                                   └─[SupervisionCCReport]
+                                       session id:          31
+                                       more updates follow: false
+                                       status:              Success
+                                       duration:            0s
+2025-09-17 02:15:30.357 SERIAL » 0x011f00a900010006119f03d000f3482bacd33ca63d43c43c66eb00000000002d4 (33 bytes)
+                                 0
+2025-09-17 02:15:30.363 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:15:30.366 SERIAL « 0x010401a90152                                                       (6 bytes)
+2025-09-17 02:15:30.366 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:15:30.367 DRIVER « [RES] [SendDataBridge]
+                                   was sent: true
+2025-09-17 02:15:30.377 SERIAL « 0x011d00a92d000001007f7f7f7f7f0001030000000002010000000000000019    (31 bytes)
+2025-09-17 02:15:30.378 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:15:30.378 DRIVER « [REQ] [SendDataBridge]
+                                   callback id:            45
+                                   transmit status:        OK, took 10 ms
+                                   routing attempts:       1
+                                   protocol & route speed: Z-Wave, 40 kbit/s
+                                   routing scheme:         LWR
+                                   TX channel no.:         1
+2025-09-17 02:15:30.881 DRIVER   all queues idle
+2025-09-17 02:15:35.885 DRIVER   one or more queues busy
+2025-09-17 02:15:35.886 DRIVER » [REQ] [GetBackgroundRSSI]
+2025-09-17 02:15:35.887 SERIAL » 0x0103003bc7                                                         (5 bytes)
+2025-09-17 02:15:35.890 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:15:35.893 SERIAL « 0x0107013b9795959fca                                                 (9 bytes)
+2025-09-17 02:15:35.894 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:15:35.895 DRIVER « [RES] [GetBackgroundRSSI]
+                                   channel 0: -105 dBm
+                                   channel 1: -107 dBm
+                                   channel 2: -107 dBm
+                                   channel 3: -97 dBm
+2025-09-17 02:15:35.896 DRIVER   all queues idle
+2025-09-17 02:16:00.427 DRIVER   one or more queues busy
+2025-09-17 02:16:00.429 DRIVER » [Node 006] [REQ] [SendDataBridge]
+                                 │ source node id:   1
+                                 │ transmit options: 0x25
+                                 │ callback id:      47
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 209
+                                   └─[UserCodeCCSet]
+                                       user id:   1
+                                       id status: Enabled
+                                       user code: ******
+2025-09-17 02:16:00.429 SERIAL » 0x012400a900010006169f03d1004747467abfd6a09f98c7ce65f0cac80cb953250 (38 bytes)
+                                 00000002fae
+2025-09-17 02:16:00.436 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:16:00.438 SERIAL « 0x010401a90152                                                       (6 bytes)
+2025-09-17 02:16:00.439 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:16:00.439 DRIVER « [RES] [SendDataBridge]
+                                   was sent: true
+2025-09-17 02:16:01.717 SERIAL « 0x011d00a92f00007f00aa7f7f7f7f01010300000000420100007f7f7f7f7f8e    (31 bytes)
+2025-09-17 02:16:01.719 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:16:01.719 DRIVER « [REQ] [SendDataBridge]
+                                   callback id:            47
+                                   transmit status:        OK, took 1270 ms
+                                   routing attempts:       1
+                                   protocol & route speed: Z-Wave, 40 kbit/s
+                                   routing scheme:         LWR
+                                   ACK RSSI:               -86 dBm
+                                   ACK channel no.:        1
+                                   TX channel no.:         1
+                                   beam:                   1000 ms
+2025-09-17 02:16:02.228 DRIVER   all queues idle
+2025-09-17 02:16:03.226 DRIVER   one or more queues busy
+2025-09-17 02:16:03.228 DRIVER » [Node 006] [REQ] [SendDataBridge]
+                                 │ source node id:   1
+                                 │ transmit options: 0x25
+                                 │ callback id:      48
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 210
+                                   └─[UserCodeCCGet]
+                                       user id: 1
+2025-09-17 02:16:03.228 SERIAL » 0x011d00a9000100060f9f03d200c63e2aa31821fc4418cb7f25000000003044    (31 bytes)
+2025-09-17 02:16:03.233 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:16:03.236 SERIAL « 0x010401a90152                                                       (6 bytes)
+2025-09-17 02:16:03.237 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:16:03.237 DRIVER « [RES] [SendDataBridge]
+                                   was sent: true
+2025-09-17 02:16:03.259 SERIAL « 0x011d00a93000000200aa7f7f7f7f01010300000000020100007f7f7f7f7fac    (31 bytes)
+2025-09-17 02:16:03.260 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:16:03.260 DRIVER « [REQ] [SendDataBridge]
+                                   callback id:            48
+                                   transmit status:        OK, took 20 ms
+                                   routing attempts:       1
+                                   protocol & route speed: Z-Wave, 40 kbit/s
+                                   routing scheme:         LWR
+                                   ACK RSSI:               -86 dBm
+                                   ACK channel no.:        1
+                                   TX channel no.:         1
+2025-09-17 02:16:08.480 SERIAL « 0x012600a80000010006189f039800df161467fcebc1133986a91d0cc1769cf981a (40 bytes)
+                                 2de00aa007f7f97
+2025-09-17 02:16:08.485 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:16:08.486 CNTRLR   [Node 006] [~] [User Code] userIdStatus[1]: 1 => 1                [Endpoint 0]
+2025-09-17 02:16:08.488 DRIVER « [Node 006] [REQ] [BridgeApplicationCommand]
+                                 │ RSSI: -86 dBm
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 152
+                                   │ security class:  S2_AccessControl
+                                   └─[UserCodeCCReport]
+                                       user id:   1
+                                       id status: Enabled
+                                       user code: ******
+2025-09-17 02:16:08.489 DRIVER   all queues idle
+2025-09-17 02:16:09.069 SERIAL « 0x012a00a800000100061c9f03990083995fdf57f1322e7ab5a073328fadfc4768c (44 bytes)
+                                 486ee4046b600aa007f7f2a
+2025-09-17 02:16:09.074 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:16:09.075 CNTRLR   [Node 006] [~] [User Code] userIdStatus[1]: 1 => 1                [Endpoint 0]
+2025-09-17 02:16:09.076 DRIVER « [Node 006] [REQ] [BridgeApplicationCommand]
+                                 │ RSSI: -86 dBm
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 153
+                                   │ security class:  S2_AccessControl
+                                   └─[SupervisionCCGet]
+                                     │ session id:      2
+                                     │ request updates: false
+                                     └─[UserCodeCCReport]
+                                         user id:   1
+                                         id status: Enabled
+                                         user code: ******
+2025-09-17 02:16:09.077 DRIVER   one or more queues busy
+2025-09-17 02:16:09.079 DRIVER » [Node 006] [REQ] [SendDataBridge]
+                                 │ source node id:   1
+                                 │ transmit options: 0x00
+                                 │ callback id:      49
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 211
+                                   └─[SupervisionCCReport]
+                                       session id:          2
+                                       more updates follow: false
+                                       status:              Success
+                                       duration:            0s
+2025-09-17 02:16:09.079 SERIAL » 0x011f00a900010006119f03d300de397401fb35f4ac9ba43471e3000000000031b (33 bytes)
+                                 c
+2025-09-17 02:16:09.085 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:16:09.088 SERIAL « 0x010401a90152                                                       (6 bytes)
+2025-09-17 02:16:09.089 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:16:09.090 DRIVER « [RES] [SendDataBridge]
+                                   was sent: true
+2025-09-17 02:16:09.099 SERIAL « 0x011d00a931000001007f7f7f7f7f0001030000000002010000000000000005    (31 bytes)
+2025-09-17 02:16:09.101 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:16:09.101 DRIVER « [REQ] [SendDataBridge]
+                                   callback id:            49
+                                   transmit status:        OK, took 10 ms
+                                   routing attempts:       1
+                                   protocol & route speed: Z-Wave, 40 kbit/s
+                                   routing scheme:         LWR
+                                   TX channel no.:         1
+2025-09-17 02:16:09.602 DRIVER   all queues idle
+2025-09-17 02:16:14.605 DRIVER   one or more queues busy
+2025-09-17 02:16:14.607 DRIVER » [REQ] [GetBackgroundRSSI]
+2025-09-17 02:16:14.607 SERIAL » 0x0103003bc7                                                         (5 bytes)
+2025-09-17 02:16:14.611 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:16:14.613 SERIAL « 0x0107013b969999a0f4                                                 (9 bytes)
+2025-09-17 02:16:14.614 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:16:14.615 DRIVER « [RES] [GetBackgroundRSSI]
+                                   channel 0: -106 dBm
+                                   channel 1: -103 dBm
+                                   channel 2: -103 dBm
+                                   channel 3: -96 dBm
+2025-09-17 02:16:14.617 DRIVER   all queues idle
+2025-09-17 02:16:44.607 DRIVER   one or more queues busy
+2025-09-17 02:16:44.608 DRIVER » [REQ] [GetBackgroundRSSI]
+2025-09-17 02:16:44.609 SERIAL » 0x0103003bc7                                                         (5 bytes)
+2025-09-17 02:16:44.612 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:16:44.615 SERIAL « 0x0107013b959393a0f7                                                 (9 bytes)
+2025-09-17 02:16:44.616 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:16:44.617 DRIVER « [RES] [GetBackgroundRSSI]
+                                   channel 0: -107 dBm
+                                   channel 1: -109 dBm
+                                   channel 2: -109 dBm
+                                   channel 3: -96 dBm
+2025-09-17 02:16:44.618 DRIVER   all queues idle
+2025-09-17 02:16:57.191 SERIAL « 0x012500a80000010006179f039a00fa6613730314f74fac7eebb4089d60e5c294b (39 bytes)
+                                 800a7007f7fe3
+2025-09-17 02:16:57.196 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:16:57.197 CNTRLR   [Node 006] [~] [Door Lock] insideHandlesCanOpenDoor: false,false, [Endpoint 0]
+                                 false,false => false,false,false,false
+2025-09-17 02:16:57.198 CNTRLR   [Node 006] [~] [Door Lock] outsideHandlesCanOpenDoor: false,false [Endpoint 0]
+                                 ,false,false => false,false,false,false
+2025-09-17 02:16:57.199 CNTRLR   [Node 006] [~] [Door Lock] currentMode: 255 => 255                [Endpoint 0]
+2025-09-17 02:16:57.200 CNTRLR   [Node 006] [~] [Door Lock] doorStatus: "open" => "open"           [Endpoint 0]
+2025-09-17 02:16:57.200 CNTRLR   [Node 006] [~] [Door Lock] boltStatus: "locked" => "locked"       [Endpoint 0]
+2025-09-17 02:16:57.201 CNTRLR   [Node 006] [~] [Door Lock] latchStatus: "open" => "open"          [Endpoint 0]
+2025-09-17 02:16:57.202 DRIVER « [Node 006] [REQ] [BridgeApplicationCommand]
+                                 │ RSSI: -89 dBm
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 154
+                                   │ security class:  S2_AccessControl
+                                   └─[SupervisionCCGet]
+                                     │ session id:      3
+                                     │ request updates: false
+                                     └─[DoorLockCCOperationReport]
+                                         current mode:           Secured
+                                         active outside handles: false, false, false, false
+                                         active inside handles:  false, false, false, false
+                                         latch status:           open
+                                         bolt status:            locked
+                                         door status:            open
+2025-09-17 02:16:57.203 DRIVER   one or more queues busy
+2025-09-17 02:16:57.204 DRIVER » [Node 006] [REQ] [SendDataBridge]
+                                 │ source node id:   1
+                                 │ transmit options: 0x00
+                                 │ callback id:      52
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 212
+                                   └─[SupervisionCCReport]
+                                       session id:          3
+                                       more updates follow: false
+                                       status:              Success
+                                       duration:            0s
+2025-09-17 02:16:57.204 SERIAL » 0x011f00a900010006119f03d400b12407df8b28f1a92683f3bac9000000000034b (33 bytes)
+                                 0
+2025-09-17 02:16:57.210 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:16:57.213 SERIAL « 0x010401a90152                                                       (6 bytes)
+2025-09-17 02:16:57.213 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:16:57.214 DRIVER « [RES] [SendDataBridge]
+                                   was sent: true
+2025-09-17 02:16:57.225 SERIAL « 0x011d00a934000001007f7f7f7f7f0001030000000002010000000000000000    (31 bytes)
+2025-09-17 02:16:57.226 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:16:57.226 DRIVER « [REQ] [SendDataBridge]
+                                   callback id:            52
+                                   transmit status:        OK, took 10 ms
+                                   routing attempts:       1
+                                   protocol & route speed: Z-Wave, 40 kbit/s
+                                   routing scheme:         LWR
+                                   TX channel no.:         1
+2025-09-17 02:16:57.325 SERIAL « 0x012800a800000100061a9f039b00ab765b5810a5581324d84ca88f0d5a868905c (42 bytes)
+                                 7d4b97200a7007f7ff0
+2025-09-17 02:16:57.327 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:16:57.329 CNTRLR   [Node 006] [~] [Notification] alarmType: 21 => 18                 [Endpoint 0]
+2025-09-17 02:16:57.330 CNTRLR   [Node 006] [~] [Notification] alarmLevel: 1 => 1                  [Endpoint 0]
+2025-09-17 02:16:57.331 DRIVER « [Node 006] [REQ] [BridgeApplicationCommand]
+                                 │ RSSI: -89 dBm
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 155
+                                   │ security class:  S2_AccessControl
+                                   └─[SupervisionCCGet]
+                                     │ session id:      4
+                                     │ request updates: false
+                                     └─[NotificationCCReport]
+                                         V1 alarm type:       18
+                                         V1 alarm level:      1
+                                         notification type:   Access Control
+                                         notification status: 255
+                                         notification event:  Keypad lock operation
+                                         event parameters:
+                                           userId: 0x01
+2025-09-17 02:16:57.332 CNTRLR   [Node 006] [~] [Door Lock] currentMode: 255 => 255                [Endpoint 0]
+2025-09-17 02:16:57.333 CNTRLR   [Node 006] [Notification]
+                                   type:   Access Control
+                                   event:  Keypad lock operation
+                                   userId: 1
+2025-09-17 02:16:57.727 DRIVER » [Node 006] [REQ] [SendDataBridge]
+                                 │ source node id:   1
+                                 │ transmit options: 0x00
+                                 │ callback id:      53
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 213
+                                   └─[SupervisionCCReport]
+                                       session id:          4
+                                       more updates follow: false
+                                       status:              Success
+                                       duration:            0s
+2025-09-17 02:16:57.728 SERIAL » 0x011f00a900010006119f03d50058854b36ef2c626120db5ea87d0000000000353 (33 bytes)
+                                 3
+2025-09-17 02:16:57.733 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:16:57.736 SERIAL « 0x010401a90152                                                       (6 bytes)
+2025-09-17 02:16:57.737 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:16:57.737 DRIVER « [RES] [SendDataBridge]
+                                   was sent: true
+2025-09-17 02:16:57.747 SERIAL « 0x011d00a935000001007f7f7f7f7f0001030000000002010000000000000001    (31 bytes)
+2025-09-17 02:16:57.748 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:16:57.748 DRIVER « [REQ] [SendDataBridge]
+                                   callback id:            53
+                                   transmit status:        OK, took 10 ms
+                                   routing attempts:       1
+                                   protocol & route speed: Z-Wave, 40 kbit/s
+                                   routing scheme:         LWR
+                                   TX channel no.:         1
+2025-09-17 02:16:58.250 DRIVER   all queues idle
+2025-09-17 02:17:02.722 SERIAL « 0x012500a80000010006179f039c009c270c1700e8cf1c76fa2db45add7585fb94b (39 bytes)
+                                 800a7007f7feb
+2025-09-17 02:17:02.727 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:17:02.729 CNTRLR   [Node 006] [~] [Door Lock] insideHandlesCanOpenDoor: false,false, [Endpoint 0]
+                                 false,false => false,false,false,false
+2025-09-17 02:17:02.732 CNTRLR   [Node 006] [~] [Door Lock] outsideHandlesCanOpenDoor: false,false [Endpoint 0]
+                                 ,false,false => false,false,false,false
+2025-09-17 02:17:02.734 CNTRLR   [Node 006] [~] [Door Lock] currentMode: 255 => 0                  [Endpoint 0]
+2025-09-17 02:17:02.736 CNTRLR   [Node 006] [~] [Door Lock] doorStatus: "open" => "open"           [Endpoint 0]
+2025-09-17 02:17:02.737 CNTRLR   [Node 006] [~] [Door Lock] boltStatus: "locked" => "unlocked"     [Endpoint 0]
+2025-09-17 02:17:02.738 CNTRLR   [Node 006] [~] [Door Lock] latchStatus: "open" => "open"          [Endpoint 0]
+2025-09-17 02:17:02.739 DRIVER « [Node 006] [REQ] [BridgeApplicationCommand]
+                                 │ RSSI: -89 dBm
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 156
+                                   │ security class:  S2_AccessControl
+                                   └─[SupervisionCCGet]
+                                     │ session id:      5
+                                     │ request updates: false
+                                     └─[DoorLockCCOperationReport]
+                                         current mode:           Unsecured
+                                         active outside handles: false, false, false, false
+                                         active inside handles:  false, false, false, false
+                                         latch status:           open
+                                         bolt status:            unlocked
+                                         door status:            open
+2025-09-17 02:17:02.741 DRIVER   one or more queues busy
+2025-09-17 02:17:02.741 DRIVER » [Node 006] [REQ] [SendDataBridge]
+                                 │ source node id:   1
+                                 │ transmit options: 0x00
+                                 │ callback id:      54
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 214
+                                   └─[SupervisionCCReport]
+                                       session id:          5
+                                       more updates follow: false
+                                       status:              Success
+                                       duration:            0s
+2025-09-17 02:17:02.742 SERIAL » 0x011f00a900010006119f03d600c307c52ed37aae3fcda57a9569000000000036d (33 bytes)
+                                 a
+2025-09-17 02:17:02.748 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:17:02.750 SERIAL « 0x010401a90152                                                       (6 bytes)
+2025-09-17 02:17:02.751 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:17:02.751 DRIVER « [RES] [SendDataBridge]
+                                   was sent: true
+2025-09-17 02:17:02.763 SERIAL « 0x011d00a936000001007f7f7f7f7f0001030000000002010000000000000002    (31 bytes)
+2025-09-17 02:17:02.764 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:17:02.764 DRIVER « [REQ] [SendDataBridge]
+                                   callback id:            54
+                                   transmit status:        OK, took 10 ms
+                                   routing attempts:       1
+                                   protocol & route speed: Z-Wave, 40 kbit/s
+                                   routing scheme:         LWR
+                                   TX channel no.:         1
+2025-09-17 02:17:02.864 SERIAL « 0x012800a800000100061a9f039d004287591281c85502283c7109153cea4844961 (42 bytes)
+                                 fdc59ec00a7007f7f17
+2025-09-17 02:17:02.870 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:17:02.874 CNTRLR   [Node 006] [~] [Notification] alarmType: 18 => 19                 [Endpoint 0]
+2025-09-17 02:17:02.875 CNTRLR   [Node 006] [~] [Notification] alarmLevel: 1 => 1                  [Endpoint 0]
+2025-09-17 02:17:02.876 DRIVER « [Node 006] [REQ] [BridgeApplicationCommand]
+                                 │ RSSI: -89 dBm
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 157
+                                   │ security class:  S2_AccessControl
+                                   └─[SupervisionCCGet]
+                                     │ session id:      6
+                                     │ request updates: false
+                                     └─[NotificationCCReport]
+                                         V1 alarm type:       19
+                                         V1 alarm level:      1
+                                         notification type:   Access Control
+                                         notification status: 255
+                                         notification event:  Keypad unlock operation
+                                         event parameters:
+                                           userId: 0x01
+2025-09-17 02:17:02.876 CNTRLR   [Node 006] [~] [Door Lock] currentMode: 0 => 0                    [Endpoint 0]
+2025-09-17 02:17:02.877 CNTRLR   [Node 006] [Notification]
+                                   type:   Access Control
+                                   event:  Keypad unlock operation
+                                   userId: 1
+2025-09-17 02:17:03.269 DRIVER » [Node 006] [REQ] [SendDataBridge]
+                                 │ source node id:   1
+                                 │ transmit options: 0x00
+                                 │ callback id:      55
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 215
+                                   └─[SupervisionCCReport]
+                                       session id:          6
+                                       more updates follow: false
+                                       status:              Success
+                                       duration:            0s
+2025-09-17 02:17:03.270 SERIAL » 0x011f00a900010006119f03d7005d3ec21898dbccb51060464ac70000000000371 (33 bytes)
+                                 b
+2025-09-17 02:17:03.276 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:17:03.279 SERIAL « 0x010401a90152                                                       (6 bytes)
+2025-09-17 02:17:03.280 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:17:03.280 DRIVER « [RES] [SendDataBridge]
+                                   was sent: true
+2025-09-17 02:17:03.292 SERIAL « 0x011d00a937000001007f7f7f7f7f0001030000000002010000000000000003    (31 bytes)
+2025-09-17 02:17:03.293 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:17:03.293 DRIVER « [REQ] [SendDataBridge]
+                                   callback id:            55
+                                   transmit status:        OK, took 10 ms
+                                   routing attempts:       1
+                                   protocol & route speed: Z-Wave, 40 kbit/s
+                                   routing scheme:         LWR
+                                   TX channel no.:         1
+2025-09-17 02:17:03.795 DRIVER   all queues idle
+2025-09-17 02:17:08.439 SERIAL « 0x012500a80000010006179f039e003c96d371fb41514fe8adc40cc9ef8eda6f0a1 (39 bytes)
+                                 800a6007f7fe8
+2025-09-17 02:17:08.444 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:17:08.445 CNTRLR   [Node 006] [~] [Door Lock] insideHandlesCanOpenDoor: false,false, [Endpoint 0]
+                                 false,false => false,false,false,false
+2025-09-17 02:17:08.445 CNTRLR   [Node 006] [~] [Door Lock] outsideHandlesCanOpenDoor: false,false [Endpoint 0]
+                                 ,false,false => false,false,false,false
+2025-09-17 02:17:08.446 CNTRLR   [Node 006] [~] [Door Lock] currentMode: 0 => 255                  [Endpoint 0]
+2025-09-17 02:17:08.447 CNTRLR   [Node 006] [~] [Door Lock] doorStatus: "open" => "open"           [Endpoint 0]
+2025-09-17 02:17:08.447 CNTRLR   [Node 006] [~] [Door Lock] boltStatus: "unlocked" => "locked"     [Endpoint 0]
+2025-09-17 02:17:08.448 CNTRLR   [Node 006] [~] [Door Lock] latchStatus: "open" => "open"          [Endpoint 0]
+2025-09-17 02:17:08.448 DRIVER « [Node 006] [REQ] [BridgeApplicationCommand]
+                                 │ RSSI: -90 dBm
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 158
+                                   │ security class:  S2_AccessControl
+                                   └─[SupervisionCCGet]
+                                     │ session id:      7
+                                     │ request updates: false
+                                     └─[DoorLockCCOperationReport]
+                                         current mode:           Secured
+                                         active outside handles: false, false, false, false
+                                         active inside handles:  false, false, false, false
+                                         latch status:           open
+                                         bolt status:            locked
+                                         door status:            open
+2025-09-17 02:17:08.450 DRIVER   one or more queues busy
+2025-09-17 02:17:08.451 DRIVER » [Node 006] [REQ] [SendDataBridge]
+                                 │ source node id:   1
+                                 │ transmit options: 0x00
+                                 │ callback id:      56
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 216
+                                   └─[SupervisionCCReport]
+                                       session id:          7
+                                       more updates follow: false
+                                       status:              Success
+                                       duration:            0s
+2025-09-17 02:17:08.451 SERIAL » 0x011f00a900010006119f03d800609a2f05176cd5040913f712ed0000000000384 (33 bytes)
+                                 b
+2025-09-17 02:17:08.458 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:17:08.460 SERIAL « 0x010401a90152                                                       (6 bytes)
+2025-09-17 02:17:08.461 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:17:08.461 DRIVER « [RES] [SendDataBridge]
+                                   was sent: true
+2025-09-17 02:17:08.471 SERIAL « 0x011d00a938000001007f7f7f7f7f000103000000000201000000000000000c    (31 bytes)
+2025-09-17 02:17:08.472 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:17:08.472 DRIVER « [REQ] [SendDataBridge]
+                                   callback id:            56
+                                   transmit status:        OK, took 10 ms
+                                   routing attempts:       1
+                                   protocol & route speed: Z-Wave, 40 kbit/s
+                                   routing scheme:         LWR
+                                   TX channel no.:         1
+2025-09-17 02:17:08.569 SERIAL « 0x012700a80000010006199f039f004c884ecc3ea1910485a8f811958b21b59ccf9 (41 bytes)
+                                 a1a97009e007f7fb5
+2025-09-17 02:17:08.570 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:17:08.571 CNTRLR   [Node 006] [~] [Notification] alarmType: 19 => 21                 [Endpoint 0]
+2025-09-17 02:17:08.571 CNTRLR   [Node 006] [~] [Notification] alarmLevel: 1 => 1                  [Endpoint 0]
+2025-09-17 02:17:08.572 DRIVER « [Node 006] [REQ] [BridgeApplicationCommand]
+                                 │ RSSI: -98 dBm
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 159
+                                   │ security class:  S2_AccessControl
+                                   └─[SupervisionCCGet]
+                                     │ session id:      8
+                                     │ request updates: false
+                                     └─[NotificationCCReport]
+                                         V1 alarm type:       21
+                                         V1 alarm level:      1
+                                         notification type:   Access Control
+                                         notification status: 255
+                                         notification event:  Manual lock operation
+2025-09-17 02:17:08.572 CNTRLR   [Node 006] [~] [Door Lock] currentMode: 255 => 255                [Endpoint 0]
+2025-09-17 02:17:08.573 CNTRLR   [Node 006] [Notification]
+                                   type:  Access Control
+                                   event: Manual lock operation
+2025-09-17 02:17:08.975 DRIVER » [Node 006] [REQ] [SendDataBridge]
+                                 │ source node id:   1
+                                 │ transmit options: 0x00
+                                 │ callback id:      57
+                                 └─[Security2CCMessageEncapsulation]
+                                   │ sequence number: 217
+                                   └─[SupervisionCCReport]
+                                       session id:          8
+                                       more updates follow: false
+                                       status:              Success
+                                       duration:            0s
+2025-09-17 02:17:08.977 SERIAL » 0x011f00a900010006119f03d900f1963d69b7f220b45f723a581a0000000000399 (33 bytes)
+                                 4
+2025-09-17 02:17:08.983 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:17:08.986 SERIAL « 0x010401a90152                                                       (6 bytes)
+2025-09-17 02:17:08.988 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:17:08.990 DRIVER « [RES] [SendDataBridge]
+                                   was sent: true
+2025-09-17 02:17:08.998 SERIAL « 0x011d00a939000001007f7f7f7f7f000103000000000201000000000000000d    (31 bytes)
+2025-09-17 02:17:09.000 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:17:09.002 DRIVER « [REQ] [SendDataBridge]
+                                   callback id:            57
+                                   transmit status:        OK, took 10 ms
+                                   routing attempts:       1
+                                   protocol & route speed: Z-Wave, 40 kbit/s
+                                   routing scheme:         LWR
+                                   TX channel no.:         1
+2025-09-17 02:17:09.506 DRIVER   all queues idle
+2025-09-17 02:17:14.606 DRIVER   one or more queues busy
+2025-09-17 02:17:14.608 DRIVER » [REQ] [GetBackgroundRSSI]
+2025-09-17 02:17:14.608 SERIAL » 0x0103003bc7                                                         (5 bytes)
+2025-09-17 02:17:14.611 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:17:14.613 SERIAL « 0x0107013b9793939dc8                                                 (9 bytes)
+2025-09-17 02:17:14.615 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:17:14.616 DRIVER « [RES] [GetBackgroundRSSI]
+                                   channel 0: -105 dBm
+                                   channel 1: -109 dBm
+                                   channel 2: -109 dBm
+                                   channel 3: -99 dBm
+2025-09-17 02:17:14.616 DRIVER   all queues idle
+2025-09-17 02:17:44.606 DRIVER   one or more queues busy
+2025-09-17 02:17:44.607 DRIVER » [REQ] [GetBackgroundRSSI]
+2025-09-17 02:17:44.608 SERIAL » 0x0103003bc7                                                         (5 bytes)
+2025-09-17 02:17:44.611 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:17:44.612 SERIAL « 0x0107013b969494a0f4                                                 (9 bytes)
+2025-09-17 02:17:44.613 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:17:44.613 DRIVER « [RES] [GetBackgroundRSSI]
+                                   channel 0: -106 dBm
+                                   channel 1: -108 dBm
+                                   channel 2: -108 dBm
+                                   channel 3: -96 dBm
+2025-09-17 02:17:44.614 DRIVER   all queues idle
+2025-09-17 02:18:14.608 DRIVER   one or more queues busy
+2025-09-17 02:18:14.609 DRIVER » [REQ] [GetBackgroundRSSI]
+2025-09-17 02:18:14.610 SERIAL » 0x0103003bc7                                                         (5 bytes)
+2025-09-17 02:18:14.613 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:18:14.615 SERIAL « 0x0107013b9492929bcd                                                 (9 bytes)
+2025-09-17 02:18:14.617 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:18:14.618 DRIVER « [RES] [GetBackgroundRSSI]
+                                   channel 0: -108 dBm
+                                   channel 1: -110 dBm
+                                   channel 2: -110 dBm
+                                   channel 3: -101 dBm
+2025-09-17 02:18:14.618 DRIVER   all queues idle
+2025-09-17 02:18:44.609 DRIVER   one or more queues busy
+2025-09-17 02:18:44.610 DRIVER » [REQ] [GetBackgroundRSSI]
+2025-09-17 02:18:44.611 SERIAL » 0x0103003bc7                                                         (5 bytes)
+2025-09-17 02:18:44.614 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:18:44.617 SERIAL « 0x0107013b9c95959fc1                                                 (9 bytes)
+2025-09-17 02:18:44.618 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:18:44.620 DRIVER « [RES] [GetBackgroundRSSI]
+                                   channel 0: -100 dBm
+                                   channel 1: -107 dBm
+                                   channel 2: -107 dBm
+                                   channel 3: -97 dBm
+2025-09-17 02:18:44.622 DRIVER   all queues idle
+2025-09-17 02:19:14.610 DRIVER   one or more queues busy
+2025-09-17 02:19:14.611 DRIVER » [REQ] [GetBackgroundRSSI]
+2025-09-17 02:19:14.612 SERIAL » 0x0103003bc7                                                         (5 bytes)
+2025-09-17 02:19:14.615 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:19:14.618 SERIAL « 0x0107013b9695959cc8                                                 (9 bytes)
+2025-09-17 02:19:14.619 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:19:14.621 DRIVER « [RES] [GetBackgroundRSSI]
+                                   channel 0: -106 dBm
+                                   channel 1: -107 dBm
+                                   channel 2: -107 dBm
+                                   channel 3: -100 dBm
+2025-09-17 02:19:14.622 DRIVER   all queues idle
+2025-09-17 02:19:44.610 DRIVER   one or more queues busy
+2025-09-17 02:19:44.611 DRIVER » [REQ] [GetBackgroundRSSI]
+2025-09-17 02:19:44.612 SERIAL » 0x0103003bc7                                                         (5 bytes)
+2025-09-17 02:19:44.615 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:19:44.617 SERIAL « 0x0107013b9794949dc8                                                 (9 bytes)
+2025-09-17 02:19:44.619 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:19:44.620 DRIVER « [RES] [GetBackgroundRSSI]
+                                   channel 0: -105 dBm
+                                   channel 1: -108 dBm
+                                   channel 2: -108 dBm
+                                   channel 3: -99 dBm
+2025-09-17 02:19:44.620 DRIVER   all queues idle
+2025-09-17 02:20:14.609 DRIVER   one or more queues busy
+2025-09-17 02:20:14.611 DRIVER » [REQ] [GetBackgroundRSSI]
+2025-09-17 02:20:14.611 SERIAL » 0x0103003bc7                                                         (5 bytes)
+2025-09-17 02:20:14.615 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:20:14.618 SERIAL « 0x0107013b9895959dc7                                                 (9 bytes)
+2025-09-17 02:20:14.619 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:20:14.621 DRIVER « [RES] [GetBackgroundRSSI]
+                                   channel 0: -104 dBm
+                                   channel 1: -107 dBm
+                                   channel 2: -107 dBm
+                                   channel 3: -99 dBm
+2025-09-17 02:20:14.622 DRIVER   all queues idle
+2025-09-17 02:20:44.611 DRIVER   one or more queues busy
+2025-09-17 02:20:44.612 DRIVER » [REQ] [GetBackgroundRSSI]
+2025-09-17 02:20:44.613 SERIAL » 0x0103003bc7                                                         (5 bytes)
+2025-09-17 02:20:44.616 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:20:44.618 SERIAL « 0x0107013b9693939bcf                                                 (9 bytes)
+2025-09-17 02:20:44.619 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:20:44.620 DRIVER « [RES] [GetBackgroundRSSI]
+                                   channel 0: -106 dBm
+                                   channel 1: -109 dBm
+                                   channel 2: -109 dBm
+                                   channel 3: -101 dBm
+2025-09-17 02:20:44.621 DRIVER   all queues idle
+2025-09-17 02:21:14.613 DRIVER   one or more queues busy
+2025-09-17 02:21:14.615 DRIVER » [REQ] [GetBackgroundRSSI]
+2025-09-17 02:21:14.615 SERIAL » 0x0103003bc7                                                         (5 bytes)
+2025-09-17 02:21:14.618 SERIAL « [ACK]                                                                   (0x06)
+2025-09-17 02:21:14.621 SERIAL « 0x0107013b979393a1f4                                                 (9 bytes)
+2025-09-17 02:21:14.622 SERIAL » [ACK]                                                                   (0x06)
+2025-09-17 02:21:14.623 DRIVER « [RES] [GetBackgroundRSSI]
+                                   channel 0: -105 dBm
+                                   channel 1: -109 dBm
+                                   channel 2: -109 dBm
+                                   channel 3: -95 dBm
+2025-09-17 02:21:14.623 DRIVER   all queues idle

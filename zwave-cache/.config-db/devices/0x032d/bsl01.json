@@ -1,0 +1,23 @@
+{
+	"manufacturer": "Benetek",
+	"manufacturerId": "0x032d",
+	"label": "BSL01",
+	"description": "",
+	"devices": [
+		{
+			"productType": "0x3002",
+			"productId": "0x0006",
+			"zwaveAllianceId": 2462
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Triple click the Z-Wave button on the Z-Wave module (inside lock body) within 1.5 seconds. The LED will flicker rapidly during inclusion and stay on for 2 seconds when complete.",
+		"exclusion": "Triple click the Z-Wave button on the Z-Wave module (inside lock body) within 1.5 seconds. The LED will flicker rapidly during exclusion and stay on for 2 seconds when complete.",
+		"reset": "The Smart Hidden Door Lock restores factory defaults automatically when the device is excluded.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2462/BENETEK_SL_EN_V4_Ed_5.pdf"
+	}
+}

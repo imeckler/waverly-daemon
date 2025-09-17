@@ -1,0 +1,23 @@
+{
+	"manufacturer": "TechniSat Digital GmbH",
+	"manufacturerId": "0x0299",
+	"label": "CDL-107U",
+	"description": "COMMAX Smart Lock",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0001",
+			"zwaveAllianceId": 3242
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"inclusion": "Ensure the door lock is open.\n1. Press the [R] button for 6 seconds.\n2. Press the [R] button, then press [1][4][7].",
+		"exclusion": "Ensure the door lock is open.\n1. Press the [R] button for 6 seconds.\n2. Press the [R] button, then press [3][6][9].",
+		"reset": "1. Press the [R] button for 9 seconds.\n2. Press the [R] button, then press [1][2][3][6][5][4][7].",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3242/CDL-107U%20Manual_Ver1.0_20190214.pdf"
+	}
+}

@@ -1,0 +1,21 @@
+{
+	"manufacturer": "AdTrustMedia LLC dba: eZLO",
+	"manufacturerId": "0x025b",
+	"label": "EZ0001",
+	"description": "eZLO Controller",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0001",
+			"zwaveAllianceId": 2471
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"reset": "1. Sign in to the eZLO app and select the eZLO hub.\n2. Select \"Settings\" from the My eZLO menu.\n3. Click \"Clean eZLO\" button.\n\nAlternatively:\n1. Sign in to the eZLO app and select the eZLO hub.\n2. Select \"Devices\" from the My eZLO menu.\n3. Select Z-Wave to filter out only Z-Wave devices.\n4. Open the \"Z-Wave Actions\" menu.\n5. Click \"Reset\".",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2471/Ezlo_UserGuide_Web_Device_1.0.pdf"
+	}
+}
