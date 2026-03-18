@@ -448,22 +448,58 @@ async function applySaunaSchedule(
 ): Promise<void> {
   console.log(`Applying ${saunaName} sauna schedule with ${heaterSlots.length} heater slots and ${bookings.length} bookings`);
 
-  await setKVS(heaterIp, 'should_be_on', false);
+  const now = new Date();
 
+  // Determine current should_be_on state: true if we're inside any heater slot
+  let shouldBeOnNow = false;
   for (const slot of heaterSlots) {
-    await scheduleSetFlag(heaterIp, slot.start, true, utcOffset);
-    await scheduleSetFlag(heaterIp, slot.stop, false, utcOffset);
+    if (now >= slot.start && now < slot.stop) {
+      shouldBeOnNow = true;
+      break;
+    }
+  }
+  await setKVS(heaterIp, 'should_be_on', shouldBeOnNow);
+  if (shouldBeOnNow) {
+    console.log(`${saunaName} heater should_be_on set to true (currently inside a heating slot)`);
+  }
+
+  // Schedule future flag changes
+  for (const slot of heaterSlots) {
+    if (slot.start > now) {
+      await scheduleSetFlag(heaterIp, slot.start, true, utcOffset);
+    }
+    if (slot.stop > now) {
+      await scheduleSetFlag(heaterIp, slot.stop, false, utcOffset);
+    }
   }
 
   await deployTemperatureMonitor(heaterIp, config.temperature_threshold);
 
+  // Determine current lights/fan state and schedule future changes
   const mergedBookings = mergeBookings(bookings);
 
+  let lightsOnNow = false;
   for (const period of mergedBookings) {
-    await scheduleSwitch(lightsFanIp, lightsSwitchId, period.start, true, utcOffset);
-    await scheduleSwitch(lightsFanIp, lightsSwitchId, period.stop, false, utcOffset);
+    if (now >= period.start && now < period.stop) {
+      lightsOnNow = true;
+      break;
+    }
+  }
+  if (lightsOnNow) {
+    console.log(`${saunaName} lights on now (currently inside a booking)`);
+    await setSwitch(lightsFanIp, lightsSwitchId, true);
   }
 
+  for (const period of mergedBookings) {
+    if (period.start > now) {
+      await scheduleSwitch(lightsFanIp, lightsSwitchId, period.start, true, utcOffset);
+    }
+    if (period.stop > now) {
+      await scheduleSwitch(lightsFanIp, lightsSwitchId, period.stop, false, utcOffset);
+    }
+  }
+
+  // Fan: on during bookings that overlap heater slots, off 30min after heater stops
   for (const heaterSlot of heaterSlots) {
     const overlappingBookings = bookings.filter(b =>
       b.start < heaterSlot.stop && b.stop > heaterSlot.start
@@ -473,11 +509,17 @@ async function applySaunaSchedule(
       const mergedOccupancy = mergeBookings(overlappingBookings);
 
       for (const period of mergedOccupancy) {
-        await scheduleSwitch(lightsFanIp, fanSwitchId, period.start, true, utcOffset);
+        if (now >= period.start && now < period.stop) {
+          await setSwitch(lightsFanIp, fanSwitchId, true);
+        } else if (period.start > now) {
+          await scheduleSwitch(lightsFanIp, fanSwitchId, period.start, true, utcOffset);
+        }
       }
 
       const fanOffTime = new Date(heaterSlot.stop.getTime() + 30 * 60 * 1000);
-      await scheduleSwitch(lightsFanIp, fanSwitchId, fanOffTime, false, utcOffset);
+      if (fanOffTime > now) {
+        await scheduleSwitch(lightsFanIp, fanSwitchId, fanOffTime, false, utcOffset);
+      }
     }
   }
 }
