@@ -34,6 +34,9 @@ function loadShellyConfig(): ShellyConfig {
     if (!parsed.shelly) {
       throw new Error('No shelly configuration found in config.json');
     }
+    if (parsed.shelly.sauna_server_url && !/^https?:\/\//.test(parsed.shelly.sauna_server_url)) {
+      throw new Error(`shelly.sauna_server_url must start with http:// or https:// (got "${parsed.shelly.sauna_server_url}")`);
+    }
     return parsed.shelly;
   } catch (error) {
     console.error(`Failed to load Shelly config from ${configPath}:`, error);
@@ -235,29 +238,49 @@ async function setKVS(ip: string, key: string, value: any): Promise<void> {
   await shellyRpc(ip, 'KVS.Set', { key, value });
 }
 
-async function scheduleSetFlag(ip: string, time: Date, shouldBeOn: boolean): Promise<void> {
-  console.log(`Scheduling ${ip} to set should_be_on=${shouldBeOn} at ${time.toISOString()}`);
+async function scheduleSetFlag(ip: string, time: Date, shouldBeOn: boolean, utcOffset: number): Promise<void> {
+  const ts = formatCronWithOffset(time, utcOffset);
+  console.log(`Scheduling ${ip} to set should_be_on=${shouldBeOn} at ${time.toISOString()} (device: ${ts})`);
   await shellyRpc(ip, 'Schedule.Create', {
     enable: true,
-    timespec: formatCron(time),
+    timespec: ts,
     calls: [{ method: 'KVS.Set', params: { key: 'should_be_on', value: shouldBeOn } }],
   });
 }
 
-async function scheduleSwitch(ip: string, switchId: number, time: Date, on: boolean): Promise<void> {
-  console.log(`Scheduling switch ${switchId} on ${ip} to ${on ? 'ON' : 'OFF'} at ${time.toISOString()}`);
+async function scheduleSwitch(ip: string, switchId: number, time: Date, on: boolean, utcOffset: number): Promise<void> {
+  const ts = formatCronWithOffset(time, utcOffset);
+  console.log(`Scheduling switch ${switchId} on ${ip} to ${on ? 'ON' : 'OFF'} at ${time.toISOString()} (device: ${ts})`);
   await shellyRpc(ip, 'Schedule.Create', {
     enable: true,
-    timespec: formatCron(time),
+    timespec: ts,
     calls: [{ method: 'Switch.Set', params: { id: switchId, on } }],
   });
 }
 
-function formatCron(date: Date): string {
-  const minutes = date.getUTCMinutes();
-  const hours = date.getUTCHours();
-  const day = date.getUTCDate();
-  const month = date.getUTCMonth() + 1;
+/**
+ * Shelly schedules use device local time. Query the UTC offset from a device,
+ * cache it, and use it to convert UTC dates to device-local timespecs.
+ */
+let deviceUtcOffsetSeconds: number | null = null;
+
+async function getDeviceUtcOffset(): Promise<number> {
+  if (deviceUtcOffsetSeconds !== null) return deviceUtcOffsetSeconds;
+  try {
+    const status = await shellyRpc(config.small_sauna_heater_ip, 'Shelly.GetStatus');
+    deviceUtcOffsetSeconds = status.sys?.utc_offset ?? -25200;
+  } catch {
+    deviceUtcOffsetSeconds = -25200; // default to UTC-7
+  }
+  return deviceUtcOffsetSeconds!;
+}
+
+function formatCronWithOffset(date: Date, utcOffsetSeconds: number): string {
+  const local = new Date(date.getTime() + utcOffsetSeconds * 1000);
+  const minutes = local.getUTCMinutes();
+  const hours = local.getUTCHours();
+  const day = local.getUTCDate();
+  const month = local.getUTCMonth() + 1;
   return `0 ${minutes} ${hours} ${day} ${month} *`;
 }
 
@@ -384,6 +407,7 @@ export async function applyOperationalPlan(
 
   await clearAllSchedulesAndScripts();
 
+  const utcOffset = await getDeviceUtcOffset();
   const smallBookings = bookings.filter(b => b.unitId === 1);
   const bigBookings = bookings.filter(b => b.unitId === 2);
 
@@ -394,7 +418,8 @@ export async function applyOperationalPlan(
     config.small_sauna_fan_switch_id ?? 1,
     plan.small,
     smallBookings,
-    'Small'
+    'Small',
+    utcOffset
   );
 
   await applySaunaSchedule(
@@ -404,7 +429,8 @@ export async function applyOperationalPlan(
     config.big_sauna_fan_switch_id ?? 1,
     plan.big,
     bigBookings,
-    'Big'
+    'Big',
+    utcOffset
   );
 
   console.log('Operational plan applied successfully');
@@ -417,15 +443,16 @@ async function applySaunaSchedule(
   fanSwitchId: number,
   heaterSlots: Slot[],
   bookings: Booking[],
-  saunaName: string
+  saunaName: string,
+  utcOffset: number
 ): Promise<void> {
   console.log(`Applying ${saunaName} sauna schedule with ${heaterSlots.length} heater slots and ${bookings.length} bookings`);
 
   await setKVS(heaterIp, 'should_be_on', false);
 
   for (const slot of heaterSlots) {
-    await scheduleSetFlag(heaterIp, slot.start, true);
-    await scheduleSetFlag(heaterIp, slot.stop, false);
+    await scheduleSetFlag(heaterIp, slot.start, true, utcOffset);
+    await scheduleSetFlag(heaterIp, slot.stop, false, utcOffset);
   }
 
   await deployTemperatureMonitor(heaterIp, config.temperature_threshold);
@@ -433,8 +460,8 @@ async function applySaunaSchedule(
   const mergedBookings = mergeBookings(bookings);
 
   for (const period of mergedBookings) {
-    await scheduleSwitch(lightsFanIp, lightsSwitchId, period.start, true);
-    await scheduleSwitch(lightsFanIp, lightsSwitchId, period.stop, false);
+    await scheduleSwitch(lightsFanIp, lightsSwitchId, period.start, true, utcOffset);
+    await scheduleSwitch(lightsFanIp, lightsSwitchId, period.stop, false, utcOffset);
   }
 
   for (const heaterSlot of heaterSlots) {
@@ -446,11 +473,11 @@ async function applySaunaSchedule(
       const mergedOccupancy = mergeBookings(overlappingBookings);
 
       for (const period of mergedOccupancy) {
-        await scheduleSwitch(lightsFanIp, fanSwitchId, period.start, true);
+        await scheduleSwitch(lightsFanIp, fanSwitchId, period.start, true, utcOffset);
       }
 
       const fanOffTime = new Date(heaterSlot.stop.getTime() + 30 * 60 * 1000);
-      await scheduleSwitch(lightsFanIp, fanSwitchId, fanOffTime, false);
+      await scheduleSwitch(lightsFanIp, fanSwitchId, fanOffTime, false, utcOffset);
     }
   }
 }
