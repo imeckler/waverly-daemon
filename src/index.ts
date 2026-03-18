@@ -8,7 +8,8 @@ import { exit } from 'process';
 import { UsagePollingService } from './usagePollingService';
 import { TranslatedValueID, Driver, isTransportServiceEncapsulation, ZWaveNode } from 'zwave-js';
 import { runLockManager } from './lockManager';
-import { SaunaScheduleClient } from './saunaScheduleClient';
+import { SaunaScheduleClient } from './saunaScheduleClient.js';
+import { startTemperatureMonitor } from './shellyController.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -87,9 +88,6 @@ usageService.start().then(() => {
   console.error('Failed to start usage polling service:', error);
 });
 */
-
-import * as fs from 'fs';
-import * as path from 'path';
 
 // Lock server configuration
 interface LockServerConfig {
@@ -199,7 +197,8 @@ driver.start().then(async () => {
         console.log(`Initializing sauna schedule client for ${shellyConfig.sauna_server_url}...`);
         saunaScheduleClient = new SaunaScheduleClient(shellyConfig.sauna_server_url);
         saunaScheduleClient.connect();
-        console.log('Sauna schedule client initialized');
+        startTemperatureMonitor();
+        console.log('Sauna schedule client and temperature monitor initialized');
       } else {
         console.log('No shelly config found, skipping sauna schedule client');
       }
