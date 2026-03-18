@@ -15,6 +15,9 @@ RUN npm ci --only=production
 # Copy source code
 COPY src/ ./src/
 
+# Copy configuration file
+COPY config.json ./
+
 # Build the application
 RUN npm run build
 

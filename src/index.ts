@@ -2,13 +2,15 @@
   * Consider just doing a polling version of this where the server holds onto the state of who should have
 * access at any time, and we just grab that from the server, query the lock and make sure they are in sync.
   *
-  * Or better, the server sends a diff (or we compute it) 
+  * Or better, the server sends a diff (or we compute it)
 */
 import { exit } from 'process';
 import { UsagePollingService } from './usagePollingService';
 import { TranslatedValueID, Driver, isTransportServiceEncapsulation, ZWaveNode } from 'zwave-js';
 import { runLockManager } from './lockManager';
-// import * as fs from 'fs';
+import { SaunaScheduleClient } from './saunaScheduleClient';
+import * as fs from 'fs';
+import * as path from 'path';
 
 class SaunaManager {
   static TARGET_TEMP = 180;
@@ -32,13 +34,15 @@ const usageService = new UsagePollingService(
 */
 
 // Store references for graceful shutdown
-let wsClient: any = null;
+let wsClients: any[] = [];
+let saunaScheduleClient: SaunaScheduleClient | null = null;
 
 // Graceful shutdown handlers
 process.on('SIGINT', async () => {
   console.log('Received SIGINT, shutting down services...');
-  if (wsClient) {
-    wsClient.disconnect();
+  wsClients.forEach(client => client.disconnect());
+  if (saunaScheduleClient) {
+    saunaScheduleClient.disconnect();
   }
   // await usageService.stop();
   process.exit(0);
@@ -46,8 +50,9 @@ process.on('SIGINT', async () => {
 
 process.on('SIGTERM', async () => {
   console.log('Received SIGTERM, shutting down services...');
-  if (wsClient) {
-    wsClient.disconnect();
+  wsClients.forEach(client => client.disconnect());
+  if (saunaScheduleClient) {
+    saunaScheduleClient.disconnect();
   }
   // await usageService.stop();
   process.exit(0);
@@ -83,44 +88,123 @@ usageService.start().then(() => {
 });
 */
 
+import * as fs from 'fs';
+import * as path from 'path';
+
+// Lock server configuration
+interface LockServerConfig {
+  serverUrl: string;
+  lockNodeIds: number[];
+  description?: string;
+}
+
+interface ShellyConfig {
+  small_sauna_heater_ip: string;
+  small_sauna_lights_fan_ip: string;
+  big_sauna_heater_ip: string;
+  big_sauna_lights_fan_ip: string;
+  temperature_threshold: number;
+  sauna_server_url: string;
+  daemon_secret?: string;
+}
+
+interface DaemonConfig {
+  lockServers: LockServerConfig[];
+  shelly?: ShellyConfig;
+}
+
+// Load daemon configuration
+function loadDaemonConfig(): DaemonConfig {
+  const configPath = process.env.DAEMON_CONFIG_FILE || './config.json';
+  try {
+    const configData = fs.readFileSync(configPath, 'utf-8');
+    const parsed = JSON.parse(configData);
+    console.log(`Loaded daemon config from ${configPath}`);
+    return parsed;
+  } catch (error) {
+    console.error(`Failed to read/parse config file ${configPath}:`, error);
+    throw error;
+  }
+}
+
 driver.start().then(async () => {
   return driver.on('all nodes ready', () => {
     console.log('All Z-Wave nodes are ready');
 
-    const lockNode = driver.controller.nodes.get(6);
-    if (lockNode == undefined) {
-      console.error('Lock node (node 2) not found');
+    const daemonConfig = loadDaemonConfig();
+    const lockServerConfigs = daemonConfig.lockServers;
+    console.log(`Initializing ${lockServerConfigs.length} booking server connection(s)...`);
+
+    // Group lock nodes by server URL
+    const serverToLocks = new Map<string, ZWaveNode[]>();
+
+    for (const config of lockServerConfigs) {
+      const locks: ZWaveNode[] = [];
+
+      for (const nodeId of config.lockNodeIds) {
+        const lockNode = driver.controller.nodes.get(nodeId);
+        if (!lockNode) {
+          console.error(`Lock node ${nodeId} not found, skipping`);
+          continue;
+        }
+
+        console.log(`Found lock node ${nodeId}`);
+        locks.push(lockNode);
+
+        // Get ALL values for the node (for debugging)
+        const allValues = lockNode.getDefinedValueIDs();
+        console.log(`Lock ${nodeId} has ${allValues.length} defined values`);
+
+        // Get specific User Code values
+        const userCodeValues = allValues.filter(v => v.commandClass === 99); // User Code CC
+        console.log(`Lock ${nodeId}: Found ${userCodeValues.length} user code-related values`);
+
+        // Log initial user code slots
+        userCodeValues.forEach(valueId => {
+          const value = lockNode.getValue(valueId);
+          if (valueId.property === 'userCode' && value) {
+            console.log(`Lock ${nodeId} user slot ${valueId.propertyKey}: ${value}`);
+          }
+          if (valueId.property === 'userIdStatus') {
+            console.log(`Lock ${nodeId} user slot ${valueId.propertyKey} status: ${value}`);
+          }
+        });
+      }
+
+      if (locks.length > 0) {
+        serverToLocks.set(config.serverUrl, locks);
+      }
+    }
+
+    if (serverToLocks.size === 0) {
+      console.error('No lock nodes found, exiting');
       exit(1);
     }
 
-    console.log('Lock node found, initializing lock manager...');
+    // Initialize lock managers for each server
+    for (const [serverUrl, locks] of serverToLocks.entries()) {
+      console.log(`Initializing lock manager for ${serverUrl} with ${locks.length} lock(s)...`);
+      const { managers, wsClient } = runLockManager(locks, serverUrl);
+      wsClients.push(wsClient);
+      console.log(`Lock manager for ${serverUrl} initialized with ${managers.length} lock(s)`);
+    }
 
-    // Initialize lock manager with WebSocket connection
-    const serverUrl = process.env.BOOKING_SERVER_URL || 'ws://localhost:8080';
-    const { manager, wsClient: lockWsClient } = runLockManager(lockNode, serverUrl);
+    console.log('All lock managers initialized successfully');
 
-    // Store reference for graceful shutdown
-    wsClient = lockWsClient;
+    // Initialize Sauna Schedule Client if shelly config exists
+    try {
+      const shellyConfig = daemonConfig.shelly;
 
-    // Get ALL values for the node (for debugging)
-    const allValues = lockNode.getDefinedValueIDs();
-    console.log(`Lock has ${allValues.length} defined values`);
-
-    // Get specific User Code values
-    const userCodeValues = allValues.filter(v => v.commandClass === 99); // User Code CC
-    console.log(`Found ${userCodeValues.length} user code-related values`);
-
-    // Log initial user code slots
-    userCodeValues.forEach(valueId => {
-      const value = lockNode.getValue(valueId);
-      if (valueId.property === 'userCode' && value) {
-        console.log(`User slot ${valueId.propertyKey}: ${value}`);
+      if (shellyConfig && shellyConfig.sauna_server_url) {
+        console.log(`Initializing sauna schedule client for ${shellyConfig.sauna_server_url}...`);
+        saunaScheduleClient = new SaunaScheduleClient(shellyConfig.sauna_server_url);
+        saunaScheduleClient.connect();
+        console.log('Sauna schedule client initialized');
+      } else {
+        console.log('No shelly config found, skipping sauna schedule client');
       }
-      if (valueId.property === 'userIdStatus') {
-        console.log(`User slot ${valueId.propertyKey} status: ${value}`);
-      }
-    });
-
-    console.log('Lock manager initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize sauna schedule client:', error);
+    }
   })
 });

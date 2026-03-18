@@ -23,8 +23,9 @@ type BookingMessage =
   | { kind: 'addAccess', code: string, start: number, stop: number }
   | { kind: 'removeAccess', code: string, start: number, stop: number };
 
-export function runLockManager(lock: ZWaveNode, serverUrl: string) {
-  const manager = new LockManager(lock);
+export function runLockManager(locks: ZWaveNode[], serverUrl: string) {
+  // Create a manager for each lock
+  const managers = locks.map(lock => new LockManager(lock));
   const wsClient = new BookingWebSocketClient({ serverUrl });
 
   wsClient.onMessage((message: BookingMessage) => {
@@ -32,17 +33,23 @@ export function runLockManager(lock: ZWaveNode, serverUrl: string) {
 
     switch (message.kind) {
       case 'addAccess':
-        const addResult = manager.addAccessInterval(message.code, [new Date(message.start), new Date(message.stop)]);
-        if (addResult.ok === false) {
-          console.error(`Failed to add access for code ${message.code}:`, addResult.error);
-        } else {
-          console.log(`Successfully added access for code ${message.code}`);
+        // Add access to all locks managed by this server
+        for (const manager of managers) {
+          const addResult = manager.addAccessInterval(message.code, [new Date(message.start), new Date(message.stop)]);
+          if (addResult.ok === false) {
+            console.error(`Failed to add access for code ${message.code} on lock:`, addResult.error);
+          } else {
+            console.log(`Successfully added access for code ${message.code} on lock`);
+          }
         }
         break;
 
       case 'removeAccess':
-        manager.removeAccessInterval(message.code, [new Date(message.start), new Date(message.stop)]);
-        console.log(`Removed access for code ${message.code}`);
+        // Remove access from all locks managed by this server
+        for (const manager of managers) {
+          manager.removeAccessInterval(message.code, [new Date(message.start), new Date(message.stop)]);
+        }
+        console.log(`Removed access for code ${message.code} from all locks`);
         break;
 
       default:
@@ -52,12 +59,12 @@ export function runLockManager(lock: ZWaveNode, serverUrl: string) {
 
   // Connect to WebSocket server
   wsClient.connect().then(() => {
-    console.log('Lock manager WebSocket client connected successfully');
+    console.log(`Lock manager WebSocket client connected successfully to ${serverUrl}`);
   }).catch((error) => {
-    console.error('Failed to connect lock manager WebSocket client:', error);
+    console.error(`Failed to connect lock manager WebSocket client to ${serverUrl}:`, error);
   });
 
-  return { manager, wsClient };
+  return { managers, wsClient };
 }
 
 
