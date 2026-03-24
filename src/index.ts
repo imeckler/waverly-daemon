@@ -9,7 +9,7 @@ import { UsagePollingService } from './usagePollingService';
 import { TranslatedValueID, Driver, isTransportServiceEncapsulation, ZWaveNode } from 'zwave-js';
 import { runLockManager } from './lockManager';
 import { SaunaScheduleClient } from './saunaScheduleClient.js';
-import { startTemperatureMonitor } from './shellyController.js';
+import { startTemperatureMonitor, deployTemperatureMonitors } from './shellyController.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -198,6 +198,7 @@ driver.start().then(async () => {
         saunaScheduleClient = new SaunaScheduleClient(shellyConfig.sauna_server_url);
         saunaScheduleClient.connect();
         startTemperatureMonitor();
+        deployTemperatureMonitors().catch(e => console.error('Failed to deploy temperature monitors:', e));
         console.log('Sauna schedule client and temperature monitor initialized');
       } else {
         console.log('No shelly config found, skipping sauna schedule client');

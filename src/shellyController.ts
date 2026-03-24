@@ -634,6 +634,13 @@ export function stopTemperatureMonitor(): void {
   }
 }
 
+export async function deployTemperatureMonitors(): Promise<void> {
+  console.log('Deploying temperature monitor scripts to all heaters...');
+  await deployTemperatureMonitor(config.small_sauna_heater_ip, config.temperature_threshold);
+  await deployTemperatureMonitor(config.big_sauna_heater_ip, config.temperature_threshold);
+  console.log('Temperature monitor scripts deployed');
+}
+
 export async function setSaunaOverride(sauna: 'small' | 'big', override: 'on' | 'off' | 'none'): Promise<void> {
   const heaterIp = sauna === 'small' ? config.small_sauna_heater_ip : config.big_sauna_heater_ip;
   console.log(`Setting override=${override} on ${sauna} sauna (${heaterIp})`);
