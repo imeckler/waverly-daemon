@@ -299,35 +299,44 @@ async function deployTemperatureMonitor(
   const script = `
 // Temperature monitoring script — reads from addon sensor (temperature:100)
 // Hysteresis: turn OFF at ${offAt}F, turn back ON at ${onAt}F
+// Override KVS key: "on" = force on, "off" = force off, "none" = follow schedule
 let TEMP_OFF = ${offAt};
 let TEMP_ON = ${onAt};
 
 function checkTemperature() {
-  Shelly.call("KVS.Get", { key: "should_be_on" }, function(result, error_code, error_message) {
-    if (error_code !== 0) {
-      print("Error getting should_be_on flag:", error_message);
-      return;
-    }
+  Shelly.call("KVS.Get", { key: "override" }, function(ovr, oe) {
+    let override = (oe === 0 && ovr) ? ovr.value : "none";
 
-    let shouldBeOn = result.value || false;
+    Shelly.call("KVS.Get", { key: "should_be_on" }, function(result, error_code, error_message) {
+      if (error_code !== 0) {
+        print("Error getting should_be_on flag:", error_message);
+        return;
+      }
 
-    let temp = Shelly.getComponentStatus("temperature", 100);
-    if (!temp || typeof temp.tF === 'undefined') {
-      print("No addon temperature sensor found");
-      return;
-    }
+      let scheduleSaysOn = result.value || false;
+      let shouldBeOn = override === "on" ? true : override === "off" ? false : scheduleSaysOn;
 
-    let tempF = temp.tF;
-    let sw = Shelly.getComponentStatus("switch", 0);
-    let switchOn = sw ? sw.output : false;
+      let temp = Shelly.getComponentStatus("temperature", 100);
+      if (!temp || typeof temp.tF === 'undefined') {
+        print("No addon temperature sensor found");
+        return;
+      }
 
-    if (tempF >= TEMP_OFF && switchOn) {
-      print("Temperature " + JSON.stringify(tempF) + "F >= " + JSON.stringify(TEMP_OFF) + "F - turning OFF");
-      Shelly.call("Switch.Set", { id: 0, on: false });
-    } else if (tempF <= TEMP_ON && !switchOn && shouldBeOn) {
-      print("Temperature " + JSON.stringify(tempF) + "F <= " + JSON.stringify(TEMP_ON) + "F - turning ON");
-      Shelly.call("Switch.Set", { id: 0, on: true });
-    }
+      let tempF = temp.tF;
+      let sw = Shelly.getComponentStatus("switch", 0);
+      let switchOn = sw ? sw.output : false;
+
+      if (override === "off" && switchOn) {
+        print("Override OFF - turning heater OFF");
+        Shelly.call("Switch.Set", { id: 0, on: false });
+      } else if (tempF >= TEMP_OFF && switchOn) {
+        print("Temperature " + JSON.stringify(tempF) + "F >= " + JSON.stringify(TEMP_OFF) + "F - turning OFF");
+        Shelly.call("Switch.Set", { id: 0, on: false });
+      } else if (tempF <= TEMP_ON && !switchOn && shouldBeOn) {
+        print("Temperature " + JSON.stringify(tempF) + "F <= " + JSON.stringify(TEMP_ON) + "F - turning ON");
+        Shelly.call("Switch.Set", { id: 0, on: true });
+      }
+    });
   });
 }
 
@@ -623,6 +632,12 @@ export function stopTemperatureMonitor(): void {
     clearInterval(tempMonitorInterval);
     tempMonitorInterval = null;
   }
+}
+
+export async function setSaunaOverride(sauna: 'small' | 'big', override: 'on' | 'off' | 'none'): Promise<void> {
+  const heaterIp = sauna === 'small' ? config.small_sauna_heater_ip : config.big_sauna_heater_ip;
+  console.log(`Setting override=${override} on ${sauna} sauna (${heaterIp})`);
+  await setKVS(heaterIp, 'override', override);
 }
 
 export async function manualControl(

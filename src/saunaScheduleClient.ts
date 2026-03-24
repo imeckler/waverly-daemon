@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { applyOperationalPlan, Booking, OperationalPlan } from './shellyController.js';
+import { applyOperationalPlan, Booking, OperationalPlan, setSaunaOverride } from './shellyController.js';
 
 interface ScheduleUpdateMessage {
   kind: 'scheduleUpdate';
@@ -14,6 +14,12 @@ interface ScheduleUpdateMessage {
     start: string;
     stop: string;
   }>;
+}
+
+interface SaunaOverrideMessage {
+  kind: 'saunaOverride';
+  sauna: 'small' | 'big';
+  override: 'on' | 'off' | 'none';
 }
 
 export class SaunaScheduleClient {
@@ -47,14 +53,16 @@ export class SaunaScheduleClient {
 
       this.ws.on('message', (data) => {
         try {
-          const message: ScheduleUpdateMessage = JSON.parse(data.toString());
-          console.log('Received schedule update:', message.kind);
+          const message = JSON.parse(data.toString());
+          console.log('Received WebSocket message:', message.kind);
 
           if (message.kind === 'scheduleUpdate') {
-            this.handleScheduleUpdate(message);
+            this.handleScheduleUpdate(message as ScheduleUpdateMessage);
+          } else if (message.kind === 'saunaOverride') {
+            this.handleSaunaOverride(message as SaunaOverrideMessage);
           }
         } catch (error) {
-          console.error('Failed to parse schedule message:', error);
+          console.error('Failed to parse WebSocket message:', error);
         }
       });
 
@@ -67,6 +75,14 @@ export class SaunaScheduleClient {
 
       this.ws.on('error', (error) => {
         console.error('Sauna schedule WebSocket error:', error);
+        // Close triggers reconnect; avoid double-reconnect by only
+        // scheduling here if close hasn't fired yet.
+        if (this.ws) {
+          this.ws.removeAllListeners();
+          this.ws = null;
+          this.isConnected = false;
+          this.scheduleReconnect();
+        }
       });
 
     } catch (error) {
@@ -119,6 +135,16 @@ export class SaunaScheduleClient {
       console.log('Successfully applied Shelly schedules');
     } catch (error) {
       console.error('Failed to apply schedule update:', error);
+    }
+  }
+
+  private async handleSaunaOverride(message: SaunaOverrideMessage): Promise<void> {
+    try {
+      console.log(`Setting ${message.sauna} sauna override to ${message.override}`);
+      await setSaunaOverride(message.sauna, message.override);
+      console.log(`Successfully set ${message.sauna} sauna override`);
+    } catch (error) {
+      console.error('Failed to set sauna override:', error);
     }
   }
 
