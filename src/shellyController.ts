@@ -295,13 +295,20 @@ async function deployTemperatureMonitor(
   const hysteresisF = 5;
   const offAt = tempThresholdF;
   const onAt = tempThresholdF - hysteresisF;
+  const lookaheadSeconds = 180;
 
   const script = `
 // Temperature monitoring script — reads from addon sensor (temperature:100)
-// Hysteresis: turn OFF at ${offAt}F, turn back ON at ${onAt}F
+// Predictive control: estimates where temp will be in ${lookaheadSeconds}s based on rate of change,
+// to compensate for thermal lag (~5min from heater mass continuing to radiate after shutoff).
+// Hard limits: OFF at ${offAt}F, ON at ${onAt}F (unchanged safety bounds)
 // Override KVS key: "on" = force on, "off" = force off, "none" = follow schedule
 let TEMP_OFF = ${offAt};
 let TEMP_ON = ${onAt};
+let LOOKAHEAD_S = ${lookaheadSeconds};
+
+let prevTempF = null;
+let prevTimeS = null;
 
 function checkTemperature() {
   Shelly.call("KVS.Get", { key: "override" }, function(ovr, oe) {
@@ -323,6 +330,20 @@ function checkTemperature() {
       }
 
       let tempF = temp.tF;
+      let nowS = Date.now() / 1000;
+
+      // Predict future temperature based on rate of change
+      let predictedF = tempF;
+      if (prevTempF !== null && prevTimeS !== null) {
+        let dtS = nowS - prevTimeS;
+        if (dtS > 0) {
+          let ratePerS = (tempF - prevTempF) / dtS;
+          predictedF = tempF + ratePerS * LOOKAHEAD_S;
+        }
+      }
+      prevTempF = tempF;
+      prevTimeS = nowS;
+
       let sw = Shelly.getComponentStatus("switch", 0);
       let switchOn = sw ? sw.output : false;
 
@@ -330,10 +351,16 @@ function checkTemperature() {
         print("Override OFF - turning heater OFF");
         Shelly.call("Switch.Set", { id: 0, on: false });
       } else if (tempF >= TEMP_OFF && switchOn) {
-        print("Temperature " + JSON.stringify(tempF) + "F >= " + JSON.stringify(TEMP_OFF) + "F - turning OFF");
+        print("Temperature " + JSON.stringify(tempF) + "F >= " + JSON.stringify(TEMP_OFF) + "F - turning OFF (hard limit)");
+        Shelly.call("Switch.Set", { id: 0, on: false });
+      } else if (predictedF >= TEMP_OFF && switchOn) {
+        print("Predicted " + JSON.stringify(predictedF) + "F >= " + JSON.stringify(TEMP_OFF) + "F (current " + JSON.stringify(tempF) + "F) - turning OFF early");
         Shelly.call("Switch.Set", { id: 0, on: false });
       } else if (tempF <= TEMP_ON && !switchOn && shouldBeOn) {
-        print("Temperature " + JSON.stringify(tempF) + "F <= " + JSON.stringify(TEMP_ON) + "F - turning ON");
+        print("Temperature " + JSON.stringify(tempF) + "F <= " + JSON.stringify(TEMP_ON) + "F - turning ON (hard limit)");
+        Shelly.call("Switch.Set", { id: 0, on: true });
+      } else if (predictedF <= TEMP_ON && !switchOn && shouldBeOn) {
+        print("Predicted " + JSON.stringify(predictedF) + "F <= " + JSON.stringify(TEMP_ON) + "F (current " + JSON.stringify(tempF) + "F) - turning ON early");
         Shelly.call("Switch.Set", { id: 0, on: true });
       }
     });
