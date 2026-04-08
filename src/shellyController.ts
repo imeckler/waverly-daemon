@@ -8,8 +8,35 @@ const SWITCH_RETRY_DELAY_MS = 2_000;
 const TEMP_CHECK_INTERVAL_MS = 30_000;
 const OVERHEAT_MARGIN_F = 15;
 
+// How many consecutive check cycles a condition must persist before alerting.
+// At 30s intervals this is 2.5 minutes.
+const ALERT_THRESHOLD_CYCLES = 5;
+
+// Minimum expected temperature rise (°F) over TEMP_RISE_WINDOW_MS when heater should be on.
+// If temp doesn't rise by at least this much, something is wrong.
+const TEMP_RISE_MIN_F = 2;
+const TEMP_RISE_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+
+// Warmup time in minutes (must match plan.ts constant)
+const WARMUP_TIME_MINUTES = 60;
+
+// How far below target a sauna can be when it should already be hot
+const NOT_HOT_TOLERANCE_F = 30;
+
 // Track active PagerDuty incidents so we can auto-resolve
 const activeDeviceIncidents = new Map<string, string>();
+
+// Track consecutive failure counts for threshold-based alerts
+const failCounts = new Map<string, number>();
+
+// Current operational plan (set when schedule is applied)
+let currentPlan: OperationalPlan | null = null;
+
+// Recent temperature readings per sauna for rate-of-change checks
+const tempHistory: Record<string, { temperatureF: number; timestamp: number }[]> = {
+  small: [],
+  big: [],
+};
 
 interface ShellyConfig {
   small_sauna_heater_ip: string;
@@ -441,6 +468,13 @@ export async function applyOperationalPlan(
 ): Promise<void> {
   console.log('Applying operational plan to Shelly devices...');
 
+  // Store plan so the health monitor can check expected heater state
+  currentPlan = plan;
+
+  // Reset temp history since new plan may change expectations
+  tempHistory.small = [];
+  tempHistory.big = [];
+
   await clearAllSchedulesAndScripts();
 
   const utcOffset = await getDeviceUtcOffset();
@@ -602,6 +636,184 @@ function checkOverheatFromStatus(name: string, ip: string, temperatureF: number 
   }
 }
 
+// --- Threshold-based alerting helpers ---
+
+/**
+ * Bump a failure counter and trigger a PagerDuty incident when it crosses the threshold.
+ * Only fires on the exact threshold crossing to avoid spamming.
+ */
+async function alertIfThreshold(
+  key: string,
+  summary: string,
+  severity: 'critical' | 'error' | 'warning' | 'info',
+  dedupKey: string,
+  threshold = ALERT_THRESHOLD_CYCLES,
+): Promise<void> {
+  const count = (failCounts.get(key) || 0) + 1;
+  failCounts.set(key, count);
+
+  if (count === threshold) {
+    try {
+      await triggerIncident(summary, severity, dedupKey);
+      activeDeviceIncidents.set(dedupKey, dedupKey);
+      console.error(`[monitor] ALERT: ${summary}`);
+    } catch (e) {
+      console.error(`[monitor] Failed to trigger PagerDuty:`, e);
+    }
+  }
+}
+
+/**
+ * Clear a failure counter and auto-resolve the PagerDuty incident if one was fired.
+ */
+async function resolveIfClear(key: string, dedupKey: string): Promise<void> {
+  const count = failCounts.get(key) || 0;
+  failCounts.delete(key);
+
+  if (count >= ALERT_THRESHOLD_CYCLES && activeDeviceIncidents.has(dedupKey)) {
+    try {
+      await resolveIncident(dedupKey);
+      activeDeviceIncidents.delete(dedupKey);
+      console.log(`[monitor] Resolved: ${dedupKey}`);
+    } catch (e) {
+      console.error(`[monitor] Failed to resolve PagerDuty:`, e);
+    }
+  }
+}
+
+/**
+ * Check whether a sauna's heater should currently be on (warming up or holding hot)
+ * based on the operational plan. Plan slots cover the full period from heater-on to heater-off.
+ */
+function saunaHeaterShouldBeOn(slots: Slot[]): boolean {
+  if (!slots.length) return false;
+  const now = Date.now();
+  for (const slot of slots) {
+    if (now >= slot.start.getTime() && now < slot.stop.getTime()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Check whether a sauna should be HOT right now — i.e. we're past the warmup
+ * period within a plan slot.
+ */
+function saunaShouldBeHot(slots: Slot[]): boolean {
+  if (!slots.length) return false;
+  const now = Date.now();
+  const warmupMs = WARMUP_TIME_MINUTES * 60 * 1000;
+  for (const slot of slots) {
+    const hotStart = slot.start.getTime() + warmupMs;
+    if (now >= hotStart && now < slot.stop.getTime()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Record a temperature reading and check whether temperature is rising.
+ * Returns true if we have enough history and the sauna has warmed by at
+ * least TEMP_RISE_MIN_F over the last TEMP_RISE_WINDOW_MS.
+ * Returns null if we don't have enough data yet.
+ */
+function recordTempAndCheckRising(sauna: string, temperatureF: number): boolean | null {
+  const now = Date.now();
+  const history = tempHistory[sauna];
+  history.push({ temperatureF, timestamp: now });
+
+  // Prune entries older than the window
+  const cutoff = now - TEMP_RISE_WINDOW_MS;
+  while (history.length > 0 && history[0].timestamp < cutoff) {
+    history.shift();
+  }
+
+  // Need at least the window's worth of data
+  if (history.length < 2 || (now - history[0].timestamp) < TEMP_RISE_WINDOW_MS * 0.8) {
+    return null; // Not enough data yet
+  }
+
+  const oldest = history[0];
+  const rise = temperatureF - oldest.temperatureF;
+  return rise >= TEMP_RISE_MIN_F;
+}
+
+/**
+ * Run health checks for a single sauna after status is fetched.
+ */
+function checkSaunaHealth(
+  name: 'Small' | 'Big',
+  status: { on: boolean; temperatureF: number | null; reachable: boolean },
+  planSlots: Slot[],
+): void {
+  const id = name.toLowerCase();
+
+  // 1. Device unreachable
+  if (!status.reachable) {
+    alertIfThreshold(
+      `unreachable-${id}`,
+      `${name} sauna Shelly device is unreachable`,
+      'critical',
+      `sauna-unreachable-${id}`,
+    );
+  } else {
+    resolveIfClear(`unreachable-${id}`, `sauna-unreachable-${id}`);
+  }
+
+  // 2. No temperature reading (device reachable but sensor gives null)
+  if (status.reachable && status.temperatureF === null) {
+    alertIfThreshold(
+      `no-temp-${id}`,
+      `${name} sauna has no temperature reading (sensor may be disconnected)`,
+      'error',
+      `sauna-no-temp-${id}`,
+    );
+  } else {
+    resolveIfClear(`no-temp-${id}`, `sauna-no-temp-${id}`);
+  }
+
+  // 3. Heater should be on (warming up or hot) but temperature isn't rising
+  const shouldBeOn = saunaHeaterShouldBeOn(planSlots);
+  if (shouldBeOn && status.reachable && status.temperatureF !== null) {
+    // Already at target — no problem
+    if (status.temperatureF >= config.temperature_threshold - OVERHEAT_MARGIN_F) {
+      resolveIfClear(`not-heating-${id}`, `sauna-not-heating-${id}`);
+    } else {
+      const rising = recordTempAndCheckRising(id, status.temperatureF);
+      if (rising === false) {
+        // We have enough data and temp is NOT rising
+        alertIfThreshold(
+          `not-heating-${id}`,
+          `${name} sauna should be heating but temperature is not rising (${status.temperatureF}°F, target ${config.temperature_threshold}°F)`,
+          'error',
+          `sauna-not-heating-${id}`,
+        );
+      } else {
+        // Either rising or not enough data yet — clear any prior alert
+        resolveIfClear(`not-heating-${id}`, `sauna-not-heating-${id}`);
+      }
+    }
+  } else {
+    resolveIfClear(`not-heating-${id}`, `sauna-not-heating-${id}`);
+  }
+
+  // 4. Should be hot (past warmup) but significantly under target temperature
+  const shouldBeHot = saunaShouldBeHot(planSlots);
+  if (shouldBeHot && status.reachable && status.temperatureF !== null &&
+      status.temperatureF < config.temperature_threshold - NOT_HOT_TOLERANCE_F) {
+    alertIfThreshold(
+      `not-hot-${id}`,
+      `${name} sauna should be hot but is only ${status.temperatureF}°F (target ${config.temperature_threshold}°F)`,
+      'critical',
+      `sauna-not-hot-${id}`,
+    );
+  } else {
+    resolveIfClear(`not-hot-${id}`, `sauna-not-hot-${id}`);
+  }
+}
+
 export async function getAllSaunaStatus(): Promise<{
   small: { on: boolean; temperatureF: number | null; reachable: boolean };
   big: { on: boolean; temperatureF: number | null; reachable: boolean };
@@ -617,6 +829,9 @@ export async function getAllSaunaStatus(): Promise<{
 
   checkOverheatFromStatus('Small', config.small_sauna_heater_ip, small.temperatureF);
   checkOverheatFromStatus('Big', config.big_sauna_heater_ip, big.temperatureF);
+
+  checkSaunaHealth('Small', small, currentPlan?.small ?? []);
+  checkSaunaHealth('Big', big, currentPlan?.big ?? []);
 
   return { small, big };
 }
@@ -672,6 +887,15 @@ export async function setSaunaOverride(sauna: 'small' | 'big', override: 'on' | 
   const heaterIp = sauna === 'small' ? config.small_sauna_heater_ip : config.big_sauna_heater_ip;
   console.log(`Setting override=${override} on ${sauna} sauna (${heaterIp})`);
   await setKVS(heaterIp, 'override', override);
+
+  // When clearing an override, sync should_be_on with the current plan
+  // so the device doesn't keep running on a stale flag
+  if (override === 'none') {
+    const slots = sauna === 'small' ? currentPlan?.small : currentPlan?.big;
+    const shouldBeOnNow = saunaHeaterShouldBeOn(slots ?? []);
+    console.log(`Syncing should_be_on=${shouldBeOnNow} on ${sauna} sauna after clearing override`);
+    await setKVS(heaterIp, 'should_be_on', shouldBeOnNow);
+  }
 }
 
 export async function manualControl(
