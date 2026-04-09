@@ -74,15 +74,16 @@ export class SaunaScheduleClient {
       });
 
       this.ws.on('error', (error) => {
-        console.error('Sauna schedule WebSocket error:', error);
-        // Close triggers reconnect; avoid double-reconnect by only
-        // scheduling here if close hasn't fired yet.
+        console.error('Sauna schedule WebSocket error:', error.message);
+        // Error is always followed by close for established connections,
+        // but for connection failures close may not fire. Clean up and
+        // ensure reconnect is scheduled.
         if (this.ws) {
           this.ws.removeAllListeners();
           this.ws = null;
-          this.isConnected = false;
-          this.scheduleReconnect();
         }
+        this.isConnected = false;
+        this.scheduleReconnect();
       });
 
     } catch (error) {
