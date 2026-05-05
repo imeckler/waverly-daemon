@@ -377,6 +377,9 @@ function checkTemperature() {
       if (override === "off" && switchOn) {
         print("Override OFF - turning heater OFF");
         Shelly.call("Switch.Set", { id: 0, on: false });
+      } else if (!shouldBeOn && override !== "on" && switchOn) {
+        print("Schedule says off and override is not ON - turning heater OFF");
+        Shelly.call("Switch.Set", { id: 0, on: false });
       } else if (tempF >= TEMP_OFF && switchOn) {
         print("Temperature " + JSON.stringify(tempF) + "F >= " + JSON.stringify(TEMP_OFF) + "F - turning OFF (hard limit)");
         Shelly.call("Switch.Set", { id: 0, on: false });
