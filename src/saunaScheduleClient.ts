@@ -28,9 +28,32 @@ export class SaunaScheduleClient {
   private reconnectInterval = 5000;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private isConnected = false;
+  // Watchdog: Cloudflare in front of the sauna server idle-closes WebSockets
+  // after ~100s and the FIN can fail to reach us, leaving a zombie socket.
+  // If we don't receive any frame (message or pong) within this window, force
+  // a reconnect.
+  private readonly watchdogTimeoutMs = 90_000;
+  private watchdogTimer: NodeJS.Timeout | null = null;
 
   constructor(serverUrl: string) {
     this.serverUrl = serverUrl;
+  }
+
+  private resetWatchdog(): void {
+    if (this.watchdogTimer) clearTimeout(this.watchdogTimer);
+    this.watchdogTimer = setTimeout(() => {
+      console.warn('Sauna schedule WebSocket watchdog: no traffic, forcing reconnect');
+      if (this.ws) {
+        try { this.ws.terminate(); } catch {}
+      }
+    }, this.watchdogTimeoutMs);
+  }
+
+  private clearWatchdog(): void {
+    if (this.watchdogTimer) {
+      clearTimeout(this.watchdogTimer);
+      this.watchdogTimer = null;
+    }
   }
 
   connect(): void {
@@ -44,6 +67,7 @@ export class SaunaScheduleClient {
       this.ws.on('open', () => {
         console.log('Connected to sauna schedule WebSocket');
         this.isConnected = true;
+        this.resetWatchdog();
 
         if (this.reconnectTimer) {
           clearTimeout(this.reconnectTimer);
@@ -52,6 +76,7 @@ export class SaunaScheduleClient {
       });
 
       this.ws.on('message', (data) => {
+        this.resetWatchdog();
         try {
           const message = JSON.parse(data.toString());
           console.log('Received WebSocket message:', message.kind);
@@ -66,10 +91,15 @@ export class SaunaScheduleClient {
         }
       });
 
+      // Any ping/pong frame also counts as liveness.
+      this.ws.on('ping', () => this.resetWatchdog());
+      this.ws.on('pong', () => this.resetWatchdog());
+
       this.ws.on('close', () => {
         console.log('Sauna schedule WebSocket connection closed');
         this.isConnected = false;
         this.ws = null;
+        this.clearWatchdog();
         this.scheduleReconnect();
       });
 
@@ -83,6 +113,7 @@ export class SaunaScheduleClient {
           this.ws = null;
         }
         this.isConnected = false;
+        this.clearWatchdog();
         this.scheduleReconnect();
       });
 
