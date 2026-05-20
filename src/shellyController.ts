@@ -383,9 +383,9 @@ let prevTimeS = null;
 
 let thermostatTimer = null;
 
-// A ring buffer is an object { arr: Array, start: number, length: number }
+// A ring buffer is an object { arr: ArrayBuffer, start: number, length: number }
 function emptyRingBuffer(capacity) {
-  let arr = new Array(capacity);
+  let arr = new Uint32Array(capacity);
   for (let i = 0; i < capacity; ++i) {
     arr[i] = null;
   }
@@ -438,7 +438,7 @@ function getRingBuffer(buf, i) {
 // The first element is the first "on" time. Each on is followed by the corresponding "off" time
 // Even length <=> currently off
 // Odd length <=> currently on
-let events = emptyRingBuffer(100);
+let events = emptyRingBuffer(1000);
 let totalTimeOnForCompleteIntervals = 0;
 
 function markTemporaryShutoff(untilS) {
@@ -537,7 +537,7 @@ function isNumeric(str) {
 }
 
 function checkTemperatureOffUntilWrapper(offUntilRes, offUntilErr, offUntilErrMsg) {
-  let nowS = Date.now() / 1000;
+  let nowS = Math.floor(Date.now() / 1000);
 
   // Clock sanity — every time-based check below assumes nowS is real.
   // If the clock is older than the deploy time, NTP hasn't synced yet.
@@ -687,7 +687,7 @@ Shelly.addStatusHandler(function(notification) {
       wifiKillTimer = Timer.set(WIFI_GRACE_S * 1000, false, function() {
         print("WiFi down >" + WIFI_GRACE_S + "s — locking heater off");
         // Reuse your existing safety path
-        let nowS = Date.now() / 1000;
+        let nowS = Math.floor(Date.now() / 1000);
         switchOffUntilManualReset(nowS, 'wifi down for over 10 minutes');
         wifiKillTimer = null;
       });
