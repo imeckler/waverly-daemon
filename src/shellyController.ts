@@ -829,29 +829,49 @@ export async function applyOperationalPlan(
   const smallBookings = bookings.filter(b => b.unitId === 1);
   const bigBookings = bookings.filter(b => b.unitId === 2);
 
-  await applySaunaSchedule(
-    config.small_sauna_heater_ip,
-    config.small_sauna_lights_fan_ip,
-    config.small_sauna_lights_switch_id ?? 0,
-    config.small_sauna_fan_switch_id ?? 1,
-    plan.small,
-    smallBookings,
-    'Small',
-    utcOffset
-  );
+  // Per-sauna isolation: one sauna being unreachable must not strand the other's deploy.
+  let smallOk = false;
+  let bigOk = false;
 
-  await applySaunaSchedule(
-    config.big_sauna_heater_ip,
-    config.big_sauna_lights_fan_ip,
-    config.big_sauna_lights_switch_id ?? 0,
-    config.big_sauna_fan_switch_id ?? 1,
-    plan.big,
-    bigBookings,
-    'Big',
-    utcOffset
-  );
+  try {
+    await applySaunaSchedule(
+      config.small_sauna_heater_ip,
+      config.small_sauna_lights_fan_ip,
+      config.small_sauna_lights_switch_id ?? 0,
+      config.small_sauna_fan_switch_id ?? 1,
+      plan.small,
+      smallBookings,
+      'Small',
+      utcOffset
+    );
+    smallOk = true;
+  } catch (e) {
+    console.error('Failed to apply Small sauna schedule:', e);
+  }
 
-  console.log('Operational plan applied successfully');
+  try {
+    await applySaunaSchedule(
+      config.big_sauna_heater_ip,
+      config.big_sauna_lights_fan_ip,
+      config.big_sauna_lights_switch_id ?? 0,
+      config.big_sauna_fan_switch_id ?? 1,
+      plan.big,
+      bigBookings,
+      'Big',
+      utcOffset
+    );
+    bigOk = true;
+  } catch (e) {
+    console.error('Failed to apply Big sauna schedule:', e);
+  }
+
+  if (smallOk && bigOk) {
+    console.log('Operational plan applied successfully');
+  } else if (!smallOk && !bigOk) {
+    console.error('Operational plan failed for both saunas');
+  } else {
+    console.error(`Operational plan applied to ${smallOk ? 'Small' : 'Big'} only; ${smallOk ? 'Big' : 'Small'} failed`);
+  }
 }
 
 async function applySaunaSchedule(
@@ -1389,9 +1409,30 @@ export function stopManualResetMonitor(): void {
 
 export async function deployTemperatureMonitors(): Promise<void> {
   console.log('Deploying temperature monitor scripts to all heaters...');
-  await deployTemperatureMonitor(config.small_sauna_heater_ip, config.temperature_threshold);
-  await deployTemperatureMonitor(config.big_sauna_heater_ip, config.temperature_threshold);
-  console.log('Temperature monitor scripts deployed');
+  // Per-heater isolation: one heater being unreachable must not strand the other's deploy.
+  let smallOk = false;
+  let bigOk = false;
+
+  try {
+    await deployTemperatureMonitor(config.small_sauna_heater_ip, config.temperature_threshold);
+    smallOk = true;
+  } catch (e) {
+    console.error(`Failed to deploy temperature monitor to small heater (${config.small_sauna_heater_ip}):`, e);
+  }
+  try {
+    await deployTemperatureMonitor(config.big_sauna_heater_ip, config.temperature_threshold);
+    bigOk = true;
+  } catch (e) {
+    console.error(`Failed to deploy temperature monitor to big heater (${config.big_sauna_heater_ip}):`, e);
+  }
+
+  if (smallOk && bigOk) {
+    console.log('Temperature monitor scripts deployed');
+  } else if (!smallOk && !bigOk) {
+    console.error('Temperature monitor deploy failed for both heaters');
+  } else {
+    console.error(`Temperature monitor deployed to ${smallOk ? 'small' : 'big'} only; ${smallOk ? 'big' : 'small'} failed`);
+  }
 }
 
 export async function setSaunaOverride(sauna: 'small' | 'big', override: 'on' | 'off' | 'none'): Promise<void> {
