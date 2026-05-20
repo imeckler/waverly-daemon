@@ -744,16 +744,35 @@ if (typeof TEMP_OFF !== 'number' || typeof TEMP_ON !== 'number'
 async function pingHeartbeat(ip: string): Promise<void> {
   // Hits the script-registered endpoint at /script/1/heartbeat (script id is always 1 here).
   // The script handler just sets lastHeartbeatMs = Date.now() in RAM; no flash writes.
-  // Use GET: on this Gen4 firmware, POST to a script endpoint RSTs the connection from
-  // a node-net client (reproduced with both fetch/undici and node:http and raw sockets),
-  // while GET returns 200 OK without even needing auth. The handler ignores method/body
-  // anyway, so GET is the simplest path that works.
-  const response = await fetch(`http://${ip}/script/1/heartbeat`, {
+  // Method must be GET: on Gen4 firmware 1.5.99, POST to a script-registered endpoint
+  // RSTs the connection from any Node client (verified with fetch/undici, node:http,
+  // and raw sockets). GET returns properly (200 or 401). Auth may or may not be required
+  // depending on device state, so do the digest dance on 401.
+  const uri = '/script/1/heartbeat';
+  const url = `http://${ip}${uri}`;
+  const response = await fetch(url, {
     method: 'GET',
     signal: AbortSignal.timeout(RPC_TIMEOUT_MS),
   });
-  if (!response.ok) {
-    throw new Error(`Heartbeat ping failed: ${response.status} ${response.statusText}`);
+  if (response.status !== 401) {
+    if (!response.ok) {
+      throw new Error(`Heartbeat ping failed: ${response.status} ${response.statusText}`);
+    }
+    return;
+  }
+  const wwwAuth = response.headers.get('www-authenticate');
+  if (!wwwAuth) {
+    throw new Error('Heartbeat ping returned 401 but no WWW-Authenticate header');
+  }
+  const challenge = parseDigestChallenge(wwwAuth);
+  const authorization = buildDigestAuth('admin', config.password, 'GET', uri, challenge, 1);
+  const authResponse = await fetch(url, {
+    method: 'GET',
+    headers: { 'Authorization': authorization },
+    signal: AbortSignal.timeout(RPC_TIMEOUT_MS),
+  });
+  if (!authResponse.ok) {
+    throw new Error(`Heartbeat ping (authed) failed: ${authResponse.status} ${authResponse.statusText}`);
   }
 }
 
