@@ -59,6 +59,8 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
+console.log('Daemon process starting...');
+
 //const driver = new Driver('/dev/serial/by-id/usb-Zooz_800_Z-Wave_Stick_533D004242-if00', {
 // const device = fs.existsSync('/dev/zwave') ? '/dev/zwave' : '/dev/serial/by-id/usb-Zooz_800_Z-Wave_Stick_533D004242-if00';
 const device = '/dev/zwave';
@@ -79,6 +81,14 @@ const driver = new Driver(device, {
 });
 
 driver.disableStatistics();
+
+driver.on('error', (err) => {
+  console.error('Z-Wave driver error:', err);
+});
+
+driver.on('driver ready', () => {
+  console.log('Z-Wave controller ready; interviewing nodes...');
+});
 
 // Start usage polling service
 /*
@@ -125,11 +135,32 @@ function loadDaemonConfig(): DaemonConfig {
   }
 }
 
+// Load config and bring up the sauna client up front — it has no Z-Wave dependency,
+// and the on-device safety scripts shouldn't wait on lock-node interviews to be redeployed.
+const daemonConfig = loadDaemonConfig();
+
+try {
+  const shellyConfig = daemonConfig.shelly;
+  if (shellyConfig && shellyConfig.sauna_server_url) {
+    console.log(`Initializing sauna schedule client for ${shellyConfig.sauna_server_url}...`);
+    saunaScheduleClient = new SaunaScheduleClient(shellyConfig.sauna_server_url);
+    saunaScheduleClient.connect();
+    startTemperatureMonitor();
+    startManualResetMonitor();
+    deployTemperatureMonitors().catch(e => console.error('Failed to deploy temperature monitors:', e));
+    console.log('Sauna schedule client and temperature monitor initialized');
+  } else {
+    console.log('No shelly config found, skipping sauna schedule client');
+  }
+} catch (error) {
+  console.error('Failed to initialize sauna schedule client:', error);
+}
+
+console.log('Starting Z-Wave driver...');
 driver.start().then(async () => {
   return driver.on('all nodes ready', () => {
     console.log('All Z-Wave nodes are ready');
 
-    const daemonConfig = loadDaemonConfig();
     const lockServerConfigs = daemonConfig.lockServers;
     console.log(`Initializing ${lockServerConfigs.length} booking server connection(s)...`);
 
@@ -188,24 +219,7 @@ driver.start().then(async () => {
     }
 
     console.log('All lock managers initialized successfully');
-
-    // Initialize Sauna Schedule Client if shelly config exists
-    try {
-      const shellyConfig = daemonConfig.shelly;
-
-      if (shellyConfig && shellyConfig.sauna_server_url) {
-        console.log(`Initializing sauna schedule client for ${shellyConfig.sauna_server_url}...`);
-        saunaScheduleClient = new SaunaScheduleClient(shellyConfig.sauna_server_url);
-        saunaScheduleClient.connect();
-        startTemperatureMonitor();
-        startManualResetMonitor();
-        deployTemperatureMonitors().catch(e => console.error('Failed to deploy temperature monitors:', e));
-        console.log('Sauna schedule client and temperature monitor initialized');
-      } else {
-        console.log('No shelly config found, skipping sauna schedule client');
-      }
-    } catch (error) {
-      console.error('Failed to initialize sauna schedule client:', error);
-    }
   })
+}).catch((err) => {
+  console.error('Z-Wave driver failed to start:', err);
 });
