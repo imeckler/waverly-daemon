@@ -9,8 +9,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install ALL dependencies (devDeps needed for the build, e.g. typescript and @types/*)
+RUN npm ci
 
 # Copy source code
 COPY src/ ./src/
@@ -20,6 +20,9 @@ COPY config.json ./
 
 # Build the application
 RUN npm run build
+
+# Strip devDeps from the final image — they were only needed for the build above.
+RUN npm prune --omit=dev
 
 # Create directory for Z-Wave cache
 RUN mkdir -p ./zwave-cache
