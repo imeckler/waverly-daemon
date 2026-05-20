@@ -1305,9 +1305,18 @@ export async function getAllSaunaStatus(): Promise<{
   return { small, big };
 }
 
+type SaunaStatus = {
+  on: boolean;
+  temperatureF: number | null;
+  powerW: number | null;
+  reachable: boolean;
+  heartbeatOk: boolean;
+  manualResetRequired: boolean | null;
+};
+
 async function reportStatusToServer(status: {
-  small: { on: boolean; temperatureF: number | null; powerW: number | null; reachable: boolean };
-  big: { on: boolean; temperatureF: number | null; powerW: number | null; reachable: boolean };
+  small: SaunaStatus;
+  big: SaunaStatus;
 }): Promise<void> {
   if (!config.sauna_server_url || !config.daemon_secret) return;
 
@@ -1328,15 +1337,18 @@ async function reportStatusToServer(status: {
 
 let tempMonitorInterval: ReturnType<typeof setInterval> | null = null;
 
-async function pingAllHeartbeats(): Promise<void> {
-  await Promise.all([
-    pingHeartbeat(config.small_sauna_heater_ip).catch(e =>
-      console.error('Heartbeat ping to small heater failed:', e)
-    ),
-    pingHeartbeat(config.big_sauna_heater_ip).catch(e =>
-      console.error('Heartbeat ping to big heater failed:', e)
-    ),
+async function pingAllHeartbeats(): Promise<{ small: boolean; big: boolean }> {
+  const [small, big] = await Promise.all([
+    pingHeartbeat(config.small_sauna_heater_ip).then(() => true).catch(e => {
+      console.error('Heartbeat ping to small heater failed:', e);
+      return false;
+    }),
+    pingHeartbeat(config.big_sauna_heater_ip).then(() => true).catch(e => {
+      console.error('Heartbeat ping to big heater failed:', e);
+      return false;
+    }),
   ]);
+  return { small, big };
 }
 
 export function startTemperatureMonitor(): void {
@@ -1344,9 +1356,16 @@ export function startTemperatureMonitor(): void {
   const alertTemp = config.temperature_threshold + OVERHEAT_MARGIN_F;
   console.log(`Starting temperature monitor (every ${TEMP_CHECK_INTERVAL_MS / 1000}s, alert at ${alertTemp}°F)`);
   tempMonitorInterval = setInterval(async () => {
-    await pingAllHeartbeats();
+    const heartbeats = await pingAllHeartbeats();
     const status = await getAllSaunaStatus();
-    await reportStatusToServer(status);
+    const [smallManualReset, bigManualReset] = await Promise.all([
+      getManualResetRequired(config.small_sauna_heater_ip),
+      getManualResetRequired(config.big_sauna_heater_ip),
+    ]);
+    await reportStatusToServer({
+      small: { ...status.small, heartbeatOk: heartbeats.small, manualResetRequired: smallManualReset },
+      big: { ...status.big, heartbeatOk: heartbeats.big, manualResetRequired: bigManualReset },
+    });
   }, TEMP_CHECK_INTERVAL_MS);
 }
 
