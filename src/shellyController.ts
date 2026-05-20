@@ -390,7 +390,7 @@ function emptyRingBuffer(capacity) {
     arr[i] = null;
   }
 
-  return { arr, start: 0, length: 0 };
+  return { arr: arr, start: 0, length: 0 };
 }
 
 function pushRingBuffer(buf, x) {
