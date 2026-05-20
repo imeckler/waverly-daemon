@@ -5,7 +5,6 @@
   * Or better, the server sends a diff (or we compute it)
 */
 import { exit } from 'process';
-import { UsagePollingService } from './usagePollingService';
 import { TranslatedValueID, Driver, isTransportServiceEncapsulation, ZWaveNode } from 'zwave-js';
 import { runLockManager } from './lockManager';
 import { SaunaScheduleClient } from './saunaScheduleClient.js';
