@@ -54,6 +54,11 @@ const tempHistory: Record<string, { temperatureF: number; timestamp: number }[]>
   big: [],
 };
 
+// Override='on' auto-reverts to 'none' after this many ms. 'off' has no auto-revert.
+// Enforcement is on the device (mJS script clears its own KVS when expired); the daemon
+// just writes both keys when admin acts, and reports current state to the server.
+const OVERRIDE_ON_DURATION_MS = 60 * 60 * 1000;
+
 interface ShellyConfig {
   small_sauna_heater_ip: string;
   small_sauna_lights_fan_ip: string;
@@ -617,55 +622,67 @@ function checkTemperatureInner(nowS) {
 
   Shelly.call("KVS.Get", { key: "override" }, function(ovr, oe) {
     let override = (oe === 0 && ovr) ? ovr.value : "none";
-    Shelly.call("KVS.Get", { key: "should_be_on" }, function(result, error_code, error_message) {
-      if (error_code !== 0) {
-        print("Error getting should_be_on flag:", error_message);
-        switchOff(nowS);
-        return;
+    // Auto-revert: an 'on' override carries an absolute epoch-ms expiry (overrideExpiresAt).
+    // When the clock passes it, the device self-clears back to 'none'. 'off' never expires.
+    Shelly.call("KVS.Get", { key: "overrideExpiresAt" }, function(exp, ee) {
+      let expiresAtMs = (ee === 0 && exp && exp.value) ? exp.value : 0;
+      if (override === "on" && expiresAtMs > 0 && Date.now() >= expiresAtMs) {
+        print("Override 'on' expired - clearing");
+        Shelly.call("KVS.Set", { key: "override", value: "none" });
+        Shelly.call("KVS.Set", { key: "overrideExpiresAt", value: 0 });
+        override = "none";
       }
 
-      let scheduleSaysOn = result.value || false;
-      let shouldBeOn = override === "on" ? true : override === "off" ? false : scheduleSaysOn;
-
-      // Predict future temperature based on rate of change
-      let predictedF = tempF;
-      if (prevTempF !== null && prevTimeS !== null) {
-        let dtS = nowS - prevTimeS;
-        if (dtS > 0) {
-          let ratePerS = (tempF - prevTempF) / dtS;
-          predictedF = tempF + ratePerS * LOOKAHEAD_S;
+      Shelly.call("KVS.Get", { key: "should_be_on" }, function(result, error_code, error_message) {
+        if (error_code !== 0) {
+          print("Error getting should_be_on flag:", error_message);
+          switchOff(nowS);
+          return;
         }
-      }
-      prevTempF = tempF;
-      prevTimeS = nowS;
 
-      let sw = Shelly.getComponentStatus("switch", 0);
-      let switchIsOn = sw ? sw.output : false;
-      if ((!switchIsOn || (events.length % 2 == 0)) && sw && typeof sw.apower == 'number' && sw.apower > 0) {
-        // We or the switch thinks it's off but there is power going through it
-        switchOffUntilManualReset(nowS, 'off switch has power');
-        return;
-      }
+        let scheduleSaysOn = result.value || false;
+        let shouldBeOn = override === "on" ? true : override === "off" ? false : scheduleSaysOn;
 
-      if (override === "off" && switchIsOn) {
-        print("Override OFF - turning heater OFF");
-        switchOff(nowS);
-      } else if (!shouldBeOn && override !== "on" && switchIsOn) {
-        print("Schedule says off and override is not ON - turning heater OFF");
-        switchOff(nowS);
-      } else if (tempF >= TEMP_OFF && switchIsOn) {
-        print("Temperature " + JSON.stringify(tempF) + "F >= " + JSON.stringify(TEMP_OFF) + "F - turning OFF (hard limit)");
-        switchOff(nowS);
-      } else if (predictedF >= TEMP_OFF && switchIsOn) {
-        print("Predicted " + JSON.stringify(predictedF) + "F >= " + JSON.stringify(TEMP_OFF) + "F (current " + JSON.stringify(tempF) + "F) - turning OFF early");
-        switchOff(nowS);
-      } else if (tempF <= TEMP_ON && !switchIsOn && shouldBeOn) {
-        print("Temperature " + JSON.stringify(tempF) + "F <= " + JSON.stringify(TEMP_ON) + "F - turning ON (hard limit)");
-        switchOn(switchIsOn, nowS);
-      } else if (predictedF <= TEMP_ON && !switchIsOn && shouldBeOn) {
-        print("Predicted " + JSON.stringify(predictedF) + "F <= " + JSON.stringify(TEMP_ON) + "F (current " + JSON.stringify(tempF) + "F) - turning ON early");
-        switchOn(switchIsOn, nowS);
-      }
+        // Predict future temperature based on rate of change
+        let predictedF = tempF;
+        if (prevTempF !== null && prevTimeS !== null) {
+          let dtS = nowS - prevTimeS;
+          if (dtS > 0) {
+            let ratePerS = (tempF - prevTempF) / dtS;
+            predictedF = tempF + ratePerS * LOOKAHEAD_S;
+          }
+        }
+        prevTempF = tempF;
+        prevTimeS = nowS;
+
+        let sw = Shelly.getComponentStatus("switch", 0);
+        let switchIsOn = sw ? sw.output : false;
+        if ((!switchIsOn || (events.length % 2 == 0)) && sw && typeof sw.apower == 'number' && sw.apower > 0) {
+          // We or the switch thinks it's off but there is power going through it
+          switchOffUntilManualReset(nowS, 'off switch has power');
+          return;
+        }
+
+        if (override === "off" && switchIsOn) {
+          print("Override OFF - turning heater OFF");
+          switchOff(nowS);
+        } else if (!shouldBeOn && override !== "on" && switchIsOn) {
+          print("Schedule says off and override is not ON - turning heater OFF");
+          switchOff(nowS);
+        } else if (tempF >= TEMP_OFF && switchIsOn) {
+          print("Temperature " + JSON.stringify(tempF) + "F >= " + JSON.stringify(TEMP_OFF) + "F - turning OFF (hard limit)");
+          switchOff(nowS);
+        } else if (predictedF >= TEMP_OFF && switchIsOn) {
+          print("Predicted " + JSON.stringify(predictedF) + "F >= " + JSON.stringify(TEMP_OFF) + "F (current " + JSON.stringify(tempF) + "F) - turning OFF early");
+          switchOff(nowS);
+        } else if (tempF <= TEMP_ON && !switchIsOn && shouldBeOn) {
+          print("Temperature " + JSON.stringify(tempF) + "F <= " + JSON.stringify(TEMP_ON) + "F - turning ON (hard limit)");
+          switchOn(switchIsOn, nowS);
+        } else if (predictedF <= TEMP_ON && !switchIsOn && shouldBeOn) {
+          print("Predicted " + JSON.stringify(predictedF) + "F <= " + JSON.stringify(TEMP_ON) + "F (current " + JSON.stringify(tempF) + "F) - turning ON early");
+          switchOn(switchIsOn, nowS);
+        }
+      });
     });
   });
 }
@@ -1335,6 +1352,9 @@ type SaunaStatus = {
   reachable: boolean;
   heartbeatOk: boolean;
   manualResetRequired: boolean | null;
+  override: 'on' | 'off' | 'none';
+  // Epoch ms when an 'on' override auto-reverts to 'none'. null when not currently 'on'.
+  overrideExpiresAt: number | null;
 };
 
 async function reportStatusToServer(status: {
@@ -1381,13 +1401,21 @@ export function startTemperatureMonitor(): void {
   tempMonitorInterval = setInterval(async () => {
     const heartbeats = await pingAllHeartbeats();
     const status = await getAllSaunaStatus();
-    const [smallManualReset, bigManualReset] = await Promise.all([
+    const [smallManualReset, bigManualReset, smallOverride, bigOverride] = await Promise.all([
       getManualResetRequired(config.small_sauna_heater_ip),
       getManualResetRequired(config.big_sauna_heater_ip),
+      getOverrideState(config.small_sauna_heater_ip),
+      getOverrideState(config.big_sauna_heater_ip),
     ]);
     await reportStatusToServer({
-      small: { ...status.small, heartbeatOk: heartbeats.small, manualResetRequired: smallManualReset },
-      big: { ...status.big, heartbeatOk: heartbeats.big, manualResetRequired: bigManualReset },
+      small: {
+        ...status.small, heartbeatOk: heartbeats.small, manualResetRequired: smallManualReset,
+        override: smallOverride.override, overrideExpiresAt: smallOverride.overrideExpiresAt,
+      },
+      big: {
+        ...status.big, heartbeatOk: heartbeats.big, manualResetRequired: bigManualReset,
+        override: bigOverride.override, overrideExpiresAt: bigOverride.overrideExpiresAt,
+      },
     });
   }, TEMP_CHECK_INTERVAL_MS);
 }
@@ -1409,6 +1437,24 @@ async function getManualResetRequired(ip: string): Promise<boolean | null> {
   } catch {
     return null;
   }
+}
+
+// Reads override + overrideExpiresAt from device KVS. Returns 'none' if missing/unreadable.
+async function getOverrideState(ip: string): Promise<{ override: 'on' | 'off' | 'none'; overrideExpiresAt: number | null }> {
+  let override: 'on' | 'off' | 'none' = 'none';
+  let overrideExpiresAt: number | null = null;
+  try {
+    const ovRes = await shellyRpc(ip, 'KVS.Get', { key: 'override' });
+    if (ovRes?.value === 'on' || ovRes?.value === 'off' || ovRes?.value === 'none') {
+      override = ovRes.value;
+    }
+  } catch { /* missing/unreachable — keep default 'none' */ }
+  try {
+    const exRes = await shellyRpc(ip, 'KVS.Get', { key: 'overrideExpiresAt' });
+    const n = Number(exRes?.value);
+    if (Number.isFinite(n) && n > 0) overrideExpiresAt = n;
+  } catch { /* missing — leave null */ }
+  return { override, overrideExpiresAt };
 }
 
 async function checkManualResetRequired(): Promise<void> {
@@ -1481,6 +1527,10 @@ export async function setSaunaOverride(sauna: 'small' | 'big', override: 'on' | 
   const heaterIp = sauna === 'small' ? config.small_sauna_heater_ip : config.big_sauna_heater_ip;
   console.log(`Setting override=${override} on ${sauna} sauna (${heaterIp})`);
   await setKVS(heaterIp, 'override', override);
+  // overrideExpiresAt is in epoch ms. 0 means no active expiry. The device script
+  // enforces this: on each cycle it self-clears 'on' overrides whose expiry has passed.
+  const expiresAt = override === 'on' ? Date.now() + OVERRIDE_ON_DURATION_MS : 0;
+  await setKVS(heaterIp, 'overrideExpiresAt', expiresAt);
 
   // When clearing an override, sync should_be_on with the current plan
   // so the device doesn't keep running on a stale flag
