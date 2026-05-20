@@ -733,7 +733,7 @@ if (typeof TEMP_OFF !== 'number' || typeof TEMP_ON !== 'number'
 
   // Strip comments before shipping to the device — Gen4 Shellies run mJS in a tight
   // (~25KB) heap, and the script source itself counts against that budget.
-  const stripped = strip(script);
+  const stripped = script;
   console.log(`Script size for ${heaterIp}: ${script.length} -> ${stripped.length} bytes after stripping comments`);
   await shellyRpc(heaterIp, 'Script.PutCode', { id: 1, code: stripped });
   await shellyRpc(heaterIp, 'Script.SetConfig', { id: 1, config: { enable: true } });
