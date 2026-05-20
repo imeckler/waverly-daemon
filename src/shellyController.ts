@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as crypto from 'crypto';
+import strip from 'strip-comments';
 import { triggerIncident, resolveIncident } from './pagerduty.js';
 
 const RPC_TIMEOUT_MS = 10_000;
@@ -730,7 +731,11 @@ if (typeof TEMP_OFF !== 'number' || typeof TEMP_ON !== 'number'
 
   try { await shellyRpc(heaterIp, 'Script.Stop', { id: 1 }); } catch { /* not running */ }
 
-  await shellyRpc(heaterIp, 'Script.PutCode', { id: 1, code: script });
+  // Strip comments before shipping to the device — Gen4 Shellies run mJS in a tight
+  // (~25KB) heap, and the script source itself counts against that budget.
+  const stripped = strip(script);
+  console.log(`Script size for ${heaterIp}: ${script.length} -> ${stripped.length} bytes after stripping comments`);
+  await shellyRpc(heaterIp, 'Script.PutCode', { id: 1, code: stripped });
   await shellyRpc(heaterIp, 'Script.SetConfig', { id: 1, config: { enable: true } });
   await shellyRpc(heaterIp, 'Script.Start', { id: 1 });
 
