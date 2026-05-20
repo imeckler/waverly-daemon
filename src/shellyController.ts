@@ -438,7 +438,7 @@ function getRingBuffer(buf, i) {
 // The first element is the first "on" time. Each on is followed by the corresponding "off" time
 // Even length <=> currently off
 // Odd length <=> currently on
-let events = emptyRingBuffer(1000);
+let events = emptyRingBuffer(100);
 let totalTimeOnForCompleteIntervals = 0;
 
 function markTemporaryShutoff(untilS) {
