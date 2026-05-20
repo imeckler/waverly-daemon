@@ -744,12 +744,43 @@ if (typeof TEMP_OFF !== 'number' || typeof TEMP_ON !== 'number'
 async function pingHeartbeat(ip: string): Promise<void> {
   // Hits the script-registered endpoint at /script/1/heartbeat (script id is always 1 here).
   // The script handler just sets lastHeartbeatMs = Date.now() in RAM; no flash writes.
-  const response = await fetch(`http://${ip}/script/1/heartbeat`, {
+  // Gen4 firmware requires digest auth even for script-registered endpoints, so we
+  // mirror the 401-challenge dance that shellyRpc does for /rpc/* paths.
+  // It also rejects POSTs without Content-Length, so we send an empty JSON body.
+  const uri = '/script/1/heartbeat';
+  const url = `http://${ip}${uri}`;
+  const body = '{}';
+  const baseHeaders = { 'Content-Type': 'application/json' };
+
+  const response = await fetch(url, {
     method: 'POST',
+    headers: baseHeaders,
+    body,
     signal: AbortSignal.timeout(RPC_TIMEOUT_MS),
   });
-  if (!response.ok) {
-    throw new Error(`Heartbeat ping failed: ${response.status} ${response.statusText}`);
+
+  if (response.status !== 401) {
+    if (!response.ok) {
+      throw new Error(`Heartbeat ping failed: ${response.status} ${response.statusText}`);
+    }
+    return;
+  }
+
+  const wwwAuth = response.headers.get('www-authenticate');
+  if (!wwwAuth) {
+    throw new Error('Heartbeat ping returned 401 but no WWW-Authenticate header');
+  }
+  const challenge = parseDigestChallenge(wwwAuth);
+  const authorization = buildDigestAuth('admin', config.password, 'POST', uri, challenge, 1);
+
+  const authResponse = await fetch(url, {
+    method: 'POST',
+    headers: { ...baseHeaders, 'Authorization': authorization },
+    body,
+    signal: AbortSignal.timeout(RPC_TIMEOUT_MS),
+  });
+  if (!authResponse.ok) {
+    throw new Error(`Heartbeat ping (authed) failed: ${authResponse.status} ${authResponse.statusText}`);
   }
 }
 
