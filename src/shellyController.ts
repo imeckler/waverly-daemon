@@ -869,62 +869,69 @@ export async function applyOperationalPlan(
   const smallBookings = bookings.filter(b => b.unitId === 1);
   const bigBookings = bookings.filter(b => b.unitId === 2);
 
-  // Per-sauna isolation: one sauna being unreachable must not strand the other's deploy.
-  let smallOk = false;
-  let bigOk = false;
+  // Heater and lights/fan live on different Shelly devices. Run each independently
+  // so an unreachable heater can't strand its sauna's lights/fan (or vice versa).
+  const phases: Array<{ name: string; run: () => Promise<void> }> = [
+    {
+      name: 'Small heater',
+      run: () => applyHeaterSchedule(config.small_sauna_heater_ip, plan.small, 'Small', utcOffset),
+    },
+    {
+      name: 'Small lights/fan',
+      run: () => applyLightsFanSchedule(
+        config.small_sauna_lights_fan_ip,
+        config.small_sauna_lights_switch_id ?? 0,
+        config.small_sauna_fan_switch_id ?? 1,
+        plan.small,
+        smallBookings,
+        'Small',
+        utcOffset,
+      ),
+    },
+    {
+      name: 'Big heater',
+      run: () => applyHeaterSchedule(config.big_sauna_heater_ip, plan.big, 'Big', utcOffset),
+    },
+    {
+      name: 'Big lights/fan',
+      run: () => applyLightsFanSchedule(
+        config.big_sauna_lights_fan_ip,
+        config.big_sauna_lights_switch_id ?? 0,
+        config.big_sauna_fan_switch_id ?? 1,
+        plan.big,
+        bigBookings,
+        'Big',
+        utcOffset,
+      ),
+    },
+  ];
 
-  try {
-    await applySaunaSchedule(
-      config.small_sauna_heater_ip,
-      config.small_sauna_lights_fan_ip,
-      config.small_sauna_lights_switch_id ?? 0,
-      config.small_sauna_fan_switch_id ?? 1,
-      plan.small,
-      smallBookings,
-      'Small',
-      utcOffset
-    );
-    smallOk = true;
-  } catch (e) {
-    console.error('Failed to apply Small sauna schedule:', e);
+  const failures: string[] = [];
+  for (const phase of phases) {
+    try {
+      await phase.run();
+    } catch (e) {
+      failures.push(phase.name);
+      console.error(`Failed to apply ${phase.name} schedule:`, e);
+    }
   }
 
-  try {
-    await applySaunaSchedule(
-      config.big_sauna_heater_ip,
-      config.big_sauna_lights_fan_ip,
-      config.big_sauna_lights_switch_id ?? 0,
-      config.big_sauna_fan_switch_id ?? 1,
-      plan.big,
-      bigBookings,
-      'Big',
-      utcOffset
-    );
-    bigOk = true;
-  } catch (e) {
-    console.error('Failed to apply Big sauna schedule:', e);
-  }
-
-  if (smallOk && bigOk) {
+  if (failures.length === 0) {
     console.log('Operational plan applied successfully');
-  } else if (!smallOk && !bigOk) {
-    console.error('Operational plan failed for both saunas');
+  } else if (failures.length === phases.length) {
+    console.error('Operational plan failed for all phases');
   } else {
-    console.error(`Operational plan applied to ${smallOk ? 'Small' : 'Big'} only; ${smallOk ? 'Big' : 'Small'} failed`);
+    console.error(`Operational plan applied with failures in: ${failures.join(', ')}`);
   }
 }
 
-async function applySaunaSchedule(
+async function applyHeaterSchedule(
   heaterIp: string,
-  lightsFanIp: string,
-  lightsSwitchId: number,
-  fanSwitchId: number,
   heaterSlots: Slot[],
-  bookings: Booking[],
   saunaName: string,
   utcOffset: number
 ): Promise<void> {
-  console.log(`Applying ${saunaName} sauna schedule with ${heaterSlots.length} heater slots and ${bookings.length} bookings`);
+  console.log(`Applying ${saunaName} heater schedule with ${heaterSlots.length} heater slots`);
 
   const now = new Date();
 
@@ -941,7 +948,6 @@ async function applySaunaSchedule(
     console.log(`${saunaName} heater should_be_on set to true (currently inside a heating slot)`);
   }
 
-  // Schedule future flag changes
   for (const slot of heaterSlots) {
     if (slot.start > now) {
       await scheduleSetFlag(heaterIp, slot.start, true, utcOffset);
@@ -952,8 +958,20 @@ async function applySaunaSchedule(
   }
 
   await deployTemperatureMonitor(heaterIp, config.temperature_threshold);
+}
 
-  // Determine current lights/fan state and schedule future changes
+async function applyLightsFanSchedule(
+  lightsFanIp: string,
+  lightsSwitchId: number,
+  fanSwitchId: number,
+  heaterSlots: Slot[],
+  bookings: Booking[],
+  saunaName: string,
+  utcOffset: number
+): Promise<void> {
+  console.log(`Applying ${saunaName} lights/fan schedule with ${bookings.length} bookings`);
+
+  const now = new Date();
   const mergedBookings = mergeBookings(bookings);
 
   let lightsOnNow = false;
