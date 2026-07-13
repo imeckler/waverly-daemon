@@ -9,6 +9,8 @@ interface WebSocketConfig {
   serverUrl: string;
   reconnectInterval?: number;
   maxReconnectAttempts?: number;
+  heartbeatInterval?: number;
+  pongTimeout?: number;
 }
 
 export class BookingWebSocketClient {
@@ -16,6 +18,8 @@ export class BookingWebSocketClient {
   private config: WebSocketConfig;
   private reconnectAttempts = 0;
   private reconnectTimer: NodeJS.Timeout | null = null;
+  private heartbeatTimer: NodeJS.Timeout | null = null;
+  private pongTimer: NodeJS.Timeout | null = null;
   private isConnected = false;
   private messageHandlers: ((message: BookingMessage) => void)[] = [];
 
@@ -23,6 +27,12 @@ export class BookingWebSocketClient {
     this.config = {
       reconnectInterval: 5000,
       maxReconnectAttempts: -1, // Infinite reconnects
+      // The booking connection is idle for long stretches (no traffic between
+      // bookings) and the server sends no keepalives, so a silently-dropped
+      // TCP connection would otherwise never fire 'close' and never reconnect.
+      // Ping the server periodically and treat a missing pong as a dead socket.
+      heartbeatInterval: 30000,
+      pongTimeout: 10000,
       ...config
     };
   }
@@ -46,7 +56,17 @@ export class BookingWebSocketClient {
             this.reconnectTimer = null;
           }
 
+          this.startHeartbeat();
           resolve();
+        });
+
+        // The server (per RFC 6455) answers our ping with a pong; receiving it
+        // clears the outstanding pong-timeout so the connection is kept alive.
+        this.ws.on('pong', () => {
+          if (this.pongTimer) {
+            clearTimeout(this.pongTimer);
+            this.pongTimer = null;
+          }
         });
 
         this.ws.on('message', (data) => {
@@ -71,6 +91,7 @@ export class BookingWebSocketClient {
           console.log(`WebSocket connection closed: ${code} - ${reason}`);
           this.isConnected = false;
           this.ws = null;
+          this.stopHeartbeat();
 
           if (this.config.maxReconnectAttempts === -1 ||
             this.reconnectAttempts < this.config.maxReconnectAttempts!) {
@@ -89,6 +110,41 @@ export class BookingWebSocketClient {
         reject(error);
       }
     });
+  }
+
+  private startHeartbeat(): void {
+    this.stopHeartbeat();
+    this.heartbeatTimer = setInterval(() => {
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+        return;
+      }
+
+      // If a pong from the previous ping is still outstanding, the connection
+      // is already being torn down; don't stack another timeout.
+      if (this.pongTimer) {
+        return;
+      }
+
+      this.ws.ping();
+      this.pongTimer = setTimeout(() => {
+        this.pongTimer = null;
+        console.warn('No pong from booking server; terminating stale connection to force reconnect');
+        // terminate() (not close()) drops a half-open socket immediately and
+        // fires 'close', which schedules a reconnect that re-pulls the snapshot.
+        this.ws?.terminate();
+      }, this.config.pongTimeout);
+    }, this.config.heartbeatInterval);
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
+    if (this.pongTimer) {
+      clearTimeout(this.pongTimer);
+      this.pongTimer = null;
+    }
   }
 
   private scheduleReconnect(): void {
@@ -116,6 +172,8 @@ export class BookingWebSocketClient {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
+
+    this.stopHeartbeat();
 
     if (this.ws) {
       this.ws.close();
