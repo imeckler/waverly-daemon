@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 import { triggerIncident, resolveIncident } from './pagerduty.js';
+import { getSteamStatus } from './steamController.js';
 
 const RPC_TIMEOUT_MS = 10_000;
 const SWITCH_MAX_RETRIES = 3;
@@ -1378,6 +1379,7 @@ type SaunaStatus = {
 async function reportStatusToServer(status: {
   small: SaunaStatus;
   big: SaunaStatus;
+  steam?: SaunaStatus;
 }): Promise<void> {
   if (!config.sauna_server_url || !config.daemon_secret) return;
 
@@ -1425,6 +1427,9 @@ export function startTemperatureMonitor(): void {
       getOverrideState(config.small_sauna_heater_ip),
       getOverrideState(config.big_sauna_heater_ip),
     ]);
+    // The steam room (TOLO unit) has no on-device script; its status/override are
+    // tracked by steamController. Omitted from the report when not configured.
+    const steam = await getSteamStatus();
     await reportStatusToServer({
       small: {
         ...status.small, heartbeatOk: heartbeats.small, manualResetRequired: smallManualReset,
@@ -1434,6 +1439,7 @@ export function startTemperatureMonitor(): void {
         ...status.big, heartbeatOk: heartbeats.big, manualResetRequired: bigManualReset,
         override: bigOverride.override, overrideExpiresAt: bigOverride.overrideExpiresAt,
       },
+      ...(steam ? { steam } : {}),
     });
   }, TEMP_CHECK_INTERVAL_MS);
 }

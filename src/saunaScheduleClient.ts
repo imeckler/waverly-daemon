@@ -1,5 +1,6 @@
 import WebSocket from 'ws';
 import { applyOperationalPlan, Booking, OperationalPlan, setSaunaOverride } from './shellyController.js';
+import { setSteamOverride } from './steamController.js';
 
 interface ScheduleUpdateMessage {
   kind: 'scheduleUpdate';
@@ -18,7 +19,7 @@ interface ScheduleUpdateMessage {
 
 interface SaunaOverrideMessage {
   kind: 'saunaOverride';
-  sauna: 'small' | 'big';
+  sauna: 'small' | 'big' | 'steam';
   override: 'on' | 'off' | 'none';
 }
 
@@ -172,9 +173,13 @@ export class SaunaScheduleClient {
 
   private async handleSaunaOverride(message: SaunaOverrideMessage): Promise<void> {
     try {
-      console.log(`Setting ${message.sauna} sauna override to ${message.override}`);
-      await setSaunaOverride(message.sauna, message.override);
-      console.log(`Successfully set ${message.sauna} sauna override`);
+      console.log(`Setting ${message.sauna} override to ${message.override}`);
+      if (message.sauna === 'steam') {
+        setSteamOverride(message.override);
+      } else {
+        await setSaunaOverride(message.sauna, message.override);
+      }
+      console.log(`Successfully set ${message.sauna} override`);
     } catch (error) {
       console.error('Failed to set sauna override:', error);
     }

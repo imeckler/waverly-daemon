@@ -9,6 +9,7 @@ import { TranslatedValueID, Driver, isTransportServiceEncapsulation, ZWaveNode }
 import { runLockManager } from './lockManager';
 import { SaunaScheduleClient } from './saunaScheduleClient.js';
 import { startTemperatureMonitor, startManualResetMonitor, deployTemperatureMonitors } from './shellyController.js';
+import { startSteamController } from './steamController.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -113,6 +114,10 @@ interface ShellyConfig {
   temperature_threshold: number;
   sauna_server_url: string;
   daemon_secret?: string;
+  // TOLO/STEAMTEC steam room (reached over the isolated/WireGuard link). Steam
+  // control stays dormant until tolo_ip is set.
+  tolo_ip?: string;
+  tolo_port?: number;
 }
 
 interface DaemonConfig {
@@ -147,6 +152,11 @@ try {
     startTemperatureMonitor();
     startManualResetMonitor();
     deployTemperatureMonitors().catch(e => console.error('Failed to deploy temperature monitors:', e));
+    if (shellyConfig.tolo_ip) {
+      startSteamController(shellyConfig.tolo_ip, shellyConfig.tolo_port);
+    } else {
+      console.log('No tolo_ip configured, skipping steam controller');
+    }
     console.log('Sauna schedule client and temperature monitor initialized');
   } else {
     console.log('No shelly config found, skipping sauna schedule client');
