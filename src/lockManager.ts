@@ -1,5 +1,5 @@
 import { IntervalTree, Interval } from 'node-interval-tree';
-import { TranslatedValueID, Driver, isTransportServiceEncapsulation, ZWaveNode } from 'zwave-js';
+import { TranslatedValueID, Driver, isTransportServiceEncapsulation, ZWaveNode, SetValueStatus } from 'zwave-js';
 import { ScheduledTask } from './scheduledTask';
 import { countUnique, Result, Err, Ok, unwrap } from './lib/util';
 import { BookingWebSocketClient } from './bookingWebSocketClient';
@@ -108,13 +108,20 @@ export class LockManager {
 
   startAccess(t: Date, code: string): ScheduledTask {
     return new ScheduledTask(t, () => {
-      unwrap(this.allocateCodeSlot(code));
+      this.allocateCodeSlot(code)
+        .then(r => {
+          if (r.ok === false) {
+            console.error(`Failed to write code ${code} to lock ${this.lock.id}: ${r.error}`);
+          }
+        })
+        .catch(e => console.error(`Error writing code ${code} to lock ${this.lock.id}:`, e));
     });
   }
 
   stopAccess(t: Date, code: string): ScheduledTask {
     return new ScheduledTask(t, () => {
-      this.freeCodeSlot(code);
+      this.freeCodeSlot(code)
+        .catch(e => console.error(`Error clearing code ${code} from lock ${this.lock.id}:`, e));
     });
   }
 
@@ -143,19 +150,25 @@ export class LockManager {
     this.tree.remove(relevantSegment);
   }
 
-  freeCodeSlot(code: string) {
+  async freeCodeSlot(code: string) {
     const r = this.codeToSlot.get(code);
     if (r != undefined) {
       r.count -= 1;
       if (r.count <= 0) {
         this.codeToSlot.delete(code)
         this.availableSlots.add(r.slotIndex);
-        this.lock.setValue(r.slot.status, CODE_AVAILABLE);
+        const slotNo = r.slot.status.propertyKey;
+        const result = await this.lock.setValue(r.slot.status, CODE_AVAILABLE);
+        if (!setValueOk(result)) {
+          console.error(`Lock ${this.lock.id} slot ${slotNo}: failed to CLEAR code ${code} — ${describeSetValue(result)}`);
+        } else {
+          console.log(`Lock ${this.lock.id} slot ${slotNo}: cleared code ${code} — ${describeSetValue(result)}`);
+        }
       }
     }
   }
 
-  allocateCodeSlot(code: string): Result<AllocatedSlot, string> {
+  async allocateCodeSlot(code: string): Promise<Result<AllocatedSlot, string>> {
     let r = this.codeToSlot.get(code);
 
     if (r == undefined) {
@@ -170,10 +183,21 @@ export class LockManager {
       r.count += 1;
     }
 
-    // Do it unconditionally for good measure
-    this.lock.setValue(r.slot.status, CODE_ENABLED);
-    this.lock.setValue(r.slot.value, code);
+    const slotNo = r.slot.value.propertyKey;
 
+    // Writing the userCode value sends a complete UserCodeCC.Set (status=Enabled
+    // + the code) in a single command. Do NOT separately enable the slot first:
+    // that sends a Set enabling the slot with no code — an invalid state that can
+    // wedge the lock (observed on the Kwikset SmartCode). Await the write so a
+    // rejection or timeout surfaces as a real error instead of the previous
+    // fire-and-forget "success".
+    const codeResult = await this.lock.setValue(r.slot.value, code);
+
+    if (!setValueOk(codeResult)) {
+      return Err(`Lock ${this.lock.id} slot ${slotNo}: setValue rejected — code=${describeSetValue(codeResult)}`);
+    }
+
+    console.log(`Lock ${this.lock.id} slot ${slotNo}: wrote code ${code} — ${describeSetValue(codeResult)}`);
     return Ok(r);
   }
 
@@ -221,6 +245,24 @@ export class LockManager {
       return Ok(undefined);
     }
   }
+}
+
+// A lock write counts as "landed" if the device accepted it (Success), the
+// controller sent it without a confirmation channel (SuccessUnsupervised — the
+// normal case over S0, which has no Supervision), or it's still in progress
+// (Working). Anything else (Fail / NoDeviceSupport / InvalidValue / timeout via
+// a thrown error) is a genuine failure worth surfacing.
+type SetValueResult = Awaited<ReturnType<ZWaveNode['setValue']>>;
+
+function setValueOk(result: SetValueResult): boolean {
+  return result.status === SetValueStatus.Success
+    || result.status === SetValueStatus.SuccessUnsupervised
+    || result.status === SetValueStatus.Working;
+}
+
+function describeSetValue(result: SetValueResult): string {
+  const name = SetValueStatus[result.status] ?? `status ${result.status}`;
+  return result.message ? `${name} (${result.message})` : name;
 }
 
 function popSet<A>(set: Set<A>): A | undefined {
