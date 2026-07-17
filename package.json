@@ -16,6 +16,7 @@
   "dependencies": {
     "@types/moment-timezone": "^0.5.30",
     "@types/ws": "^8.5.12",
+    "@waverly/sauna-protocol": "github:imeckler/waverly-sauna-protocol#v1",
     "moment-timezone": "^0.6.0",
     "node-interval-tree": "^2.1.2",
     "ws": "^8.18.0",

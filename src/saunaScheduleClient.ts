@@ -1,27 +1,16 @@
 import WebSocket from 'ws';
 import { applyOperationalPlan, Booking, OperationalPlan, setSaunaOverride } from './shellyController.js';
 import { setSteamOverride } from './steamController.js';
-
-interface ScheduleUpdateMessage {
-  kind: 'scheduleUpdate';
-  planDate: string;
-  plan: {
-    small: Array<{ start: string; stop: string }>;
-    big: Array<{ start: string; stop: string }>;
-  };
-  bookings: Array<{
-    bookingId: number;
-    unitId: number;
-    start: string;
-    stop: string;
-  }>;
-}
-
-interface SaunaOverrideMessage {
-  kind: 'saunaOverride';
-  sauna: 'small' | 'big' | 'steam';
-  override: 'on' | 'off' | 'none';
-}
+import { getLockCodes, setLockCode } from './lockRegistry.js';
+import {
+  ServerToDaemonMessage,
+  DaemonToServerMessage,
+  ScheduleUpdateMessage,
+  SaunaOverrideMessage,
+  GetLockCodesRequest,
+  SetLockCodeRequest,
+  assertNever,
+} from '@waverly/sauna-protocol';
 
 export class SaunaScheduleClient {
   private ws: WebSocket | null = null;
@@ -78,18 +67,14 @@ export class SaunaScheduleClient {
 
       this.ws.on('message', (data) => {
         this.resetWatchdog();
+        let message: ServerToDaemonMessage;
         try {
-          const message = JSON.parse(data.toString());
-          console.log('Received WebSocket message:', message.kind);
-
-          if (message.kind === 'scheduleUpdate') {
-            this.handleScheduleUpdate(message as ScheduleUpdateMessage);
-          } else if (message.kind === 'saunaOverride') {
-            this.handleSaunaOverride(message as SaunaOverrideMessage);
-          }
+          message = JSON.parse(data.toString()) as ServerToDaemonMessage;
         } catch (error) {
           console.error('Failed to parse WebSocket message:', error);
+          return;
         }
+        this.handleMessage(message);
       });
 
       // Any ping/pong frame also counts as liveness.
@@ -134,6 +119,72 @@ export class SaunaScheduleClient {
       this.reconnectTimer = null;
       this.connect();
     }, this.reconnectInterval);
+  }
+
+  // Send a reply back to the server. Every outgoing message is a
+  // DaemonToServerMessage, so the compiler forbids sending, say, a server->daemon
+  // command back up this socket.
+  private send(message: DaemonToServerMessage): void {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify(message));
+    } else {
+      console.warn(`Cannot send ${message.kind}: sauna schedule socket not open`);
+    }
+  }
+
+  // Single typed entry point for everything arriving on the socket. The
+  // exhaustive switch (assertNever default) guarantees every server->daemon
+  // message kind — schedule, override, or lock admin — is handled distinctly.
+  private handleMessage(message: ServerToDaemonMessage): void {
+    console.log('Received WebSocket message:', message.kind);
+    switch (message.kind) {
+      case 'scheduleUpdate':
+        void this.handleScheduleUpdate(message);
+        break;
+      case 'saunaOverride':
+        void this.handleSaunaOverride(message);
+        break;
+      case 'getLockCodes':
+        this.handleGetLockCodes(message);
+        break;
+      case 'setLockCode':
+        void this.handleSetLockCode(message);
+        break;
+      default:
+        assertNever(message);
+    }
+  }
+
+  private handleGetLockCodes(message: GetLockCodesRequest): void {
+    try {
+      const locks = getLockCodes();
+      this.send({ kind: 'lockCodesResult', requestId: message.requestId, ok: true, locks });
+    } catch (e) {
+      this.send({
+        kind: 'lockCodesResult',
+        requestId: message.requestId,
+        ok: false,
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
+  }
+
+  private async handleSetLockCode(message: SetLockCodeRequest): Promise<void> {
+    const action = message.code.trim() === '' ? 'clear' : `set to ${message.code}`;
+    console.log(`Manual lock code request: node ${message.nodeId} slot ${message.slot} — ${action}`);
+    const result = await setLockCode(message.nodeId, message.slot, message.code);
+    if (result.ok) {
+      console.log(`Manual lock code ${action} on node ${message.nodeId} slot ${message.slot}: ${result.status}`);
+    } else {
+      console.error(`Manual lock code ${action} on node ${message.nodeId} slot ${message.slot} FAILED: ${result.error}`);
+    }
+    this.send({
+      kind: 'setLockCodeResult',
+      requestId: message.requestId,
+      ok: result.ok,
+      status: result.status,
+      error: result.error,
+    });
   }
 
   private async handleScheduleUpdate(message: ScheduleUpdateMessage): Promise<void> {

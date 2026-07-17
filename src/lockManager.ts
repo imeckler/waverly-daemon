@@ -252,15 +252,15 @@ export class LockManager {
 // normal case over S0, which has no Supervision), or it's still in progress
 // (Working). Anything else (Fail / NoDeviceSupport / InvalidValue / timeout via
 // a thrown error) is a genuine failure worth surfacing.
-type SetValueResult = Awaited<ReturnType<ZWaveNode['setValue']>>;
+export type SetValueResult = Awaited<ReturnType<ZWaveNode['setValue']>>;
 
-function setValueOk(result: SetValueResult): boolean {
+export function setValueOk(result: SetValueResult): boolean {
   return result.status === SetValueStatus.Success
     || result.status === SetValueStatus.SuccessUnsupervised
     || result.status === SetValueStatus.Working;
 }
 
-function describeSetValue(result: SetValueResult): string {
+export function describeSetValue(result: SetValueResult): string {
   const name = SetValueStatus[result.status] ?? `status ${result.status}`;
   return result.message ? `${name} (${result.message})` : name;
 }

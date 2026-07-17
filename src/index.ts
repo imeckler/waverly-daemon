@@ -7,6 +7,7 @@
 import { exit } from 'process';
 import { TranslatedValueID, Driver, isTransportServiceEncapsulation, ZWaveNode } from 'zwave-js';
 import { runLockManager } from './lockManager';
+import { registerLock } from './lockRegistry';
 import { SaunaScheduleClient } from './saunaScheduleClient.js';
 import { startTemperatureMonitor, startManualResetMonitor, deployTemperatureMonitors } from './shellyController.js';
 import { startSteamController } from './steamController.js';
@@ -188,6 +189,8 @@ driver.start().then(async () => {
 
         console.log(`Found lock node ${nodeId}`);
         locks.push(lockNode);
+        // Expose this lock to the admin control channel (query/set codes).
+        registerLock(lockNode);
 
         // Get ALL values for the node (for debugging)
         const allValues = lockNode.getDefinedValueIDs();
