@@ -10,7 +10,7 @@ import { runLockManager } from './lockManager';
 import { registerLock } from './lockRegistry';
 import { SaunaScheduleClient } from './saunaScheduleClient.js';
 import { startTemperatureMonitor, startManualResetMonitor, deployTemperatureMonitors } from './shellyController.js';
-import { startSteamController } from './steamController.js';
+import { startSteamController, stopSteamController } from './steamController.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -46,6 +46,9 @@ process.on('SIGINT', async () => {
   if (saunaScheduleClient) {
     saunaScheduleClient.disconnect();
   }
+  // The steam room is left to its own power timer, which lapses within minutes
+  // of this last tick — safer than relying on one final packet getting through.
+  await stopSteamController();
   // await usageService.stop();
   process.exit(0);
 });
@@ -56,6 +59,9 @@ process.on('SIGTERM', async () => {
   if (saunaScheduleClient) {
     saunaScheduleClient.disconnect();
   }
+  // The steam room is left to its own power timer, which lapses within minutes
+  // of this last tick — safer than relying on one final packet getting through.
+  await stopSteamController();
   // await usageService.stop();
   process.exit(0);
 });

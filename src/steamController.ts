@@ -10,8 +10,13 @@
 // (WireGuard) link to the box, the power timer lapses and the unit powers itself
 // off. `setPowerOn(true)` is deliberately never used — it has no such backstop.
 //
-// For now the steam room has no computed schedule (it isn't in plan generation
-// yet); it is driven purely by the admin override relayed from the server.
+// The room is driven by the operational plan from the server, with an admin
+// override taking precedence. Where the Shelly heaters get their schedules
+// *pushed onto the device* — so they keep running through a daemon outage — the
+// TOLO box has no on-device scheduler, so the plan is held here in memory and
+// enforced by the control tick. The consequence is deliberate and worth stating:
+// if this daemon stops, the steam room stops with it. That is the safe direction
+// to fail for a unit with no independent supervision.
 
 import { ToloClient, ToloCommunicationError } from './tolo/index.js';
 
@@ -42,10 +47,18 @@ function celsiusToFahrenheit(c: number): number {
   return Math.round((c * 9) / 5 + 32);
 }
 
+/** A period the plan wants the steam room powered for. */
+export type SteamPeriod = { start: Date; stop: Date; hotFrom: Date | null };
+
 let client: ToloClient | null = null;
 let steamOverride: 'on' | 'off' | 'none' = 'none';
 let steamOverrideExpiresAt = 0; // epoch ms; 0 unless an 'on' override is active
 let controlInterval: ReturnType<typeof setInterval> | null = null;
+let schedule: SteamPeriod[] = [];
+let schedulePlanDate: string | null = null;
+// Last state we drove towards, so the tick only logs transitions rather than
+// narrating every 30 seconds.
+let lastDesiredOn: boolean | null = null;
 
 /** Apply an admin override to the steam room (relayed from the server). */
 export function setSteamOverride(override: 'on' | 'off' | 'none'): void {
@@ -53,6 +66,40 @@ export function setSteamOverride(override: 'on' | 'off' | 'none'): void {
   steamOverrideExpiresAt = override === 'on' ? Date.now() + OVERRIDE_ON_DURATION_MS : 0;
   // Drive the change now rather than waiting for the next control tick.
   void applySteamState().catch(e => console.error('steam: apply after override failed:', e));
+}
+
+/**
+ * Take the steam room's periods from a new operational plan.
+ *
+ * Replaces the schedule wholesale — the server sends the whole day every time,
+ * and a replan can withdraw a period as readily as add one, so merging would let
+ * a cancelled period linger. Periods that have already passed are dropped on the
+ * way in; they can't affect anything and they clutter the logs.
+ */
+export function applySteamSchedule(periods: SteamPeriod[], planDate: string): void {
+  const now = Date.now();
+  schedule = periods
+    .filter(p => p.stop.getTime() > now)
+    .sort((a, b) => a.start.getTime() - b.start.getTime());
+  schedulePlanDate = planDate;
+
+  if (schedule.length === 0) {
+    console.log(`steam: plan ${planDate} has no upcoming periods`);
+  } else {
+    const summary = schedule
+      .map(p => `${p.start.toISOString()} → ${p.stop.toISOString()}`)
+      .join(', ');
+    console.log(`steam: plan ${planDate}, ${schedule.length} period(s): ${summary}`);
+  }
+
+  // Drive the change now rather than waiting for the next control tick — a plan
+  // can land at the exact moment a period should already have started.
+  void applySteamState().catch(e => console.error('steam: apply after schedule failed:', e));
+}
+
+/** Whether the plan wants the room powered at `now`. */
+function scheduledOn(now: number): boolean {
+  return schedule.some(p => now >= p.start.getTime() && now < p.stop.getTime());
 }
 
 function expireOverrideIfNeeded(): void {
@@ -66,7 +113,21 @@ function expireOverrideIfNeeded(): void {
 async function applySteamState(): Promise<void> {
   if (!client) return;
   expireOverrideIfNeeded();
-  const desiredOn = steamOverride === 'on';
+
+  // An admin override wins outright, in both directions: 'off' keeps the room
+  // shut through a scheduled period (a member reported a fault, say), 'on' opens
+  // it outside one. With no override in force the plan decides.
+  const desiredOn =
+    steamOverride === 'on' ? true :
+    steamOverride === 'off' ? false :
+    scheduledOn(Date.now());
+
+  if (desiredOn !== lastDesiredOn) {
+    const why = steamOverride === 'none' ? `plan ${schedulePlanDate ?? '(none)'}` : `override "${steamOverride}"`;
+    console.log(`steam: turning ${desiredOn ? 'on' : 'off'} (${why})`);
+    lastDesiredOn = desiredOn;
+  }
+
   if (desiredOn) {
     // Re-arm the power timer: this both powers the unit on and refreshes the
     // auto-off countdown. Never setPowerOn(true).
@@ -122,4 +183,27 @@ export function startSteamController(host: string, port?: number): void {
   controlInterval = setInterval(() => {
     void applySteamState().catch(e => console.error('steam: control tick failed:', e));
   }, CONTROL_INTERVAL_MS);
+}
+
+/**
+ * Stop the control loop and release the socket.
+ *
+ * Note what this deliberately does *not* do: switch the unit off. The power
+ * timer is the backstop — it lapses within POWER_TIMER_MINUTES of the last tick
+ * and the unit powers itself down — so a daemon shutting down leaves the room to
+ * fail safe on its own rather than depending on one last packet landing.
+ */
+export async function stopSteamController(): Promise<void> {
+  if (controlInterval) {
+    clearInterval(controlInterval);
+    controlInterval = null;
+  }
+  const c = client;
+  client = null;
+  schedule = [];
+  schedulePlanDate = null;
+  steamOverride = 'none';
+  steamOverrideExpiresAt = 0;
+  lastDesiredOn = null;
+  if (c) await c.close();
 }

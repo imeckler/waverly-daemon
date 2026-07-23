@@ -1,6 +1,6 @@
 import WebSocket from 'ws';
 import { applyOperationalPlan, Booking, OperationalPlan, setSaunaOverride } from './shellyController.js';
-import { setSteamOverride } from './steamController.js';
+import { applySteamSchedule, setSteamOverride, SteamPeriod } from './steamController.js';
 import { getLockCodes, setLockCode } from './lockRegistry.js';
 import {
   ServerToDaemonMessage,
@@ -189,10 +189,23 @@ export class SaunaScheduleClient {
 
   private async handleScheduleUpdate(message: ScheduleUpdateMessage): Promise<void> {
     try {
+      const steamPeriods = message.plan.steam ?? [];
       console.log(`Applying schedule for ${message.planDate}...`);
       console.log(`  Small sauna: ${message.plan.small.length} slots`);
       console.log(`  Big sauna: ${message.plan.big.length} slots`);
+      console.log(`  Steam room: ${steamPeriods.length} slots`);
       console.log(`  Bookings: ${message.bookings.length}`);
+
+      // The steam room is handed its schedule before the saunas. Theirs goes out
+      // over HTTP to four Shelly devices and any of them can hang or throw; the
+      // TOLO schedule is a local assignment that cannot. Going first means an
+      // unreachable sauna can't leave the steam room running yesterday's plan.
+      const steam: SteamPeriod[] = steamPeriods.map(s => ({
+        start: new Date(s.start),
+        stop: new Date(s.stop),
+        hotFrom: s.hotFrom ? new Date(s.hotFrom) : null,
+      }));
+      applySteamSchedule(steam, message.planDate);
 
       // Convert to OperationalPlan format
       const plan: OperationalPlan = {
