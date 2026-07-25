@@ -1,0 +1,13 @@
+node_modules/
+build/
+
+# Live config and files derived from it — contain the Shelly admin password,
+# PagerDuty routing key, and daemon secret. Never commit these.
+config.json
+manual-reset
+waverly@waverlypi.local
+
+# Local device state / debug dumps
+lockids.json
+in-docker
+out-docker

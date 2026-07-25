@@ -1,0 +1,33 @@
+{
+  "lockServers": [
+    {
+      "serverUrl": "http://localhost:8080",
+      "lockNodeIds": [6, 7],
+      "description": "Printshop - front door and shop entrance"
+    },
+    {
+      "serverUrl": "http://localhost:3000",
+      "lockNodeIds": [8],
+      "description": "Sauna entrance lock"
+    }
+  ],
+  "shelly": {
+    "small_sauna_heater_ip": "192.168.1.100",
+    "small_sauna_lights_fan_ip": "192.168.1.101",
+    "small_sauna_lights_switch_id": 0,
+    "small_sauna_fan_switch_id": 1,
+    "big_sauna_heater_ip": "192.168.1.102",
+    "big_sauna_lights_fan_ip": "192.168.1.103",
+    "big_sauna_lights_switch_id": 0,
+    "big_sauna_fan_switch_id": 1,
+    "temperature_threshold": 185,
+    "password": "your-shelly-admin-password",
+    "sauna_server_url": "http://localhost:3000",
+    "daemon_secret": "your-daemon-secret-here",
+    "tolo_ip": "192.168.8.10",
+    "tolo_port": 51500
+  },
+  "pagerduty": {
+    "routing_key": "your-pagerduty-integration-routing-key"
+  }
+}
