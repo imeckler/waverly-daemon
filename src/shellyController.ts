@@ -14,6 +14,22 @@ const OVERHEAT_MARGIN_F = 15;
 // At 30s intervals this is 2.5 minutes.
 const ALERT_THRESHOLD_CYCLES = 5;
 
+// Wall-clock debounce for the device-unreachable alert only: Shelly devices
+// drop off WiFi transiently, so only page if one stays unreachable for this
+// long continuously. Other (safety-relevant) alerts keep their cycle thresholds.
+const UNREACHABLE_DEBOUNCE_MS = 3 * 60 * 1000;
+
+// A single missed heartbeat can be a race against an in-flight plan apply (the
+// script is briefly stopped mid-redeploy). Two consecutive misses mean the
+// script is really down: a stopped script cannot serve its HTTP endpoint, so
+// the 404 is deterministic, and a freshly started script registers it within
+// seconds.
+const HEARTBEAT_CONFIRM_CYCLES = 2;
+
+// While a heater's script stays down, attempt an automatic redeploy at most
+// this often (each attempt rewrites KVS, which is flash-backed).
+const HEARTBEAT_REDEPLOY_INTERVAL_MS = 10 * 60 * 1000;
+
 // Minimum expected temperature rise (°F) over TEMP_RISE_WINDOW_MS when heater should be on.
 // If temp doesn't rise by at least this much, something is wrong.
 const TEMP_RISE_MIN_F = 2;
@@ -45,6 +61,16 @@ const TEMP_STUCK_EPSILON_F = 0.5;
 // Incident state itself lives in PagerDuty (dedup_key) — we send trigger/resolve
 // every cycle and let PagerDuty handle deduplication and reopening.
 const failCounts = new Map<string, number>();
+
+// First-observed timestamps for time-debounced alerts (currently just unreachable).
+const faultFirstSeen = new Map<string, { firstAt: number; alerted: boolean }>();
+
+// Last automatic temp-monitor redeploy attempt per sauna ('small' / 'big').
+const lastScriptRedeployAt = new Map<string, number>();
+
+// True while applyOperationalPlan is tearing down / rebuilding device state;
+// the heartbeat self-heal must not interleave with it.
+let planApplyInProgress = false;
 
 // Current operational plan (set when schedule is applied)
 let currentPlan: OperationalPlan | null = null;
@@ -851,7 +877,31 @@ export async function clearAllSchedulesAndScripts(): Promise<void> {
   }
 }
 
+// Serializes every path that tears down / rebuilds heater device state (plan
+// applies, startup deploys, heartbeat self-heals). Two rebuilds interleaving
+// can deploy the script onto a live relay — the new script instance sees an
+// off-belief with power flowing and trips its 'off switch has power' lockout —
+// or leave duplicate schedules behind.
+let deviceRebuildChain: Promise<void> = Promise.resolve();
+function withDeviceRebuildLock<T>(fn: () => Promise<T>): Promise<T> {
+  const run = deviceRebuildChain.then(fn, fn);
+  deviceRebuildChain = run.then(() => undefined, () => undefined);
+  return run;
+}
+
 export async function applyOperationalPlan(
+  plan: OperationalPlan,
+  bookings: Booking[]
+): Promise<void> {
+  planApplyInProgress = true;
+  try {
+    await withDeviceRebuildLock(() => applyOperationalPlanInner(plan, bookings));
+  } finally {
+    planApplyInProgress = false;
+  }
+}
+
+async function applyOperationalPlanInner(
   plan: OperationalPlan,
   bookings: Booking[]
 ): Promise<void> {
@@ -1090,11 +1140,49 @@ async function alertIfThreshold(
 }
 
 /**
- * Clear the failure counter and send a resolve to PagerDuty. Resolve is idempotent;
- * if no incident is open under this dedup_key, PagerDuty no-ops.
+ * Like alertIfThreshold, but debounced by wall-clock time instead of cycle count:
+ * only pages once the condition has been observed continuously for debounceMs.
+ * Once past the debounce, sends a trigger every cycle (PagerDuty dedupes).
+ */
+async function alertIfPersistent(
+  key: string,
+  summary: string,
+  severity: 'critical' | 'error' | 'warning' | 'info',
+  dedupKey: string,
+  debounceMs = UNREACHABLE_DEBOUNCE_MS,
+): Promise<void> {
+  // Monotonic clock, NOT Date.now(): the Pi has no RTC, so the wall clock can
+  // step by hours at boot when NTP syncs — which would instantly satisfy (or
+  // indefinitely defer) the debounce. Boot is precisely when devices are
+  // transiently unreachable, so a clock-step-proof timer matters here.
+  const now = performance.now();
+  let state = faultFirstSeen.get(key);
+  if (!state) {
+    state = { firstAt: now, alerted: false };
+    faultFirstSeen.set(key, state);
+    console.warn(`[monitor] fault observed: ${summary} (paging if still active in ${debounceMs / 60000}min)`);
+  }
+
+  if (now - state.firstAt >= debounceMs) {
+    if (!state.alerted) {
+      state.alerted = true;
+      console.error(`[monitor] ALERT: ${summary}`);
+    }
+    try {
+      await triggerIncident(summary, severity, dedupKey);
+    } catch (e) {
+      console.error(`[monitor] Failed to trigger PagerDuty:`, e);
+    }
+  }
+}
+
+/**
+ * Clear the failure counter / debounce state and send a resolve to PagerDuty.
+ * Resolve is idempotent; if no incident is open under this dedup_key, PagerDuty no-ops.
  */
 async function resolveIfClear(key: string, dedupKey: string): Promise<void> {
   failCounts.delete(key);
+  faultFirstSeen.delete(key);
   try {
     await resolveIncident(dedupKey);
   } catch (e) {
@@ -1230,7 +1318,7 @@ function checkSaunaHealth(
 
   // 1. Device unreachable
   if (!status.reachable) {
-    alertIfThreshold(
+    alertIfPersistent(
       `unreachable-${id}`,
       `${name} sauna Shelly device is unreachable`,
       'critical',
@@ -1342,6 +1430,115 @@ function checkSaunaHealth(
   }
 }
 
+/**
+ * The on-device temp-monitor script is the heater's only real-time watchdog;
+ * the heartbeat ping doubles as a liveness probe for it. A missed heartbeat on
+ * a reachable device means the script is not running (its endpoint dies with
+ * it), so:
+ *   1. fail closed — force the relay off rather than heat unmonitored (the
+ *      hardware auto_off allows up to HEATER_AUTO_OFF_DELAY_S of unmonitored
+ *      heating; that's a last resort, not an operating mode);
+ *   2. self-heal — clear + reapply the heater schedule and script, because a
+ *      plan apply interrupted mid-redeploy otherwise leaves the script stopped
+ *      indefinitely;
+ *   3. page if it persists.
+ */
+async function checkHeartbeatHealth(
+  name: 'Small' | 'Big',
+  ip: string,
+  heartbeatOk: boolean,
+  status: { on: boolean; reachable: boolean },
+): Promise<void> {
+  const id = name.toLowerCase();
+  const key = `heartbeat-${id}`;
+  const dedupKey = `sauna-heartbeat-${id}`;
+
+  if (heartbeatOk) {
+    await resolveIfClear(key, dedupKey);
+    return;
+  }
+
+  // Unreachable device: the unreachable alert owns that condition, and we can't
+  // distinguish "script down" from "network down". Freeze the counter — if the
+  // script is dead we resume counting when the device comes back.
+  if (!status.reachable) return;
+
+  const count = (failCounts.get(key) || 0) + 1;
+  failCounts.set(key, count);
+  if (count < HEARTBEAT_CONFIRM_CYCLES) return;
+
+  // heartbeatOk was sampled at the top of the cycle and may be stale — a plan
+  // apply may have brought the script up (and the script turned the relay on)
+  // since. A stopped script 404s deterministically, so a live probe is
+  // authoritative: never force the relay off, page, or redeploy on the stale
+  // sample alone. Forcing off a *running* script's relay would silently drop an
+  // interval from its duty-cycle events log (external offs are never recorded).
+  const alive = await pingHeartbeat(ip).then(() => true, () => false);
+  if (alive) {
+    await resolveIfClear(key, dedupKey);
+    return;
+  }
+
+  if (status.on) {
+    console.error(`[monitor] ${name} heater relay is ON with its temp-monitor script down — forcing OFF`);
+    await setSwitch(ip, 0, false);
+  }
+
+  if (count >= ALERT_THRESHOLD_CYCLES) {
+    if (count === ALERT_THRESHOLD_CYCLES) {
+      console.error(`[monitor] ALERT: ${name} sauna temp-monitor script down (no heartbeat)`);
+    }
+    try {
+      await triggerIncident(
+        `${name} sauna temperature-monitor script is down (no heartbeat) — heater has no on-device watchdog`,
+        'critical',
+        dedupKey,
+      );
+    } catch (e) {
+      console.error(`[monitor] Failed to trigger PagerDuty:`, e);
+    }
+  }
+
+  if (planApplyInProgress) return;
+  // Monotonic clock (see alertIfPersistent): a boot-time NTP step must not
+  // bypass or extend the throttle. Unlike an epoch timestamp, performance.now()
+  // starts near 0, so "no attempt yet" needs an explicit check rather than ?? 0.
+  const now = performance.now();
+  const lastAttempt = lastScriptRedeployAt.get(id);
+  if (lastAttempt !== undefined && now - lastAttempt < HEARTBEAT_REDEPLOY_INTERVAL_MS) return;
+  lastScriptRedeployAt.set(id, now);
+
+  await withDeviceRebuildLock(async () => {
+    // Re-probe under the lock: a plan apply queued ahead of us may have already
+    // redeployed the script, and redeploying over a healthy one would stop the
+    // watchdog and force off a possibly-legitimately-on heater for nothing.
+    const nowAlive = await pingHeartbeat(ip).then(() => true, () => false);
+    if (nowAlive) return;
+
+    console.log(`[monitor] Self-healing ${name} heater: redeploying temp monitor to ${ip}`);
+    try {
+      // Invariant: relay must be OFF before the script (re)starts — deploying
+      // onto a live relay trips the script's 'off switch has power' lockout.
+      // setSwitch reports failure via PagerDuty instead of throwing, so verify
+      // before proceeding.
+      await setSwitch(ip, 0, false);
+      const check = await shellyRpc(ip, 'Switch.GetStatus', { id: 0 });
+      if (check.output !== false) {
+        console.error(`[monitor] ${name} heater relay would not turn off; skipping redeploy`);
+        return;
+      }
+      const slots = (name === 'Small' ? currentPlan?.small : currentPlan?.big) ?? [];
+      await clearSchedules(ip);
+      await applyHeaterSchedule(ip, slots, name, await getDeviceUtcOffset());
+      console.log(`[monitor] ${name} heater temp monitor redeployed`);
+    } catch (e) {
+      // The relay is already off, the alert keeps firing, and the next attempt
+      // comes after HEARTBEAT_REDEPLOY_INTERVAL_MS.
+      console.error(`[monitor] ${name} heater temp-monitor redeploy failed:`, e);
+    }
+  });
+}
+
 export async function getAllSaunaStatus(): Promise<{
   small: { on: boolean; temperatureF: number | null; powerW: number | null; reachable: boolean };
   big: { on: boolean; temperatureF: number | null; powerW: number | null; reachable: boolean };
@@ -1421,6 +1618,13 @@ export function startTemperatureMonitor(): void {
   tempMonitorInterval = setInterval(async () => {
     const heartbeats = await pingAllHeartbeats();
     const status = await getAllSaunaStatus();
+    // Isolated so a failure here can't skip the status report below.
+    await Promise.all([
+      checkHeartbeatHealth('Small', config.small_sauna_heater_ip, heartbeats.small, status.small)
+        .catch(e => console.error('[monitor] Small heartbeat health check failed:', e)),
+      checkHeartbeatHealth('Big', config.big_sauna_heater_ip, heartbeats.big, status.big)
+        .catch(e => console.error('[monitor] Big heartbeat health check failed:', e)),
+    ]);
     const [smallManualReset, bigManualReset, smallOverride, bigOverride] = await Promise.all([
       getManualResetRequired(config.small_sauna_heater_ip),
       getManualResetRequired(config.big_sauna_heater_ip),
@@ -1520,6 +1724,10 @@ export function stopManualResetMonitor(): void {
 }
 
 export async function deployTemperatureMonitors(): Promise<void> {
+  return withDeviceRebuildLock(deployTemperatureMonitorsInner);
+}
+
+async function deployTemperatureMonitorsInner(): Promise<void> {
   console.log('Deploying temperature monitor scripts to all heaters...');
   // Per-heater isolation: one heater being unreachable must not strand the other's deploy.
   let smallOk = false;
