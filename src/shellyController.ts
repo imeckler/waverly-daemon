@@ -216,7 +216,7 @@ async function firstSuccessful<A, B>(xs: A[], f: (x: A) => Promise<B>): Promise<
 }
 
 // --- RPC ---
-async function shellyRpc(ip: string | string[], method: string, params: any = {}): Promise<any> {
+export async function shellyRpc(ip: string | string[], method: string, params: any = {}): Promise<any> {
   if (typeof ip === "string") {
     return await shellyRpcSingleIP(ip, method, params);
   } else {
