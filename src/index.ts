@@ -9,7 +9,7 @@ import { TranslatedValueID, Driver, isTransportServiceEncapsulation, ZWaveNode }
 import { runLockManager } from './lockManager';
 import { registerLock } from './lockRegistry';
 import { SaunaScheduleClient } from './saunaScheduleClient.js';
-import { startTemperatureMonitor, startManualResetMonitor, deployTemperatureMonitors } from './shellyController.js';
+import { startTemperatureMonitor, startManualResetMonitor, deployTemperatureMonitors, ShellyConfig } from './shellyController.js';
 import { startSteamController, stopSteamController } from './steamController.js';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -113,8 +113,9 @@ interface LockServerConfig {
   description?: string;
 }
 
+/*
 interface ShellyConfig {
-  small_sauna_heater_ip: string;
+  small_sauna_heater_ip: string[];
   small_sauna_lights_fan_ip: string;
   big_sauna_heater_ip: string;
   big_sauna_lights_fan_ip: string;
@@ -126,6 +127,7 @@ interface ShellyConfig {
   tolo_ip?: string;
   tolo_port?: number;
 }
+*/
 
 interface DaemonConfig {
   lockServers: LockServerConfig[];

@@ -86,8 +86,8 @@ const tempHistory: Record<string, { temperatureF: number; timestamp: number }[]>
 // just writes both keys when admin acts, and reports current state to the server.
 const OVERRIDE_ON_DURATION_MS = 60 * 60 * 1000;
 
-interface ShellyConfig {
-  small_sauna_heater_ip: string;
+export interface ShellyConfig {
+  small_sauna_heater_ip: string[];
   small_sauna_lights_fan_ip: string;
   small_sauna_lights_switch_id: number;
   small_sauna_fan_switch_id: number;
@@ -99,6 +99,10 @@ interface ShellyConfig {
   password: string;
   sauna_server_url: string;
   daemon_secret?: string;
+  // TOLO/STEAMTEC steam room (reached over the isolated/WireGuard link). Steam
+  // control stays dormant until tolo_ip is set.
+  tolo_ip?: string;
+  tolo_port?: number;
 }
 
 function loadShellyConfig(): ShellyConfig {
@@ -191,9 +195,36 @@ function buildDigestAuth(
   return header;
 }
 
-// --- RPC ---
+async function firstSuccessful<A, B>(xs: A[], f: (x: A) => Promise<B>): Promise<B> {
+  const errors = [];
+  for (let i = 0; i < xs.length; ++i) {
+    const x = xs[i];
 
-export async function shellyRpc(ip: string, method: string, params: any = {}): Promise<any> {
+    try {
+      const res = await f(x);
+      // put this item first for next time
+      xs.splice(i, 1);
+      xs.unshift(x);
+      return res;
+    } catch (error) {
+      errors.push(error);
+      continue;
+    }
+  }
+
+  throw errors;
+}
+
+// --- RPC ---
+async function shellyRpc(ip: string | string[], method: string, params: any = {}): Promise<any> {
+  if (typeof ip === "string") {
+    return await shellyRpcSingleIP(ip, method, params);
+  } else {
+    return await firstSuccessful(ip, (ip_) => shellyRpcSingleIP(ip_, method, params));
+  }
+}
+
+async function shellyRpcSingleIP(ip: string, method: string, params: any = {}): Promise<any> {
   const uri = `/rpc/${method}`;
   const url = `http://${ip}${uri}`;
   const body = JSON.stringify(params);
@@ -252,8 +283,8 @@ export async function shellyRpc(ip: string, method: string, params: any = {}): P
 
 // --- Switch control with retries + PagerDuty ---
 
-async function resolveDeviceIncident(ip: string, switchId: number): Promise<void> {
-  const dedupKey = `shelly-${ip}-sw${switchId}`;
+async function resolveDeviceIncident(ipString: string, switchId: number): Promise<void> {
+  const dedupKey = `shelly-${ipString}-sw${switchId}`;
   try {
     await resolveIncident(dedupKey);
   } catch (e) {
@@ -261,8 +292,9 @@ async function resolveDeviceIncident(ip: string, switchId: number): Promise<void
   }
 }
 
-async function setSwitch(ip: string, switchId: number, on: boolean): Promise<void> {
-  const label = `${ip} switch:${switchId}`;
+async function setSwitch(ip: string | string[], switchId: number, on: boolean): Promise<void> {
+  const ipString = typeof ip === 'string' ? ip : `${[...ip].sort()}`;
+  const label = `${ipString} switch:${switchId}`;
   const desired = on ? 'ON' : 'OFF';
 
   for (let attempt = 1; attempt <= SWITCH_MAX_RETRIES; attempt++) {
@@ -272,7 +304,7 @@ async function setSwitch(ip: string, switchId: number, on: boolean): Promise<voi
 
       const status = await shellyRpc(ip, 'Switch.GetStatus', { id: switchId });
       if (status.output === on) {
-        await resolveDeviceIncident(ip, switchId);
+        await resolveDeviceIncident(ipString, switchId);
         return;
       }
 
@@ -286,7 +318,7 @@ async function setSwitch(ip: string, switchId: number, on: boolean): Promise<voi
     }
   }
 
-  const dedupKey = `shelly-${ip}-sw${switchId}`;
+  const dedupKey = `shelly-${ipString}-sw${switchId}`;
   const summary = `Shelly device ${label} failed to set to ${desired} after ${SWITCH_MAX_RETRIES} attempts`;
   console.error(summary);
 
@@ -299,16 +331,16 @@ async function setSwitch(ip: string, switchId: number, on: boolean): Promise<voi
 
 // --- Helper functions ---
 
-async function clearSchedules(ip: string): Promise<void> {
+async function clearSchedules(ip: string | string[]): Promise<void> {
   console.log(`Clearing schedules on ${ip}`);
   await shellyRpc(ip, 'Schedule.DeleteAll');
 }
 
-async function setKVS(ip: string, key: string, value: any): Promise<void> {
+async function setKVS(ip: string | string[], key: string, value: any): Promise<void> {
   await shellyRpc(ip, 'KVS.Set', { key, value });
 }
 
-async function scheduleSetFlag(ip: string, time: Date, shouldBeOn: boolean, utcOffset: number): Promise<void> {
+async function scheduleSetFlag(ip: string | string[], time: Date, shouldBeOn: boolean, utcOffset: number): Promise<void> {
   const ts = formatCronWithOffset(time, utcOffset);
   console.log(`Scheduling ${ip} to set should_be_on=${shouldBeOn} at ${time.toISOString()} (device: ${ts})`);
   await shellyRpc(ip, 'Schedule.Create', {
@@ -357,7 +389,7 @@ function formatCronWithOffset(date: Date, utcOffsetSeconds: number): string {
 // --- Temperature monitoring script (deployed to device) ---
 
 async function deployTemperatureMonitor(
-  heaterIp: string,
+  heaterIp: string | string[],
   tempThresholdF: number
 ): Promise<void> {
   console.log(`Deploying temperature monitor to ${heaterIp}`);
@@ -785,7 +817,15 @@ if (typeof TEMP_OFF !== 'number' || typeof TEMP_ON !== 'number'
   );
 }
 
-async function pingHeartbeat(ip: string): Promise<void> {
+async function pingHeartbeat(ip: string | string[]): Promise<void> {
+  if (typeof ip === "string") {
+    return await pingHeartbeatOne(ip);
+  } else {
+    return await firstSuccessful(ip, pingHeartbeatOne);
+  }
+}
+
+async function pingHeartbeatOne(ip: string): Promise<void> {
   // Hits the script-registered endpoint at /script/1/heartbeat (script id is always 1 here).
   // The script handler just sets lastHeartbeatMs = Date.now() in RAM; no flash writes.
   // Method must be GET: on Gen4 firmware 1.5.99, POST to a script-registered endpoint
@@ -794,6 +834,7 @@ async function pingHeartbeat(ip: string): Promise<void> {
   // depending on device state, so do the digest dance on 401.
   const uri = '/script/1/heartbeat';
   const url = `http://${ip}${uri}`;
+
   const response = await fetch(url, {
     method: 'GET',
     signal: AbortSignal.timeout(RPC_TIMEOUT_MS),
@@ -977,7 +1018,7 @@ async function applyOperationalPlanInner(
 }
 
 async function applyHeaterSchedule(
-  heaterIp: string,
+  heaterIp: string | string[],
   heaterSlots: Slot[],
   saunaName: string,
   utcOffset: number
@@ -1073,7 +1114,7 @@ async function applyLightsFanSchedule(
 
 // --- Status + temperature monitoring ---
 
-async function getHeaterStatus(ip: string): Promise<{ on: boolean; temperatureF: number | null; powerW: number | null }> {
+async function getHeaterStatus(ip: string | string[]): Promise<{ on: boolean; temperatureF: number | null; powerW: number | null }> {
   try {
     const status = await shellyRpc(ip, 'Shelly.GetStatus');
     const apower = status['switch:0']?.apower;
@@ -1087,7 +1128,7 @@ async function getHeaterStatus(ip: string): Promise<{ on: boolean; temperatureF:
   }
 }
 
-function checkOverheatFromStatus(name: string, ip: string, temperatureF: number | null): void {
+function checkOverheatFromStatus(name: string, ip: string | string[], temperatureF: number | null): void {
   if (temperatureF == null) return;
 
   const dedupKey = `sauna-overheat-${name.toLowerCase()}`;
@@ -1305,7 +1346,7 @@ async function alertIfThresholdManualOnly(
  */
 function checkSaunaHealth(
   name: 'Small' | 'Big',
-  ip: string,
+  ip: string | string[],
   status: { on: boolean; temperatureF: number | null; powerW: number | null; reachable: boolean },
   planSlots: Slot[],
 ): void {
@@ -1445,7 +1486,7 @@ function checkSaunaHealth(
  */
 async function checkHeartbeatHealth(
   name: 'Small' | 'Big',
-  ip: string,
+  ip: string | string[],
   heartbeatOk: boolean,
   status: { on: boolean; reachable: boolean },
 ): Promise<void> {
@@ -1657,7 +1698,7 @@ export function stopTemperatureMonitor(): void {
 
 // Returns true if the heater's safety-lockout flag is set, false if explicitly cleared,
 // null if unknown (key missing or device unreachable).
-async function getManualResetRequired(ip: string): Promise<boolean | null> {
+async function getManualResetRequired(ip: string | string[]): Promise<boolean | null> {
   try {
     const result = await shellyRpc(ip, 'KVS.Get', { key: 'manualResetRequired' });
     if (!result || result.value === undefined) return null;
@@ -1668,7 +1709,7 @@ async function getManualResetRequired(ip: string): Promise<boolean | null> {
 }
 
 // Reads override + overrideExpiresAt from device KVS. Returns 'none' if missing/unreadable.
-async function getOverrideState(ip: string): Promise<{ override: 'on' | 'off' | 'none'; overrideExpiresAt: number | null }> {
+async function getOverrideState(ip: string | string[]): Promise<{ override: 'on' | 'off' | 'none'; overrideExpiresAt: number | null }> {
   let override: 'on' | 'off' | 'none' = 'none';
   let overrideExpiresAt: number | null = null;
   try {
@@ -1686,7 +1727,7 @@ async function getOverrideState(ip: string): Promise<{ override: 'on' | 'off' | 
 }
 
 async function checkManualResetRequired(): Promise<void> {
-  const saunas: Array<{ name: 'Small' | 'Big'; ip: string }> = [
+  const saunas: Array<{ name: 'Small' | 'Big'; ip: string | string[] }> = [
     { name: 'Small', ip: config.small_sauna_heater_ip },
     { name: 'Big', ip: config.big_sauna_heater_ip },
   ];
