@@ -9,7 +9,9 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
-    "test": "tsc -p tsconfig.json && node --test build/**/*.test.js"
+    "test": "tsc -p tsconfig.json && node --test build/**/*.test.js",
+    "test-shelly": "tsx test-shelly.ts",
+    "test-pagerduty": "tsx test-pagerduty.ts"
   },
   "keywords": [],
   "author": "",
@@ -31,6 +33,7 @@
     "esbuild": "^0.25.5",
     "eslint": "^9.29.0",
     "prettier": "^3.5.3",
+    "tsx": "^4.23.11",
     "typescript": "^5.8.3"
   }
 }
