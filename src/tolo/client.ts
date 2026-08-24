@@ -29,6 +29,11 @@ class AsyncQueue<T> {
     else this.items.push(item);
   }
 
+  /** Drop anything queued but not yet consumed. */
+  clear(): void {
+    this.items.length = 0;
+  }
+
   get(timeoutMs: number): Promise<T | typeof TIMEOUT> {
     const item = this.items.shift();
     if (item !== undefined) return Promise.resolve(item);
@@ -52,6 +57,10 @@ class AsyncQueue<T> {
 export class ToloClient {
   private socket: dgram.Socket | null = null;
   private queue: AsyncQueue<Buffer> | null = null;
+  // Requests are serialized: one socket, one reply queue, one outstanding
+  // request. Concurrent callers would otherwise consume (and discard) each
+  // other's replies.
+  private chain: Promise<unknown> = Promise.resolve();
 
   /**
    * @param retryTimeout Per-attempt UDP wait, in seconds.
@@ -213,31 +222,100 @@ export class ToloClient {
   /**
    * Send a message with retry logic. UDP is unreliable, so if no matching reply
    * arrives within `retryTimeout` the message is re-sent, up to `retryCount`.
+   *
+   * Calls are queued behind one another so only one request is ever in flight
+   * on the socket (see `chain`).
    */
-  private async communicate(message: Message): Promise<Message> {
+  private communicate(message: Message): Promise<Message> {
+    const run = this.chain.then(() => this.exchange(message));
+    // Keep the chain alive regardless of how this request ends.
+    this.chain = run.catch(() => undefined);
+    return run;
+  }
+
+  private async exchange(message: Message): Promise<Message> {
     const { socket, queue } = this.ensureEndpoint();
     const timeoutMs = this.retryTimeout * 1000;
     const payload = message.toBytes();
+
+    // Anything still queued is a late reply to an earlier (timed-out) request;
+    // it must not be mistaken for the answer to this one.
+    queue.clear();
 
     for (let attempt = 0; attempt < this.retryCount; attempt++) {
       socket.send(payload, this.port, this.address);
 
       // Keep reading until this attempt's budget is exhausted, skipping
-      // keep-alive packets and replies for other commands.
+      // keep-alive packets, noise, and replies for other commands. Datagram
+      // boundaries are not trusted to be frame boundaries: the App Box is a
+      // serial-to-UDP bridge and has been seen splitting its 24-byte status
+      // reply across two datagrams, so bytes are accumulated and frames are
+      // cut out of the stream.
+      let pending: Buffer = Buffer.alloc(0);
       let responseMessage: Message | null = null;
       while (responseMessage === null) {
-        const responseBytes = await queue.get(timeoutMs);
-        if (responseBytes === TIMEOUT) break;
+        const chunk = await queue.get(timeoutMs);
+        if (chunk === TIMEOUT) break;
 
-        if (responseBytes.length === 1 && responseBytes[0] === KEEP_ALIVE) continue;
+        if (chunk.length === 1 && chunk[0] === KEEP_ALIVE) continue;
+        pending = pending.length === 0 ? chunk : Buffer.concat([pending, chunk]);
 
-        const parsed = Message.fromBytes(responseBytes);
-        if (parsed.command.code === message.command.code) responseMessage = parsed;
+        for (;;) {
+          const cut = ToloClient.cutFrame(pending);
+          if (cut.kind === 'incomplete') break;
+          pending = cut.rest;
+          if (cut.kind === 'garbage') {
+            console.warn(`tolo: discarding ${cut.bytes.toString('hex')} from ${this.address}`);
+            continue;
+          }
+          if (cut.message.command.code === message.command.code) {
+            responseMessage = cut.message;
+            break;
+          }
+        }
       }
       if (responseMessage !== null) return responseMessage;
+      if (pending.length > 0) {
+        console.warn(`tolo: attempt ended with partial frame ${pending.toString('hex')} from ${this.address}`);
+      }
     }
 
     throw new ToloCommunicationError(`failed to send message after ${this.retryCount} attempts`);
+  }
+
+  /**
+   * Take one frame off the front of `buf`. `incomplete` means more bytes are
+   * needed before a decision can be made; `garbage` returns bytes that cannot
+   * begin a valid frame (so the stream resyncs on the next prefix).
+   */
+  private static cutFrame(
+    buf: Buffer,
+  ): { kind: 'incomplete' } | { kind: 'garbage'; bytes: Buffer; rest: Buffer } | { kind: 'frame'; message: Message; rest: Buffer } {
+    const MIN_FRAME = Message.PREFIX.length + 2 + Message.SUFFIX.length + 1;
+    if (buf.length < MIN_FRAME) return { kind: 'incomplete' };
+
+    const start = buf.indexOf(Message.PREFIX);
+    if (start !== 0) {
+      const end = start < 0 ? buf.length : start;
+      return { kind: 'garbage', bytes: buf.subarray(0, end), rest: buf.subarray(end) };
+    }
+
+    let command: Command;
+    try {
+      command = Command.fromCode(buf[2]);
+    } catch {
+      // A prefix followed by a code we don't know: skip the prefix and resync.
+      return { kind: 'garbage', bytes: buf.subarray(0, 2), rest: buf.subarray(2) };
+    }
+
+    const length = Message.PREFIX.length + 2 + protocol.replyExtraLength(command) + Message.SUFFIX.length + 1;
+    if (buf.length < length) return { kind: 'incomplete' };
+
+    const frame = buf.subarray(0, length);
+    if (!Message.validateMeta(frame)) {
+      return { kind: 'garbage', bytes: buf.subarray(0, 2), rest: buf.subarray(2) };
+    }
+    return { kind: 'frame', message: Message.fromBytes(Buffer.from(frame)), rest: buf.subarray(length) };
   }
 
   /**

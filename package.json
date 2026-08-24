@@ -9,7 +9,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
-    "test": "tsc -p tsconfig.json && node --test build/**/*.test.js",
+    "test": "tsc -p tsconfig.json && node --test \"build/**/*.test.js\"",
     "test-shelly": "tsx test-shelly.ts",
     "test-pagerduty": "tsx test-pagerduty.ts"
   },

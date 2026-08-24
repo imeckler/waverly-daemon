@@ -44,3 +44,14 @@ export function parseGetCommandResponse(command: Command, response: Message): Na
 export function buildDiscoverMessage(): Message {
   return new Message(Command.GET_STATUS, 0x00, Buffer.from([0xff]));
 }
+
+/**
+ * Length in bytes of the `extra` payload the device puts in its reply to
+ * `command`. Frames carry no length field, so a receiver reassembling bytes
+ * needs to know how long the reply it is waiting for should be.
+ */
+export function replyExtraLength(command: Command): number {
+  if (command === Command.GET_STATUS) return 17;
+  if (command === Command.GET_SETTINGS) return 8;
+  return 1;
+}

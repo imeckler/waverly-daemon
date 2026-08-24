@@ -5,10 +5,12 @@
 // TOLO unit is a dumb UDP endpoint with no on-device safety script. So the daemon
 // enforces everything here.
 //
-// Turning the unit ON is done ONLY via `setPowerTimer`, re-armed on every control
-// tick. That doubles as a dead-man's-switch: if the daemon dies or loses its
-// (WireGuard) link to the box, the power timer lapses and the unit powers itself
-// off. `setPowerOn(true)` is deliberately never used — it has no such backstop.
+// Powering the unit on takes two commands. `setPowerOn(true)` is what actually
+// starts it — arming the power timer alone does NOT power the unit on (verified
+// on the hardware: SET_POWER_TIMER leaves powerOn=0; only SET_POWER_ON flips it).
+// The power timer is then re-armed on every control tick as a dead-man's-switch:
+// if the daemon dies or loses its (WireGuard) link to the box, the timer lapses
+// and the unit powers itself off. The unit is never left on without it armed.
 //
 // The room is driven by the operational plan from the server, with an admin
 // override taking precedence. Where the Shelly heaters get their schedules
@@ -65,7 +67,7 @@ export function setSteamOverride(override: 'on' | 'off' | 'none'): void {
   steamOverride = override;
   steamOverrideExpiresAt = override === 'on' ? Date.now() + OVERRIDE_ON_DURATION_MS : 0;
   // Drive the change now rather than waiting for the next control tick.
-  void applySteamState().catch(e => console.error('steam: apply after override failed:', e));
+  requestApply();
 }
 
 /**
@@ -94,7 +96,7 @@ export function applySteamSchedule(periods: SteamPeriod[], planDate: string): vo
 
   // Drive the change now rather than waiting for the next control tick — a plan
   // can land at the exact moment a period should already have started.
-  void applySteamState().catch(e => console.error('steam: apply after schedule failed:', e));
+  requestApply();
 }
 
 /** Whether the plan wants the room powered at `now`. */
@@ -110,8 +112,39 @@ function expireOverrideIfNeeded(): void {
   }
 }
 
+// Applies never overlap. Powering on is several round-trips to the box, and an
+// override or replan can land in the middle of one; if its apply ran
+// concurrently, the older apply's remaining commands could undo the newer
+// decision (an "on" re-powering the unit after an "off" had shut it). Instead
+// a request made while an apply is running is folded into one more run after
+// it, which reads the (now current) desired state afresh.
+let applyRunning = false;
+let applyRequested = false;
+
+function requestApply(): void {
+  if (applyRunning) {
+    applyRequested = true;
+    return;
+  }
+  applyRunning = true;
+  void (async () => {
+    do {
+      applyRequested = false;
+      try {
+        await applySteamState();
+      } catch (e) {
+        console.error('steam: apply failed:', e);
+      }
+    } while (applyRequested);
+    applyRunning = false;
+  })();
+}
+
 async function applySteamState(): Promise<void> {
-  if (!client) return;
+  // Pin the client for the whole apply: stopSteamController() may null the
+  // module-level one while we're between round-trips.
+  const c = client;
+  if (!c) return;
   expireOverrideIfNeeded();
 
   // An admin override wins outright, in both directions: 'off' keeps the room
@@ -129,11 +162,20 @@ async function applySteamState(): Promise<void> {
   }
 
   if (desiredOn) {
-    // Re-arm the power timer: this both powers the unit on and refreshes the
-    // auto-off countdown. Never setPowerOn(true).
-    await client.setPowerTimer(POWER_TIMER_MINUTES);
+    // Arm the auto-off backstop first, then make sure the unit is actually
+    // running. Arming the timer does not power the unit on by itself, and
+    // SET_POWER_ON is only sent when the unit reports itself off — so a unit
+    // that is already running isn't poked every tick, and a unit that its own
+    // timer (or someone at the panel) switched off gets brought back within one
+    // tick, visibly in the log.
+    await c.setPowerTimer(POWER_TIMER_MINUTES);
+    const status = await c.getStatus();
+    if (!status.powerOn) {
+      console.log('steam: unit is off, powering on');
+      await c.setPowerOn(true);
+    }
   } else {
-    await client.setPowerOn(false);
+    await c.setPowerOn(false);
   }
 }
 
@@ -180,9 +222,7 @@ export function startSteamController(host: string, port?: number): void {
   console.log(
     `Starting steam controller (TOLO ${host}:${port ?? 51500}, control every ${CONTROL_INTERVAL_MS / 1000}s)`,
   );
-  controlInterval = setInterval(() => {
-    void applySteamState().catch(e => console.error('steam: control tick failed:', e));
-  }, CONTROL_INTERVAL_MS);
+  controlInterval = setInterval(requestApply, CONTROL_INTERVAL_MS);
 }
 
 /**

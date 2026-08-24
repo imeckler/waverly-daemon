@@ -5,9 +5,9 @@
 // stubbing the client. What's being checked is the part that decides *whether
 // the room should be on*: the plan, the admin override, and which wins.
 //
-// The unit is only ever powered on by arming its power timer (never
-// setPowerOn(true)), so "we turned it on" reads as the timer being armed to
-// POWER_TIMER_MINUTES, and "we turned it off" as powerOn going false.
+// "We turned it on" reads as the unit powered on *with* its power timer armed
+// to POWER_TIMER_MINUTES (the timer is the fail-safe; arming it does not power
+// the real unit on by itself), and "we turned it off" as powerOn going false.
 
 import { test, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
@@ -76,10 +76,22 @@ async function waitFor(
 }
 
 const expectOn = () =>
-  waitFor(s => s.powerTimer === POWER_TIMER_MINUTES, 'the power timer to be armed');
+  waitFor(
+    s => s.powerOn && s.powerTimer === POWER_TIMER_MINUTES,
+    'the unit to be powered on with the power timer armed',
+  );
 const expectOff = () => waitFor(s => s.powerOn === false, 'the unit to be powered off');
 
 test('a period covering now switches the room on', async () => {
+  applySteamSchedule([period(-30, 90)], '2026-03-10');
+  await expectOn();
+});
+
+test('a period covering now powers on a unit that is off', async () => {
+  // The default fixture starts powered on, which would let a controller that
+  // only arms the timer pass. Start from off: the unit must be switched on.
+  await probe.setPowerOn(false);
+  assert.equal((await probe.getStatus()).powerOn, false, 'fixture: device should start powered off');
   applySteamSchedule([period(-30, 90)], '2026-03-10');
   await expectOn();
 });
