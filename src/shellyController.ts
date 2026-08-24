@@ -2,6 +2,8 @@ import * as fs from 'fs';
 import * as crypto from 'crypto';
 import { triggerIncident, resolveIncident } from './pagerduty.js';
 import { getSteamStatus } from './steamController.js';
+import { ScheduledTask } from './scheduledTask.js';
+import { blinkSwitch } from './blink.js';
 
 const RPC_TIMEOUT_MS = 10_000;
 const SWITCH_MAX_RETRIES = 3;
@@ -85,6 +87,48 @@ const tempHistory: Record<string, { temperatureF: number; timestamp: number }[]>
 // Enforcement is on the device (mJS script clears its own KVS when expired); the daemon
 // just writes both keys when admin acts, and reports current state to the server.
 const OVERRIDE_ON_DURATION_MS = 60 * 60 * 1000;
+
+// When a heater slot ends, flash that sauna's lights to signal the session is
+// over. The blink is driven from the daemon (not a device schedule): it needs
+// to read the lights' actual state to end where it started, and it is
+// cosmetic, so losing it during a daemon outage costs nothing.
+const LIGHTS_BLINK_COUNT = 2;
+const LIGHTS_BLINK_INTERVAL_MS = 700;
+// The device's own lights-off schedule fires at the same instant the slot
+// ends; wait for it to land so the blink starts from the settled state.
+const LIGHTS_BLINK_DELAY_MS = 3_000;
+
+// Pending blink timers, keyed by sauna name. Every plan apply replaces the
+// whole set, so a withdrawn slot can't leave a stray blink behind.
+const lightsBlinkTasks = new Map<string, ScheduledTask[]>();
+
+function cancelLightsBlinks(saunaName?: string): void {
+  for (const [name, tasks] of lightsBlinkTasks) {
+    if (saunaName !== undefined && name !== saunaName) continue;
+    for (const t of tasks) t.cancel();
+    lightsBlinkTasks.delete(name);
+  }
+}
+
+function scheduleLightsBlink(
+  lightsFanIp: string,
+  lightsSwitchId: number,
+  at: Date,
+  saunaName: string,
+): void {
+  const fireAt = new Date(at.getTime() + LIGHTS_BLINK_DELAY_MS);
+  console.log(`Scheduling ${saunaName} lights blink at ${fireAt.toISOString()} (heater slot ends ${at.toISOString()})`);
+  const task = new ScheduledTask(fireAt, () => {
+    console.log(`${saunaName} heater slot ended - blinking lights ${LIGHTS_BLINK_COUNT}x`);
+    blinkSwitch(shellyRpc, lightsFanIp, lightsSwitchId, {
+      count: LIGHTS_BLINK_COUNT,
+      intervalMs: LIGHTS_BLINK_INTERVAL_MS,
+    }).catch(e => console.error(`${saunaName} lights blink failed:`, e));
+  });
+  const tasks = lightsBlinkTasks.get(saunaName) ?? [];
+  tasks.push(task);
+  lightsBlinkTasks.set(saunaName, tasks);
+}
 
 export interface ShellyConfig {
   small_sauna_heater_ip: string[];
@@ -886,6 +930,8 @@ function mergeBookings(bookings: Booking[]): Slot[] {
 // --- Clear + Apply ---
 
 export async function clearAllSchedulesAndScripts(): Promise<void> {
+  cancelLightsBlinks();
+
   const devices = [
     { ip: config.small_sauna_heater_ip, name: 'Small Sauna Heater', isHeater: true },
     { ip: config.small_sauna_lights_fan_ip, name: 'Small Sauna Lights/Fan', isHeater: false },
@@ -1084,6 +1130,16 @@ async function applyLightsFanSchedule(
     }
     if (period.stop > now) {
       await scheduleSwitch(lightsFanIp, lightsSwitchId, period.stop, false, utcOffset);
+    }
+  }
+
+  // Lights: blink when each heater slot ends, so people inside know the
+  // session is over. Also used when the lights are already off (slot ended
+  // together with the last booking): the blink ends back in the off state.
+  cancelLightsBlinks(saunaName);
+  for (const heaterSlot of heaterSlots) {
+    if (heaterSlot.stop > now) {
+      scheduleLightsBlink(lightsFanIp, lightsSwitchId, heaterSlot.stop, saunaName);
     }
   }
 
