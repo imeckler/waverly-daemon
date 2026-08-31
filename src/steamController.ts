@@ -43,6 +43,11 @@ const OVERRIDE_ON_DURATION_MS = 60 * 60 * 1000;
 // two. Must be <= POWER_TIMER_MAX (60).
 const POWER_TIMER_MINUTES = 10;
 
+// Target temperature the room is driven to whenever it's on. Re-asserted every
+// tick alongside the power timer, so a change made at the wall panel is undone
+// within a tick. Must be within TARGET_TEMPERATURE_MIN..MAX (35..60).
+const TARGET_TEMPERATURE_C = 50;
+
 const CONTROL_INTERVAL_MS = 30_000;
 
 function celsiusToFahrenheit(c: number): number {
@@ -169,6 +174,7 @@ async function applySteamState(): Promise<void> {
     // timer (or someone at the panel) switched off gets brought back within one
     // tick, visibly in the log.
     await c.setPowerTimer(POWER_TIMER_MINUTES);
+    await c.setTargetTemperature(TARGET_TEMPERATURE_C);
     const status = await c.getStatus();
     if (!status.powerOn) {
       console.log('steam: unit is off, powering on');
