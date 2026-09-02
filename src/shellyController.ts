@@ -1736,6 +1736,9 @@ export function startTemperatureMonitor(): void {
     // The steam room (TOLO unit) has no on-device script; its status/override are
     // tracked by steamController. Omitted from the report when not configured.
     const steam = await getSteamStatus();
+    if (steam) {
+      await checkSteamReachable(steam).catch(e => console.error('[monitor] Steam reachability check failed:', e));
+    }
     await reportStatusToServer({
       small: {
         ...status.small, heartbeatOk: heartbeats.small, manualResetRequired: smallManualReset,
@@ -1748,6 +1751,29 @@ export function startTemperatureMonitor(): void {
       ...(steam ? { steam } : {}),
     });
   }, TEMP_CHECK_INTERVAL_MS);
+}
+
+/**
+ * Page if the steam room's TOLO unit stays unreachable, with the same wall-clock
+ * debounce as the heaters (the box sits behind a WireGuard link that can flap).
+ *
+ * Losing the unit is not a safety problem — its power timer lapses and it shuts
+ * itself off — but it does mean no scheduled steam sessions run and no
+ * temperature reaches the site, and nothing else surfaces that: the status
+ * reader deliberately swallows communication errors, so without this the only
+ * trace is the control tick's error log.
+ */
+async function checkSteamReachable(steam: SaunaStatus): Promise<void> {
+  if (!steam.reachable) {
+    await alertIfPersistent(
+      'unreachable-steam',
+      'Steam room TOLO unit is unreachable',
+      'error',
+      'sauna-unreachable-steam',
+    );
+  } else {
+    await resolveIfClear('unreachable-steam', 'sauna-unreachable-steam');
+  }
 }
 
 export function stopTemperatureMonitor(): void {
