@@ -46,7 +46,7 @@ const POWER_TIMER_MINUTES = 10;
 // Target temperature the room is driven to whenever it's on. Re-asserted every
 // tick alongside the power timer, so a change made at the wall panel is undone
 // within a tick. Must be within TARGET_TEMPERATURE_MIN..MAX (35..60).
-const TARGET_TEMPERATURE_C = 50;
+const TARGET_TEMPERATURE_C = 46;
 
 const CONTROL_INTERVAL_MS = 30_000;
 
