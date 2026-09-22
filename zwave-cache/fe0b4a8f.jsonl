@@ -50,7 +50,7 @@
 {"k":"node.2.endpoint.0.commandClass.0x5e","v":{"isSupported":true,"isControlled":false,"secure":false,"version":2}}
 {"k":"node.2.endpoint.0.commandClass.0x55","v":{"isSupported":true,"isControlled":false,"secure":false,"version":2}}
 {"k":"node.2.endpoint.0.commandClass.0x6c","v":{"isSupported":true,"isControlled":false,"secure":false,"version":1}}
-{"k":"node.6.lastSeen","v":1790095077855}
+{"k":"node.6.lastSeen","v":1790098270778}
 {"k":"node.6.hasSUCReturnRoute","v":true}
 {"k":"node.6.endpoint.0.commandClass.0x9f","v":{"isSupported":true,"isControlled":false,"secure":true,"version":1}}
 {"k":"node.6.securityClasses.S2_AccessControl","v":true}
@@ -189,5 +189,7 @@
 {"k":"node.13.endpoint.0.commandClass.0x73","v":{"isSupported":true,"isControlled":false,"secure":false,"version":1}}
 {"k":"node.13.endpoint.0.commandClass.0x7a","v":{"isSupported":true,"isControlled":false,"secure":false,"version":3}}
 {"k":"node.13.deviceConfigHash","v":"$v2$1ZexDoIwEIbfhbkDHBVkdTc+gGEgykA0kgDGgfTdvYJCG6SRgYR/IS007Xf/Nfcfrbmk9Xz9yOq6vBTdmd3LQD/Mo3U8wgTnibWrlz2b0lNK/Aji3E5l5g0MOfV2g4p6MqgrhSFQT2FnhVdPJe6kF2M6mOCT00CJYRwaY6lSPZty+iigMIoSCmiIAsoAGKA7FNAIBTRGAd2jgCYgoChllFAclFAclGBSj+KghOKghOKghOKghOKghOKghOKgKNUpRHHQ8Ough6I5ZvXN+ZvPQY3k/MVNzqurPLueHncm7hcsicQ36IO/6R0+C0Dv8DQAeke12x69XUlY+BlYSYlMopgStvE1qGfw7JuwNTyU3ks6yvDiK/mqiiZf806iNIoofSJKm4jSJW6xSUyVUm8="}
-{"k":"node.6.lastSeen","v":1790095164668}
-{"k":"node.6.lastSeen","v":1790095165251}
+{"k":"node.6.lastSeen","v":1790098273359}
+{"k":"node.6.lastSeen","v":1790098273399}
+{"k":"node.6.lastSeen","v":1790098278295}
+{"k":"node.6.lastSeen","v":1790098278862}
