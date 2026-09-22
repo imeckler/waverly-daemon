@@ -1199,6 +1199,19 @@
 	{
 		"manufacturerId": "0x000c",
 		"manufacturer": "HomeSeer Technologies",
+		"label": "WS300",
+		"productType": "0x4447",
+		"productId": "0x4047",
+		"firmwareVersion": {
+			"min": "0.0",
+			"max": "255.255"
+		},
+		"filename": "0x000c/hs-ws300.json",
+		"rootDir": "/usr/src/app/store/.config-db/devices"
+	},
+	{
+		"manufacturerId": "0x000c",
+		"manufacturer": "HomeSeer Technologies",
 		"label": "HS-WV100+",
 		"productType": "0x0003",
 		"productId": "0x0002",
@@ -8495,6 +8508,19 @@
 		"label": "AMZ Solar",
 		"productType": "0x0005",
 		"productId": "0x0012",
+		"firmwareVersion": {
+			"min": "0.0",
+			"max": "255.255"
+		},
+		"filename": "0x0085/amz_solar.json",
+		"rootDir": "/usr/src/app/store/.config-db/devices"
+	},
+	{
+		"manufacturerId": "0x0085",
+		"manufacturer": "Fakro",
+		"label": "AMZ Solar",
+		"productType": "0x0005",
+		"productId": "0x0111",
 		"firmwareVersion": {
 			"min": "0.0",
 			"max": "255.255"
@@ -25600,6 +25626,19 @@
 	{
 		"manufacturerId": "0x015f",
 		"manufacturer": "McoHome Technology Co., Ltd.",
+		"label": "MH4936",
+		"productType": "0x8101",
+		"productId": "0x4a36",
+		"firmwareVersion": {
+			"min": "0.0",
+			"max": "255.255"
+		},
+		"filename": "0x015f/mh4936.json",
+		"rootDir": "/usr/src/app/store/.config-db/devices"
+	},
+	{
+		"manufacturerId": "0x015f",
+		"manufacturer": "McoHome Technology Co., Ltd.",
 		"label": "MH5-2A",
 		"productType": "0xf501",
 		"productId": "0x7102",
@@ -26349,6 +26388,19 @@
 			"max": "255.255"
 		},
 		"filename": "0x016a/ft116.json",
+		"rootDir": "/usr/src/app/store/.config-db/devices"
+	},
+	{
+		"manufacturerId": "0x016a",
+		"manufacturer": "Fantem",
+		"label": "FT117",
+		"productType": "0x0004",
+		"productId": "0x0076",
+		"firmwareVersion": {
+			"min": "0.0",
+			"max": "255.255"
+		},
+		"filename": "0x016a/ft117.json",
 		"rootDir": "/usr/src/app/store/.config-db/devices"
 	},
 	{
@@ -32255,7 +32307,20 @@
 	},
 	{
 		"manufacturerId": "0x026f",
-		"manufacturer": "Sprue Safety Products Ltd.",
+		"manufacturer": "FireAngel",
+		"label": "ZHT-630",
+		"productType": "0x0001",
+		"productId": "0x0002",
+		"firmwareVersion": {
+			"min": "0.0",
+			"max": "255.255"
+		},
+		"filename": "0x026f/zht-630.json",
+		"rootDir": "/usr/src/app/store/.config-db/devices"
+	},
+	{
+		"manufacturerId": "0x026f",
+		"manufacturer": "FireAngel",
 		"label": "ZHT-630",
 		"productType": "0x0002",
 		"productId": "0x0002",
@@ -32268,7 +32333,7 @@
 	},
 	{
 		"manufacturerId": "0x026f",
-		"manufacturer": "Sprue Safety Products Ltd.",
+		"manufacturer": "FireAngel",
 		"label": "ZST-630",
 		"productType": "0x0001",
 		"productId": "0x0001",
@@ -32802,6 +32867,19 @@
 	{
 		"manufacturerId": "0x027a",
 		"manufacturer": "Zooz",
+		"label": "ZEN35",
+		"productType": "0x7000",
+		"productId": "0xa018",
+		"firmwareVersion": {
+			"min": "0.0",
+			"max": "255.255"
+		},
+		"filename": "0x027a/zen35.json",
+		"rootDir": "/usr/src/app/store/.config-db/devices"
+	},
+	{
+		"manufacturerId": "0x027a",
+		"manufacturer": "Zooz",
 		"label": "ZEN37 800LR",
 		"productType": "0x7000",
 		"productId": "0xf003",
@@ -32953,6 +33031,19 @@
 			"max": "255.255"
 		},
 		"filename": "0x027a/zen74.json",
+		"rootDir": "/usr/src/app/store/.config-db/devices"
+	},
+	{
+		"manufacturerId": "0x027a",
+		"manufacturer": "Zooz",
+		"label": "ZEN75",
+		"productType": "0x7000",
+		"productId": "0xa005",
+		"firmwareVersion": {
+			"min": "0.0",
+			"max": "255.255"
+		},
+		"filename": "0x027a/zen75.json",
 		"rootDir": "/usr/src/app/store/.config-db/devices"
 	},
 	{
@@ -35124,6 +35215,19 @@
 			"max": "255.255"
 		},
 		"filename": "0x031e/vzw31-sn.json",
+		"rootDir": "/usr/src/app/store/.config-db/devices"
+	},
+	{
+		"manufacturerId": "0x031e",
+		"manufacturer": "Inovelli",
+		"label": "VZW32-SN",
+		"productType": "0x0017",
+		"productId": "0x0001",
+		"firmwareVersion": {
+			"min": "0.2",
+			"max": "255.255"
+		},
+		"filename": "0x031e/vzw32-sn.json",
 		"rootDir": "/usr/src/app/store/.config-db/devices"
 	},
 	{
@@ -39265,6 +39369,19 @@
 	},
 	{
 		"manufacturerId": "0x041b",
+		"manufacturer": "First Alert",
+		"label": "SMCO410",
+		"productType": "0x0001",
+		"productId": "0x0410",
+		"firmwareVersion": {
+			"min": "0.0",
+			"max": "255.255"
+		},
+		"filename": "0x041b/smco410.json",
+		"rootDir": "/usr/src/app/store/.config-db/devices"
+	},
+	{
+		"manufacturerId": "0x041b",
 		"manufacturer": "Honeywell",
 		"label": "TH6320ZW2007",
 		"productType": "0x0011",
@@ -39430,6 +39547,19 @@
 			"max": "255.255"
 		},
 		"filename": "0x042f/connect2.json",
+		"rootDir": "/usr/src/app/store/.config-db/devices"
+	},
+	{
+		"manufacturerId": "0x0431",
+		"manufacturer": "EcoDim",
+		"label": "ECO-DIM",
+		"productType": "0x0021",
+		"productId": "0x0216",
+		"firmwareVersion": {
+			"min": "0.0",
+			"max": "255.255"
+		},
+		"filename": "0x0431/ecodim.json",
 		"rootDir": "/usr/src/app/store/.config-db/devices"
 	},
 	{
@@ -40488,7 +40618,7 @@
 	{
 		"manufacturerId": "0x0466",
 		"manufacturer": "Nabu Casa",
-		"label": "Home Assistant Connect ZWA-2",
+		"label": "NC-ZWA-9734",
 		"productType": "0x0001",
 		"productId": "0x0001",
 		"firmwareVersion": {
