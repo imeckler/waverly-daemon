@@ -1683,7 +1683,7 @@ async function reportStatusToServer(status: {
   if (!config.sauna_server_url || !config.daemon_secret) return;
 
   try {
-    await fetch(`${config.sauna_server_url}/api/daemon/sauna-status`, {
+    const res = await fetch(`${config.sauna_server_url}/api/daemon/sauna-status`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1692,6 +1692,11 @@ async function reportStatusToServer(status: {
       body: JSON.stringify(status),
       signal: AbortSignal.timeout(5000),
     });
+    // fetch only rejects on network failure; a report the server refused would
+    // otherwise vanish silently and leave the admin UI showing stale state.
+    if (!res.ok) {
+      console.error(`Server rejected sauna status report: ${res.status} ${await res.text()}`);
+    }
   } catch (e) {
     console.error('Failed to report sauna status to server:', e);
   }

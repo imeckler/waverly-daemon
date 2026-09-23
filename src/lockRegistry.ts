@@ -1,5 +1,5 @@
 import { ZWaveNode } from 'zwave-js';
-import { setValueOk, describeSetValue } from './lockManager';
+import { setValueOk, describeSetValue, statusValueIdFor } from './lockManager';
 import { LockCodes, LockSlot } from '@waverly/sauna-protocol';
 
 // Shared registry of the lock nodes the daemon controls. index.ts populates it
@@ -40,7 +40,7 @@ export function getLockCodes(): LockCodes[] {
     const slots: LockSlot[] = codeVids.map(codeVid => {
       const slot = codeVid.propertyKey as number;
       const code = node.getValue<string>(codeVid);
-      const status = node.getValue({ ...codeVid, property: 'userIdStatus' });
+      const status = node.getValue(statusValueIdFor(codeVid));
       return {
         slot,
         code: code && code.trim() !== '' ? code : null,
@@ -80,13 +80,12 @@ export async function setLockCode(
     return { ok: false, error: `Invalid slot ${slot}` };
   }
 
-  const vids = node.getDefinedValueIDs()
-    .filter(v => v.commandClass === 99 && v.propertyKey === slot);
-  const codeVid = vids.find(v => v.property === 'userCode');
-  const statusVid = vids.find(v => v.property === 'userIdStatus');
-  if (!codeVid || !statusVid) {
+  const codeVid = node.getDefinedValueIDs()
+    .find(v => v.commandClass === 99 && v.property === 'userCode' && v.propertyKey === slot);
+  if (!codeVid) {
     return { ok: false, error: `Lock node ${nodeId} has no user slot ${slot}` };
   }
+  const statusVid = statusValueIdFor(codeVid);
 
   const trimmed = (code ?? '').trim();
   try {

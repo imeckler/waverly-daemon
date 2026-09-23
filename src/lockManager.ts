@@ -82,23 +82,11 @@ export class LockManager {
     this.tree = new IntervalTree();
     this.codeToSlot = new Map();
     // Code 1 (propertyKey == 1) is reserved and propertyKey 0 is special and used for modifying all the codes at once.
-    const codeOrStatus = lock.getDefinedValueIDs().filter(v => v.commandClass === 99 && v.propertyKey != 0 && v.propertyKey != 1);
     // propertyKey 0 is special and used for modifying all the codes.
-    const codeValues = codeOrStatus.filter(v => v.property == 'userCode');
-    const statusesByIndex = new Map<any, TranslatedValueID>();
-    codeOrStatus.forEach(v => {
-      if (v.property == 'userIdStatus') {
-        statusesByIndex.set(v.propertyKey, v);
-      }
-    });
+    const codeValues = lock.getDefinedValueIDs().filter(v =>
+      v.commandClass === 99 && v.property == 'userCode' && v.propertyKey != 0 && v.propertyKey != 1);
 
-    this.userCodeSlots = codeValues.map((code) => {
-      const status = statusesByIndex.get(code.propertyKey);
-      if (status == undefined) {
-        throw 'Status for code not found';
-      }
-      return { value: code, status };
-    });
+    this.userCodeSlots = codeValues.map((code) => ({ value: code, status: statusValueIdFor(code) }));
 
     this.availableSlots = new Set();
     for (let i = 0; i < this.userCodeSlots.length; ++i) {
@@ -245,6 +233,16 @@ export class LockManager {
       return Ok(undefined);
     }
   }
+}
+
+// zwave-js keys a slot's userCode and userIdStatus value IDs by the same user ID
+// (propertyKey); they differ only in `property`. Derive the status ID from the
+// code's rather than looking it up among the node's defined value IDs, so a
+// slot whose status the driver has not cached is still usable. setValue only
+// dispatches on commandClass/endpoint/property/propertyKey, and writing
+// Available (0) maps to UserCodeCC.clear, which never consults the cache.
+export function statusValueIdFor(code: TranslatedValueID): TranslatedValueID {
+  return { ...code, property: 'userIdStatus', propertyName: 'userIdStatus' };
 }
 
 // A lock write counts as "landed" if the device accepted it (Success), the
