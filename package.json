@@ -18,7 +18,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/ws": "^8.5.12",
-    "@waverly/sauna-protocol": "github:imeckler/waverly-sauna-protocol#v2",
+    "@waverly/sauna-protocol": "github:imeckler/waverly-sauna-protocol#v4",
     "moment-timezone": "^0.6.0",
     "node-interval-tree": "^2.1.2",
     "ws": "^8.18.0",

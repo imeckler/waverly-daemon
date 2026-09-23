@@ -1918,3 +1918,57 @@ export async function manualControl(
   const { ip, switchId } = deviceMap[device];
   await setSwitch(ip, switchId, on);
 }
+
+// ---------------------------------------------------------------------------
+// Lights, switched by hand from the members' site
+// ---------------------------------------------------------------------------
+
+export type LitSauna = 'small' | 'big';
+
+export interface LightsState {
+  small: boolean | null;
+  big: boolean | null;
+}
+
+function lightsRelay(sauna: LitSauna): { ip: string; switchId: number } {
+  return sauna === 'small'
+    ? { ip: config.small_sauna_lights_fan_ip, switchId: config.small_sauna_lights_switch_id ?? 0 }
+    : { ip: config.big_sauna_lights_fan_ip, switchId: config.big_sauna_lights_switch_id ?? 0 };
+}
+
+async function readLights(sauna: LitSauna): Promise<boolean | null> {
+  const { ip, switchId } = lightsRelay(sauna);
+  try {
+    const status = await shellyRpc(ip, 'Switch.GetStatus', { id: switchId });
+    return typeof status.output === 'boolean' ? status.output : null;
+  } catch (error) {
+    console.warn(`Could not read ${sauna} sauna lights (${ip} switch:${switchId}):`, error);
+    return null;
+  }
+}
+
+/**
+ * What the lights relays report right now. A room whose device can't be
+ * reached comes back null rather than failing the whole read, so the site can
+ * still show the other room.
+ */
+export async function getLightsState(): Promise<LightsState> {
+  const [small, big] = await Promise.all([readLights('small'), readLights('big')]);
+  return { small, big };
+}
+
+/**
+ * Switch a room's lights and read the relay back. Deliberately not setSwitch:
+ * that retries for several seconds and pages on failure, which is right for
+ * the plan but wrong for a member tapping a button. Here a device that can't
+ * be reached just throws, and the site tells them so.
+ */
+export async function setLights(sauna: LitSauna, on: boolean): Promise<void> {
+  const { ip, switchId } = lightsRelay(sauna);
+  console.log(`Setting ${sauna} sauna lights ${on ? 'ON' : 'OFF'} (${ip} switch:${switchId})`);
+  await shellyRpc(ip, 'Switch.Set', { id: switchId, on });
+  const status = await shellyRpc(ip, 'Switch.GetStatus', { id: switchId });
+  if (status.output !== on) {
+    throw new Error(`${sauna} sauna lights did not switch ${on ? 'on' : 'off'}`);
+  }
+}

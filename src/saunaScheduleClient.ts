@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { applyOperationalPlan, Booking, OperationalPlan, setSaunaOverride } from './shellyController.js';
+import { applyOperationalPlan, Booking, OperationalPlan, setSaunaOverride, getLightsState, setLights } from './shellyController.js';
 import { applySteamSchedule, setSteamOverride, SteamPeriod } from './steamController.js';
 import { getLockCodes, setLockCode } from './lockRegistry.js';
 import {
@@ -9,6 +9,8 @@ import {
   SaunaOverrideMessage,
   GetLockCodesRequest,
   SetLockCodeRequest,
+  GetLightsRequest,
+  SetLightsRequest,
   assertNever,
 } from '@waverly/sauna-protocol';
 
@@ -150,6 +152,12 @@ export class SaunaScheduleClient {
       case 'setLockCode':
         void this.handleSetLockCode(message);
         break;
+      case 'getLights':
+        void this.handleGetLights(message);
+        break;
+      case 'setLights':
+        void this.handleSetLights(message);
+        break;
       default:
         assertNever(message);
     }
@@ -185,6 +193,35 @@ export class SaunaScheduleClient {
       status: result.status,
       error: result.error,
     });
+  }
+
+  private async handleGetLights(message: GetLightsRequest): Promise<void> {
+    try {
+      const lights = await getLightsState();
+      this.send({ kind: 'lightsResult', requestId: message.requestId, ok: true, lights });
+    } catch (e) {
+      this.send({
+        kind: 'lightsResult',
+        requestId: message.requestId,
+        ok: false,
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
+  }
+
+  // Switch, then report what both relays say afterwards, so the site shows
+  // the lights as they are rather than as they were asked to be.
+  private async handleSetLights(message: SetLightsRequest): Promise<void> {
+    console.log(`Lights request: ${message.sauna} sauna ${message.on ? 'on' : 'off'}`);
+    let error: string | undefined;
+    try {
+      await setLights(message.sauna, message.on);
+    } catch (e) {
+      error = e instanceof Error ? e.message : String(e);
+      console.error(`Lights request for ${message.sauna} sauna FAILED: ${error}`);
+    }
+    const lights = await getLightsState();
+    this.send({ kind: 'lightsResult', requestId: message.requestId, ok: error === undefined, lights, error });
   }
 
   private async handleScheduleUpdate(message: ScheduleUpdateMessage): Promise<void> {
