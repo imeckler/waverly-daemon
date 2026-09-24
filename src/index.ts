@@ -91,7 +91,14 @@ const driver = new Driver(device, {
   },
   storage: {
     cacheDir: './zwave-cache'
-  }
+  },
+  // The driver logs nothing in a container by default (stdout is not a TTY).
+  // ZWAVE_LOG_CONSOLE=<level> (e.g. debug) sends its log to stdout, where
+  // journald keeps it. Do not use LOGTOFILE: /app is not writable and the
+  // driver then throws on startup.
+  ...(process.env.ZWAVE_LOG_CONSOLE
+    ? { logConfig: { enabled: true, level: process.env.ZWAVE_LOG_CONSOLE, forceConsole: true } }
+    : {}),
 });
 
 driver.disableStatistics();
