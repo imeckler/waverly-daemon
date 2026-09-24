@@ -96,3 +96,12 @@ type ScheduleUpdate = {
   bookings: Booking[]
 };
 ```
+
+## Re-paired locks
+
+A lock that is excluded and included again gets a new node id. Because
+`config.json` is baked into the image, the daemon keeps the mapping it actually
+runs with in `zwave-cache/lock-nodes.json` (the one writable directory), written
+by the assisted pairing flow on the admin page. On startup that file's node ids
+win over `lockNodeIds` in `config.json` for the servers it lists. Delete the file
+to go back to `config.json`.

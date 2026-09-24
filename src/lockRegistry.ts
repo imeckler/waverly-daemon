@@ -11,6 +11,10 @@ export function registerLock(node: ZWaveNode): void {
   lockNodes.set(node.id, node);
 }
 
+export function unregisterLock(nodeId: number): void {
+  lockNodes.delete(nodeId);
+}
+
 // Kwikset SmartCode (and most Z-Wave locks) accept 4–8 digit codes.
 const CODE_PATTERN = /^\d{4,8}$/;
 

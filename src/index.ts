@@ -6,9 +6,12 @@
 */
 import { exit } from 'process';
 import { TranslatedValueID, Driver, isTransportServiceEncapsulation, ZWaveNode } from 'zwave-js';
-import { runLockManager, LockManager } from './lockManager';
+import { runLockManager } from './lockManager';
 import { startLockWatchdog } from './lockHealth';
 import { registerLock } from './lockRegistry';
+import { LockPairing } from './lockPairing';
+import { setLockPairing } from './lockPairingRegistry';
+import { adoptLock, allLockManagers, applyLockNodeOverrides, listLockServers, retireLock, LockServerConfig } from './lockGroups';
 import { SaunaScheduleClient } from './saunaScheduleClient.js';
 import { startTemperatureMonitor, startManualResetMonitor, deployTemperatureMonitors, ShellyConfig } from './shellyController.js';
 import { startSteamController, stopSteamController } from './steamController.js';
@@ -38,7 +41,6 @@ const usageService = new UsagePollingService(
 
 // Store references for graceful shutdown
 let wsClients: any[] = [];
-let lockManagers: LockManager[] = [];
 let stopLockWatchdog: (() => void) | null = null;
 let saunaScheduleClient: SaunaScheduleClient | null = null;
 
@@ -111,12 +113,7 @@ usageService.start().then(() => {
 });
 */
 
-// Lock server configuration
-interface LockServerConfig {
-  serverUrl: string;
-  lockNodeIds: number[];
-  description?: string;
-}
+// Lock server configuration: see LockServerConfig in lockGroups.ts.
 
 /*
 interface ShellyConfig {
@@ -144,8 +141,11 @@ function loadDaemonConfig(): DaemonConfig {
   const configPath = process.env.DAEMON_CONFIG_FILE || './config.json';
   try {
     const configData = fs.readFileSync(configPath, 'utf-8');
-    const parsed = JSON.parse(configData);
+    const parsed = JSON.parse(configData) as DaemonConfig;
     console.log(`Loaded daemon config from ${configPath}`);
+    // A re-paired lock has a new node id; the mapping assisted pairing saved
+    // wins over the one baked into the image.
+    parsed.lockServers = applyLockNodeOverrides(parsed.lockServers ?? []);
     return parsed;
   } catch (error) {
     console.error(`Failed to read/parse config file ${configPath}:`, error);
@@ -189,6 +189,7 @@ driver.start().then(async () => {
 
     // Group lock nodes by server URL
     const serverToLocks = new Map<string, ZWaveNode[]>();
+    const serverDescriptions = new Map<string, string | null>();
 
     for (const config of lockServerConfigs) {
       const locks: ZWaveNode[] = [];
@@ -227,6 +228,7 @@ driver.start().then(async () => {
 
       if (locks.length > 0) {
         serverToLocks.set(config.serverUrl, locks);
+        serverDescriptions.set(config.serverUrl, config.description ?? null);
       }
     }
 
@@ -238,15 +240,22 @@ driver.start().then(async () => {
     // Initialize lock managers for each server
     for (const [serverUrl, locks] of serverToLocks.entries()) {
       console.log(`Initializing lock manager for ${serverUrl} with ${locks.length} lock(s)...`);
-      const { managers, wsClient } = runLockManager(locks, serverUrl);
+      const { managers, wsClient } = runLockManager(locks, serverUrl, serverDescriptions.get(serverUrl) ?? null);
       wsClients.push(wsClient);
-      lockManagers.push(...managers);
       console.log(`Lock manager for ${serverUrl} initialized with ${managers.length} lock(s)`);
     }
 
     // A lock whose radio still acknowledges frames can stop acting on them
     // (seen on the Kwikset). Probe any lock that has gone quiet and page.
-    stopLockWatchdog = startLockWatchdog(lockManagers);
+    stopLockWatchdog = startLockWatchdog(allLockManagers);
+
+    // Assisted re-pairing from the admin page: the controller side of
+    // exclusion and inclusion, with the new lock adopted for its server.
+    setLockPairing(new LockPairing(driver.controller, {
+      listServers: listLockServers,
+      retire: (nodeId) => { retireLock(nodeId); },
+      adopt: (serverUrl, node, replacesNodeId) => { adoptLock(serverUrl, node, replacesNodeId); },
+    }));
 
     console.log('All lock managers initialized successfully');
   })

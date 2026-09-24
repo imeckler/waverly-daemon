@@ -183,11 +183,12 @@ export interface WatchdogOptions {
  * Probe every lock once shortly after start, then periodically probe any lock
  * that has been silent. Returns a function that stops the watchdog.
  */
-export function startLockWatchdog(locks: Probeable[], options: WatchdogOptions = {}): () => void {
+export function startLockWatchdog(locks: Probeable[] | (() => Probeable[]), options: WatchdogOptions = {}): () => void {
   const intervalMs = options.intervalMs ?? WATCHDOG_INTERVAL_MS;
   const initialDelayMs = options.initialDelayMs ?? STARTUP_PROBE_DELAY_MS;
+  const current = typeof locks === 'function' ? locks : () => locks;
   const tick = (force: boolean) => {
-    for (const lock of locks) {
+    for (const lock of current()) {
       checkLiveness(lock, force).catch(e => console.error(`${lock.health.describe()}: liveness check failed:`, e));
     }
   };

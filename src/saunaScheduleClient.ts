@@ -2,6 +2,7 @@ import WebSocket from 'ws';
 import { applyOperationalPlan, Booking, OperationalPlan, setSaunaOverride, getLightsState, setLights } from './shellyController.js';
 import { applySteamSchedule, setSteamOverride, SteamPeriod } from './steamController.js';
 import { getLockCodes, setLockCode } from './lockRegistry.js';
+import { lockPairing } from './lockPairingRegistry.js';
 import {
   ServerToDaemonMessage,
   DaemonToServerMessage,
@@ -11,6 +12,11 @@ import {
   SetLockCodeRequest,
   GetLightsRequest,
   SetLightsRequest,
+  StartLockExclusionRequest,
+  StartLockInclusionRequest,
+  StopLockPairingRequest,
+  EnterLockPairingPinRequest,
+  GetLockPairingStatusRequest,
   assertNever,
 } from '@waverly/sauna-protocol';
 
@@ -158,6 +164,21 @@ export class SaunaScheduleClient {
       case 'setLights':
         void this.handleSetLights(message);
         break;
+      case 'startLockExclusion':
+        void this.handleLockPairing(message, p => p.startExclusion());
+        break;
+      case 'startLockInclusion':
+        void this.handleLockPairing(message, p => p.startInclusion(message.serverUrl, message.replacesNodeId ?? null));
+        break;
+      case 'stopLockPairing':
+        void this.handleLockPairing(message, p => p.stop());
+        break;
+      case 'enterLockPairingPin':
+        void this.handleLockPairing(message, async p => p.enterPin(message.pin));
+        break;
+      case 'getLockPairingStatus':
+        void this.handleLockPairing(message, async () => {});
+        break;
       default:
         assertNever(message);
     }
@@ -193,6 +214,29 @@ export class SaunaScheduleClient {
       status: result.status,
       error: result.error,
     });
+  }
+
+  // Every pairing request gets the same reply: the whole pairing status after
+  // the action, or the reason the action was refused.
+  private async handleLockPairing(
+    message: StartLockExclusionRequest | StartLockInclusionRequest | StopLockPairingRequest
+      | EnterLockPairingPinRequest | GetLockPairingStatusRequest,
+    action: (pairing: NonNullable<ReturnType<typeof lockPairing>>) => Promise<void>,
+  ): Promise<void> {
+    const pairing = lockPairing();
+    if (!pairing) {
+      this.send({ kind: 'lockPairingResult', requestId: message.requestId, ok: false, error: 'Z-Wave controller is not ready yet' });
+      return;
+    }
+    try {
+      if (message.kind !== 'getLockPairingStatus') console.log(`Lock pairing request: ${message.kind}`);
+      await action(pairing);
+      this.send({ kind: 'lockPairingResult', requestId: message.requestId, ok: true, status: pairing.status() });
+    } catch (e) {
+      const error = e instanceof Error ? e.message : String(e);
+      console.error(`Lock pairing ${message.kind} failed: ${error}`);
+      this.send({ kind: 'lockPairingResult', requestId: message.requestId, ok: false, error, status: pairing.status() });
+    }
   }
 
   private async handleGetLights(message: GetLightsRequest): Promise<void> {

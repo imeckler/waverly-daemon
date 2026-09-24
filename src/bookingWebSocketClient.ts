@@ -183,6 +183,20 @@ export class BookingWebSocketClient {
     this.isConnected = false;
   }
 
+  /**
+   * Drop the connection and come back, which makes the server resend its
+   * whole snapshot of live access grants. Used after a lock is adopted so the
+   * new lock learns every code it should hold.
+   */
+  reconnect(): void {
+    if (this.ws) {
+      // 'close' schedules the reconnect.
+      this.ws.terminate();
+    } else if (!this.reconnectTimer) {
+      this.scheduleReconnect();
+    }
+  }
+
   getConnectionStatus(): boolean {
     return this.isConnected;
   }

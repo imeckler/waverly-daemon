@@ -1,0 +1,1 @@
+node -e 'import("./build/tolo/index.js").then(async ({ToloClient}) => console.log(await new ToloClient("192.168.8.178").setFanOn(true)))'

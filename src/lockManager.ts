@@ -4,6 +4,7 @@ import { ScheduledTask } from './scheduledTask';
 import { Result, Err, Ok } from './lib/util';
 import { BookingWebSocketClient } from './bookingWebSocketClient';
 import { LockHealth, maskCode, Probeable, checkLiveness } from './lockHealth';
+import { registerLockGroup } from './lockGroups';
 
 interface CodeInterval {
   low: number,
@@ -33,10 +34,12 @@ type BookingMessage =
   | { kind: 'addAccess', code: string, start: number, stop: number }
   | { kind: 'removeAccess', code: string, start: number, stop: number };
 
-export function runLockManager(locks: ZWaveNode[], serverUrl: string) {
-  // Create a manager for each lock
+export function runLockManager(locks: ZWaveNode[], serverUrl: string, description: string | null = null) {
+  // Create a manager for each lock. The array is shared with the lock group
+  // registry, which adds and removes managers as locks are re-paired.
   const managers = locks.map(lock => new LockManager(lock));
   const wsClient = new BookingWebSocketClient({ serverUrl });
+  registerLockGroup({ serverUrl, description, managers, wsClient });
 
   wsClient.onMessage((message: BookingMessage) => {
     console.log('Processing booking message:', message);
@@ -99,6 +102,8 @@ export class LockManager implements Probeable {
   private readonly reinterview: () => Promise<InterviewOutcome>;
   private readonly healCheckDelayMs: number;
   private healCheckTimer: NodeJS.Timeout | null = null;
+  /** Set once the lock has left the network; nothing is written to it after that. */
+  retired = false;
 
   constructor(lock: ZWaveNode, options: LockManagerOptions = {}) {
     this.lock = lock;
@@ -121,8 +126,23 @@ export class LockManager implements Probeable {
     }
   }
 
+  /**
+   * The lock is gone (excluded, or replaced): cancel every pending start and
+   * stop, drop the liveness check, and refuse further writes. Access intervals
+   * stay in the tree only as history; nothing acts on them.
+   */
+  retire(): void {
+    this.retired = true;
+    if (this.healCheckTimer) { clearTimeout(this.healCheckTimer); this.healCheckTimer = null; }
+    for (const interval of this.tree.inOrder()) {
+      interval.startEvent.cancel();
+      interval.stopEvent.cancel();
+    }
+  }
+
   startAccess(t: Date, code: string): ScheduledTask {
     return new ScheduledTask(t, () => {
+      if (this.retired) return;
       this.allocateCodeSlot(code)
         .then(r => {
           if (r.ok === false) {
@@ -135,6 +155,7 @@ export class LockManager implements Probeable {
 
   stopAccess(t: Date, code: string): ScheduledTask {
     return new ScheduledTask(t, () => {
+      if (this.retired) return;
       this.freeCodeSlot(code)
         .catch(e => console.error(`Error clearing code ${code} from lock ${this.lock.id}:`, e));
     });
@@ -227,7 +248,7 @@ export class LockManager implements Probeable {
    * minutes rather than at the next watchdog tick.
    */
   private requestHealCheck(): void {
-    if (this.healCheckTimer) return;
+    if (this.healCheckTimer || this.retired) return;
     this.healCheckTimer = setTimeout(() => {
       this.healCheckTimer = null;
       checkLiveness(this, true)
