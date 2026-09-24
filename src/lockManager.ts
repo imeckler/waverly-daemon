@@ -3,7 +3,7 @@ import { TranslatedValueID, ZWaveNode, SetValueStatus } from 'zwave-js';
 import { ScheduledTask } from './scheduledTask';
 import { Result, Err, Ok } from './lib/util';
 import { BookingWebSocketClient } from './bookingWebSocketClient';
-import { LockHealth, maskCode, Probeable } from './lockHealth';
+import { LockHealth, maskCode, Probeable, checkLiveness } from './lockHealth';
 
 interface CodeInterval {
   low: number,
@@ -21,6 +21,13 @@ export type SlotReading = { status: number | undefined, code: string | undefined
 const CAPACITY = 20;
 const CODE_ENABLED = 1;
 const CODE_AVAILABLE = 0;
+
+/** How long to give a re-interview before treating it as failed. */
+export const REINTERVIEW_TIMEOUT_MS = 10 * 60 * 1000;
+/** A write that got no answer triggers a liveness check after this long. */
+export const HEAL_CHECK_DELAY_MS = 60 * 1000;
+
+export type InterviewOutcome = 'ready' | 'interview failed' | 'timeout';
 
 type BookingMessage =
   | { kind: 'addAccess', code: string, start: number, stop: number }
@@ -74,6 +81,9 @@ export interface LockManagerOptions {
   health?: LockHealth;
   /** Query one slot on the lock. Defaults to a User Code Get over the radio. */
   readSlot?: (slotNo: number) => Promise<SlotReading | undefined>;
+  /** Re-interview the lock. Defaults to zwave-js's refreshInfo. */
+  reinterview?: () => Promise<InterviewOutcome>;
+  healCheckDelayMs?: number;
 }
 
 export class LockManager implements Probeable {
@@ -86,11 +96,16 @@ export class LockManager implements Probeable {
   // ref-counting to handle overlapping intervals with the same code
   codeToSlot: Map<string, AllocatedSlot>;
   private readonly readSlot: (slotNo: number) => Promise<SlotReading | undefined>;
+  private readonly reinterview: () => Promise<InterviewOutcome>;
+  private readonly healCheckDelayMs: number;
+  private healCheckTimer: NodeJS.Timeout | null = null;
 
   constructor(lock: ZWaveNode, options: LockManagerOptions = {}) {
     this.lock = lock;
     this.health = options.health ?? new LockHealth(lock);
     this.readSlot = options.readSlot ?? ((slotNo) => readSlotFromLock(lock, slotNo));
+    this.reinterview = options.reinterview ?? (() => reinterviewLock(lock));
+    this.healCheckDelayMs = options.healCheckDelayMs ?? HEAL_CHECK_DELAY_MS;
     this.tree = new IntervalTree();
     this.codeToSlot = new Map();
     // Code 1 (propertyKey == 1) is reserved and propertyKey 0 is special and used for modifying all the codes at once.
@@ -163,7 +178,11 @@ export class LockManager implements Probeable {
       console.error(`Lock ${this.lock.id} slot ${slotNo}: read-back failed:`, e);
       reading = undefined;
     }
-    if (reading !== undefined) this.health.recordHeard();
+    if (reading !== undefined) {
+      this.health.recordHeard();
+    } else {
+      this.requestHealCheck();
+    }
     return reading;
   }
 
@@ -171,7 +190,50 @@ export class LockManager implements Probeable {
   async probe(): Promise<boolean> {
     const slot = this.userCodeSlots[0];
     if (!slot) return false;
-    return (await this.querySlot(slot.value.propertyKey as number)) !== undefined;
+    let reading: SlotReading | undefined;
+    try {
+      reading = await this.readSlot(slot.value.propertyKey as number);
+    } catch (e) {
+      console.error(`Lock ${this.lock.id}: probe failed:`, e);
+      reading = undefined;
+    }
+    return reading !== undefined;
+  }
+
+  /**
+   * A lock whose radio still acknowledges frames can stop acting on them (the
+   * Kwikset, after an interrupted transaction). A fresh interview re-queries
+   * every command class, which has brought such a lock back without anyone
+   * touching it. Reports whether the lock answers a probe afterwards.
+   */
+  async heal(): Promise<boolean> {
+    this.health.lastHealAt = this.health.now();
+    console.log(`${this.health.describe()}: not answering; re-interviewing`);
+    let outcome: InterviewOutcome;
+    try {
+      outcome = await this.reinterview();
+    } catch (e) {
+      console.error(`${this.health.describe()}: re-interview threw:`, e);
+      return false;
+    }
+    console.log(`${this.health.describe()}: re-interview ${outcome}`);
+    if (outcome !== 'ready') return false;
+    return this.probe();
+  }
+
+  /**
+   * A write or read got no answer: look at the lock's liveness soon, once the
+   * current burst of commands is over, so a deaf lock is re-interviewed within
+   * minutes rather than at the next watchdog tick.
+   */
+  private requestHealCheck(): void {
+    if (this.healCheckTimer) return;
+    this.healCheckTimer = setTimeout(() => {
+      this.healCheckTimer = null;
+      checkLiveness(this, true)
+        .catch(e => console.error(`${this.health.describe()}: liveness check failed:`, e));
+    }, this.healCheckDelayMs);
+    this.healCheckTimer.unref();
   }
 
   async freeCodeSlot(code: string) {
@@ -323,6 +385,28 @@ export function describeReading(reading: SlotReading | undefined): string {
     : reading.status === CODE_ENABLED ? 'enabled'
     : reading.status === undefined ? 'status unknown' : `status ${reading.status}`;
   return reading.code === undefined || reading.code === '' ? status : `${status}, code ${maskCode(reading.code)}`;
+}
+
+/**
+ * Re-interview the lock and wait for it to come back (ready), give up
+ * (interview failed), or run out of time.
+ */
+export function reinterviewLock(lock: ZWaveNode): Promise<InterviewOutcome> {
+  const outcome = new Promise<InterviewOutcome>((resolve) => {
+    const finish = (o: InterviewOutcome) => {
+      clearTimeout(timer);
+      lock.off('ready', onReady);
+      lock.off('interview failed', onFailed);
+      resolve(o);
+    };
+    const onReady = () => finish('ready');
+    const onFailed = () => finish('interview failed');
+    const timer = setTimeout(() => finish('timeout'), REINTERVIEW_TIMEOUT_MS);
+    lock.on('ready', onReady);
+    lock.on('interview failed', onFailed);
+  });
+  return lock.refreshInfo({ resetSecurityClasses: false, waitForWakeup: false })
+    .then(() => outcome);
 }
 
 /** A User Code Get over the radio. Resolves undefined when the lock does not answer. */

@@ -21,6 +21,7 @@ function fakeLock(slotCount = 3) {
       return { status: 254 /* SuccessUnsupervised */ };
     },
     on: (ev: string, fn: () => void) => { (events[ev] ??= []).push(fn); },
+    off: () => {},
   };
   return { lock: lock as any, writes, events };
 }
@@ -175,28 +176,37 @@ test('the watchdog leaves a recently heard lock alone', async () => {
   assert.equal(triggered.length, 0);
 });
 
-test('the watchdog probes a silent lock and pages when it does not answer, then resolves when it does', async () => {
+test('the watchdog probes a silent lock, re-interviews it once, pages when that does not help, and resolves when it answers', async () => {
   const { lock } = fakeLock();
   const { notifier, triggered, resolved } = fakeNotifier();
   const clock = fakeClock();
   const health = new LockHealth(lock, notifier, clock.now);
   let answer: SlotReading | undefined = undefined;
   const { readSlot, reads } = readsFrom(() => answer);
-  const m = new LockManager(lock, { health, readSlot });
+  let reinterviews = 0;
+  const reinterview = async () => { reinterviews++; return 'ready' as const; };
+  const m = new LockManager(lock, { health, readSlot, reinterview });
 
-  // Nothing heard since start; after the limit the probe goes out and fails.
+  // Nothing heard since start; after the limit the probe goes out and fails,
+  // the lock is re-interviewed, probed again, and paged.
   clock.advance(SILENCE_LIMIT_MS);
   await checkLiveness(m);
-  assert.deepEqual(reads, [2]);
+  assert.deepEqual(reads, [2, 2]);
+  assert.equal(reinterviews, 1);
   await flush();
   assert.equal(triggered.length, 1);
   assert.equal(triggered[0].dedupKey, 'lock-13-unresponsive');
   assert.match(triggered[0].summary, /since the daemon started 2 h ago/);
+  assert.match(triggered[0].summary, /re-interview did not help/);
+  assert.equal(triggered[0].details.reinterviewAttempted, true);
 
-  // Still silent, still probing on the next tick.
+  // Still silent on the next tick: probed, but not re-interviewed again so soon.
   clock.advance(SILENCE_LIMIT_MS);
   await checkLiveness(m);
-  assert.equal(reads.length, 2);
+  assert.equal(reads.length, 3);
+  assert.equal(reinterviews, 1);
+  await flush();
+  assert.equal(triggered[1].details.reinterviewAttempted, false);
 
   // The lock comes back: the probe answers and the incident is resolved.
   answer = { status: 0, code: '' };
@@ -204,6 +214,59 @@ test('the watchdog probes a silent lock and pages when it does not answer, then 
   await flush();
   assert.deepEqual(resolved, ['lock-13-unresponsive']);
   assert.equal(health.lastHeardAt, clock.now());
+});
+
+test('a re-interview that brings the lock back is not paged', async () => {
+  const { lock } = fakeLock();
+  const { notifier, triggered } = fakeNotifier();
+  const clock = fakeClock();
+  const health = new LockHealth(lock, notifier, clock.now);
+  let answer: SlotReading | undefined = undefined;
+  const { readSlot } = readsFrom(() => answer);
+  const reinterview = async () => { answer = { status: 0, code: '' }; return 'ready' as const; };
+  const m = new LockManager(lock, { health, readSlot, reinterview });
+
+  await checkLiveness(m, true);
+  await flush();
+  assert.equal(triggered.length, 0);
+  assert.equal(health.lastHeardAt, clock.now());
+});
+
+test('a re-interview that fails or times out counts as not healed', async () => {
+  for (const outcome of ['interview failed', 'timeout'] as const) {
+    const { lock } = fakeLock();
+    const { notifier, triggered } = fakeNotifier();
+    const health = new LockHealth(lock, notifier, fakeClock().now);
+    const { readSlot, reads } = readsFrom(() => undefined);
+    const m = new LockManager(lock, { health, readSlot, reinterview: async () => outcome });
+
+    await checkLiveness(m, true);
+    await flush();
+    // No second probe after a failed interview.
+    assert.deepEqual(reads, [2]);
+    assert.equal(triggered.length, 1);
+    assert.equal(triggered[0].details.reinterviewAttempted, true);
+  }
+});
+
+test('a write that gets no answer triggers a liveness check and re-interview shortly after', async () => {
+  const { lock } = fakeLock();
+  const { notifier, triggered } = fakeNotifier();
+  const health = new LockHealth(lock, notifier, fakeClock().now);
+  let answer: SlotReading | undefined = undefined;
+  const { readSlot } = readsFrom(() => answer);
+  let reinterviews = 0;
+  const reinterview = async () => { reinterviews++; answer = { status: 1, code: '913790' }; return 'ready' as const; };
+  const m = new LockManager(lock, { health, readSlot, reinterview, healCheckDelayMs: 0 });
+
+  assert.equal((await m.allocateCodeSlot('913790')).ok, false);
+  await new Promise(r => setTimeout(r, 5));
+  await flush();
+  assert.equal(reinterviews, 1);
+  // The unconfirmed write was paged; the lock is not paged as unresponsive,
+  // since the re-interview brought it back.
+  assert.deepEqual(triggered.map(t => t.dedupKey), ['lock-13-write-unconfirmed']);
+  assert.notEqual(health.lastHeardAt, null);
 });
 
 test('a notification pushed by the lock counts as being heard', async () => {

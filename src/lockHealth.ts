@@ -35,6 +35,10 @@ export const pagerDutyNotifier: Notifier = {
 export const SILENCE_LIMIT_MS = 2 * 60 * 60 * 1000;
 /** How often the watchdog looks at every lock. */
 export const WATCHDOG_INTERVAL_MS = 30 * 60 * 1000;
+/** How soon after start every lock is probed once, whether or not it is silent. */
+export const STARTUP_PROBE_DELAY_MS = 2 * 60 * 1000;
+/** A lock is re-interviewed at most this often. */
+export const HEAL_MIN_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 /** Hide a door code in anything that leaves the daemon. */
 export function maskCode(code: string): string {
@@ -46,6 +50,9 @@ export class LockHealth {
   lastHeardAt: number | null = null;
   lastCommandAt: number | null = null;
   commandsSinceHeard = 0;
+
+  /** Last time a re-interview was attempted; null if never. */
+  lastHealAt: number | null = null;
 
   private unresponsiveOpen = false;
   private unconfirmedOpen = false;
@@ -66,6 +73,13 @@ export class LockHealth {
       on.call(lock, 'notification', heard);
       on.call(lock, 'value notification', heard);
     }
+  }
+
+  now(): number { return this.clock(); }
+
+  /** Whether enough time has passed since the last re-interview to try another. */
+  canHeal(now: number = this.clock()): boolean {
+    return this.lastHealAt === null || now - this.lastHealAt >= HEAL_MIN_INTERVAL_MS;
   }
 
   describe(): string {
@@ -120,19 +134,23 @@ export class LockHealth {
   }
 
   /** The watchdog probed the lock and got nothing back. */
-  recordUnresponsive(): void {
+  recordUnresponsive(healAttempted: boolean): void {
     const now = this.clock();
     const since = this.lastHeardAt;
     const sinceText = since === null
       ? `since the daemon started ${describeAge(now - this.startedAt)} ago`
       : `for ${describeAge(now - since)} (last answer ${new Date(since).toISOString()})`;
-    const summary = `${this.describe()} is not answering the controller ${sinceText}; ${this.commandsSinceHeard} command(s) sent meanwhile`;
+    const healText = healAttempted
+      ? '; a re-interview did not help — it needs hands on: pull its batteries, and if it stays silent exclude and re-include it'
+      : '';
+    const summary = `${this.describe()} is not answering the controller ${sinceText}; ${this.commandsSinceHeard} command(s) sent meanwhile${healText}`;
     console.error(summary);
     this.unresponsiveOpen = true;
     this.notifier.trigger(summary, this.dedupUnresponsive, {
       lock: this.lock.id,
       lastHeardAt: since === null ? null : new Date(since).toISOString(),
       commandsSinceHeard: this.commandsSinceHeard,
+      reinterviewAttempted: healAttempted,
     }).catch(e => console.error(`${this.describe()}: failed to report unresponsive lock:`, e));
   }
 }
@@ -149,29 +167,57 @@ export interface Probeable {
   health: LockHealth;
   /** Ask the lock something and report whether it answered. */
   probe(): Promise<boolean>;
+  /**
+   * Try to bring a silent lock back without hands on it (a re-interview), and
+   * report whether it answers afterwards.
+   */
+  heal(): Promise<boolean>;
+}
+
+export interface WatchdogOptions {
+  intervalMs?: number;
+  initialDelayMs?: number;
 }
 
 /**
- * Periodically probe every lock that has been silent. Returns a function that
- * stops the watchdog.
+ * Probe every lock once shortly after start, then periodically probe any lock
+ * that has been silent. Returns a function that stops the watchdog.
  */
-export function startLockWatchdog(locks: Probeable[], intervalMs: number = WATCHDOG_INTERVAL_MS): () => void {
-  const tick = () => {
+export function startLockWatchdog(locks: Probeable[], options: WatchdogOptions = {}): () => void {
+  const intervalMs = options.intervalMs ?? WATCHDOG_INTERVAL_MS;
+  const initialDelayMs = options.initialDelayMs ?? STARTUP_PROBE_DELAY_MS;
+  const tick = (force: boolean) => {
     for (const lock of locks) {
-      checkLiveness(lock).catch(e => console.error(`${lock.health.describe()}: liveness check failed:`, e));
+      checkLiveness(lock, force).catch(e => console.error(`${lock.health.describe()}: liveness check failed:`, e));
     }
   };
-  const timer = setInterval(tick, intervalMs);
-  return () => clearInterval(timer);
+  const first = setTimeout(() => tick(true), initialDelayMs);
+  const timer = setInterval(() => tick(false), intervalMs);
+  return () => { clearTimeout(first); clearInterval(timer); };
 }
 
-export async function checkLiveness(lock: Probeable): Promise<void> {
-  if (!lock.health.isSilent()) return;
-  console.log(`${lock.health.describe()}: quiet for a while; probing`);
-  const answered = await lock.probe();
-  if (answered) {
-    lock.health.recordHeard();
-  } else {
-    lock.health.recordUnresponsive();
+/**
+ * Probe a silent lock (or any lock, when forced). A lock that does not answer
+ * is re-interviewed once per HEAL_MIN_INTERVAL_MS; if it still does not answer
+ * it is paged.
+ */
+export async function checkLiveness(lock: Probeable, force = false): Promise<void> {
+  const health = lock.health;
+  if (!force && !health.isSilent()) return;
+  console.log(`${health.describe()}: ${force ? 'probing' : 'quiet for a while; probing'}`);
+  if (await lock.probe()) {
+    health.recordHeard();
+    return;
   }
+  let healAttempted = false;
+  if (health.canHeal()) {
+    healAttempted = true;
+    if (await lock.heal()) {
+      health.recordHeard();
+      return;
+    }
+  } else {
+    console.log(`${health.describe()}: re-interviewed recently; not trying again yet`);
+  }
+  health.recordUnresponsive(healAttempted);
 }
