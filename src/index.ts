@@ -6,7 +6,8 @@
 */
 import { exit } from 'process';
 import { TranslatedValueID, Driver, isTransportServiceEncapsulation, ZWaveNode } from 'zwave-js';
-import { runLockManager } from './lockManager';
+import { runLockManager, LockManager } from './lockManager';
+import { startLockWatchdog } from './lockHealth';
 import { registerLock } from './lockRegistry';
 import { SaunaScheduleClient } from './saunaScheduleClient.js';
 import { startTemperatureMonitor, startManualResetMonitor, deployTemperatureMonitors, ShellyConfig } from './shellyController.js';
@@ -37,12 +38,15 @@ const usageService = new UsagePollingService(
 
 // Store references for graceful shutdown
 let wsClients: any[] = [];
+let lockManagers: LockManager[] = [];
+let stopLockWatchdog: (() => void) | null = null;
 let saunaScheduleClient: SaunaScheduleClient | null = null;
 
 // Graceful shutdown handlers
 process.on('SIGINT', async () => {
   console.log('Received SIGINT, shutting down services...');
   wsClients.forEach(client => client.disconnect());
+  stopLockWatchdog?.();
   if (saunaScheduleClient) {
     saunaScheduleClient.disconnect();
   }
@@ -56,6 +60,7 @@ process.on('SIGINT', async () => {
 process.on('SIGTERM', async () => {
   console.log('Received SIGTERM, shutting down services...');
   wsClients.forEach(client => client.disconnect());
+  stopLockWatchdog?.();
   if (saunaScheduleClient) {
     saunaScheduleClient.disconnect();
   }
@@ -235,8 +240,13 @@ driver.start().then(async () => {
       console.log(`Initializing lock manager for ${serverUrl} with ${locks.length} lock(s)...`);
       const { managers, wsClient } = runLockManager(locks, serverUrl);
       wsClients.push(wsClient);
+      lockManagers.push(...managers);
       console.log(`Lock manager for ${serverUrl} initialized with ${managers.length} lock(s)`);
     }
+
+    // A lock whose radio still acknowledges frames can stop acting on them
+    // (seen on the Kwikset). Probe any lock that has gone quiet and page.
+    stopLockWatchdog = startLockWatchdog(lockManagers);
 
     console.log('All lock managers initialized successfully');
   })

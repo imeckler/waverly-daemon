@@ -1,21 +1,24 @@
-import { IntervalTree, Interval } from 'node-interval-tree';
-import { TranslatedValueID, Driver, isTransportServiceEncapsulation, ZWaveNode, SetValueStatus } from 'zwave-js';
+import { IntervalTree } from 'node-interval-tree';
+import { TranslatedValueID, ZWaveNode, SetValueStatus } from 'zwave-js';
 import { ScheduledTask } from './scheduledTask';
-import { countUnique, Result, Err, Ok, unwrap } from './lib/util';
+import { Result, Err, Ok } from './lib/util';
 import { BookingWebSocketClient } from './bookingWebSocketClient';
+import { LockHealth, maskCode, Probeable } from './lockHealth';
 
 interface CodeInterval {
   low: number,
   high: number,
   code: string,
-  startEvent: ScheduledTask, // | { overlapsEarlier: CodeInterval },
-  stopEvent: ScheduledTask, //| { overlapsLater: CodeInterval },
+  startEvent: ScheduledTask,
+  stopEvent: ScheduledTask,
 };
 type CodeSlot = { value: TranslatedValueID, status: TranslatedValueID };
 type AllocatedSlot = { slot: CodeSlot, slotIndex: number, count: number };
 
+/** What the lock says a slot holds, in answer to a User Code Get. */
+export type SlotReading = { status: number | undefined, code: string | undefined };
+
 const CAPACITY = 20;
-const CODE_LENGTH = 6;
 const CODE_ENABLED = 1;
 const CODE_AVAILABLE = 0;
 
@@ -67,18 +70,27 @@ export function runLockManager(locks: ZWaveNode[], serverUrl: string) {
   return { managers, wsClient };
 }
 
+export interface LockManagerOptions {
+  health?: LockHealth;
+  /** Query one slot on the lock. Defaults to a User Code Get over the radio. */
+  readSlot?: (slotNo: number) => Promise<SlotReading | undefined>;
+}
 
-export class LockManager {
+export class LockManager implements Probeable {
   lock: ZWaveNode;
+  health: LockHealth;
   tree: IntervalTree<CodeInterval>;
   userCodeSlots: Array<CodeSlot>;
   // These are indices into the userCodeIds array. The 
   availableSlots: Set<number>;
   // ref-counting to handle overlapping intervals with the same code
   codeToSlot: Map<string, AllocatedSlot>;
+  private readonly readSlot: (slotNo: number) => Promise<SlotReading | undefined>;
 
-  constructor(lock: ZWaveNode) {
+  constructor(lock: ZWaveNode, options: LockManagerOptions = {}) {
     this.lock = lock;
+    this.health = options.health ?? new LockHealth(lock);
+    this.readSlot = options.readSlot ?? ((slotNo) => readSlotFromLock(lock, slotNo));
     this.tree = new IntervalTree();
     this.codeToSlot = new Map();
     // Code 1 (propertyKey == 1) is reserved and propertyKey 0 is special and used for modifying all the codes at once.
@@ -138,6 +150,30 @@ export class LockManager {
     this.tree.remove(relevantSegment);
   }
 
+  /**
+   * Ask the lock what a slot holds. Returns undefined when the lock does not
+   * answer. Any answer at all — even one that shows a rejected write — counts
+   * as proof that the lock is alive.
+   */
+  private async querySlot(slotNo: number): Promise<SlotReading | undefined> {
+    let reading: SlotReading | undefined;
+    try {
+      reading = await this.readSlot(slotNo);
+    } catch (e) {
+      console.error(`Lock ${this.lock.id} slot ${slotNo}: read-back failed:`, e);
+      reading = undefined;
+    }
+    if (reading !== undefined) this.health.recordHeard();
+    return reading;
+  }
+
+  /** Watchdog probe: read the first managed slot and report whether the lock answered. */
+  async probe(): Promise<boolean> {
+    const slot = this.userCodeSlots[0];
+    if (!slot) return false;
+    return (await this.querySlot(slot.value.propertyKey as number)) !== undefined;
+  }
+
   async freeCodeSlot(code: string) {
     const r = this.codeToSlot.get(code);
     if (r != undefined) {
@@ -145,12 +181,28 @@ export class LockManager {
       if (r.count <= 0) {
         this.codeToSlot.delete(code)
         this.availableSlots.add(r.slotIndex);
-        const slotNo = r.slot.status.propertyKey;
+        const slotNo = r.slot.status.propertyKey as number;
+        this.health.recordCommand();
         const result = await this.lock.setValue(r.slot.status, CODE_AVAILABLE);
         if (!setValueOk(result)) {
           console.error(`Lock ${this.lock.id} slot ${slotNo}: failed to CLEAR code ${code} — ${describeSetValue(result)}`);
+          return;
+        }
+        console.log(`Lock ${this.lock.id} slot ${slotNo}: cleared code ${code} — ${describeSetValue(result)}`);
+
+        // The radio's acknowledgement says nothing about the slot; ask. A
+        // Kwikset reports a cleared slot as Available while still echoing the
+        // old digits, so only the status is checked.
+        const reading = await this.querySlot(slotNo);
+        if (reading !== undefined && reading.status === CODE_AVAILABLE) {
+          console.log(`Lock ${this.lock.id} slot ${slotNo}: clear verified`);
+          this.health.recordConfirmed();
         } else {
-          console.log(`Lock ${this.lock.id} slot ${slotNo}: cleared code ${code} — ${describeSetValue(result)}`);
+          this.health.recordUnconfirmed(`clearing slot ${slotNo}`, {
+            slot: slotNo,
+            code: maskCode(code),
+            lockReports: describeReading(reading),
+          });
         }
       }
     }
@@ -171,7 +223,7 @@ export class LockManager {
       r.count += 1;
     }
 
-    const slotNo = r.slot.value.propertyKey;
+    const slotNo = r.slot.value.propertyKey as number;
 
     // Writing the userCode value sends a complete UserCodeCC.Set (status=Enabled
     // + the code) in a single command. Do NOT separately enable the slot first:
@@ -179,14 +231,37 @@ export class LockManager {
     // wedge the lock (observed on the Kwikset SmartCode). Await the write so a
     // rejection or timeout surfaces as a real error instead of the previous
     // fire-and-forget "success".
-    const codeResult = await this.lock.setValue(r.slot.value, code);
+    //
+    // Even an accepted write proves only that the radio took the frame. Over S0
+    // there is no supervision and zwave-js then writes the sent value into its
+    // own cache, so the slot is read back from the lock itself. One retry
+    // covers a dropped frame; anything worse is paged.
+    let reading: SlotReading | undefined;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      this.health.recordCommand();
+      const codeResult = await this.lock.setValue(r.slot.value, code);
+      if (!setValueOk(codeResult)) {
+        return Err(`Lock ${this.lock.id} slot ${slotNo}: setValue rejected — code=${describeSetValue(codeResult)}`);
+      }
+      console.log(`Lock ${this.lock.id} slot ${slotNo}: wrote code ${code} — ${describeSetValue(codeResult)}`);
 
-    if (!setValueOk(codeResult)) {
-      return Err(`Lock ${this.lock.id} slot ${slotNo}: setValue rejected — code=${describeSetValue(codeResult)}`);
+      reading = await this.querySlot(slotNo);
+      if (confirmsCode(reading, code)) {
+        console.log(`Lock ${this.lock.id} slot ${slotNo}: code ${code} verified`);
+        this.health.recordConfirmed();
+        return Ok(r);
+      }
+      if (attempt === 1) {
+        console.warn(`Lock ${this.lock.id} slot ${slotNo}: code ${code} not confirmed (${describeReading(reading)}); retrying once`);
+      }
     }
 
-    console.log(`Lock ${this.lock.id} slot ${slotNo}: wrote code ${code} — ${describeSetValue(codeResult)}`);
-    return Ok(r);
+    this.health.recordUnconfirmed(`writing code ${maskCode(code)} to slot ${slotNo}`, {
+      slot: slotNo,
+      code: maskCode(code),
+      lockReports: describeReading(reading),
+    });
+    return Err(`Lock ${this.lock.id} slot ${slotNo}: code not confirmed by the lock (${describeReading(reading)})`);
   }
 
   addAccessInterval(code: string, [start, stop]: [Date, Date]): Result<void, string> {
@@ -235,6 +310,32 @@ export class LockManager {
   }
 }
 
+/** Does the lock's answer show `code` enabled in the slot? A lock that masks codes is trusted on status alone. */
+export function confirmsCode(reading: SlotReading | undefined, code: string): boolean {
+  if (reading === undefined || reading.status !== CODE_ENABLED) return false;
+  if (reading.code === undefined || !/^\d+$/.test(reading.code)) return true;
+  return reading.code === code;
+}
+
+export function describeReading(reading: SlotReading | undefined): string {
+  if (reading === undefined) return 'no answer';
+  const status = reading.status === CODE_AVAILABLE ? 'available'
+    : reading.status === CODE_ENABLED ? 'enabled'
+    : reading.status === undefined ? 'status unknown' : `status ${reading.status}`;
+  return reading.code === undefined || reading.code === '' ? status : `${status}, code ${maskCode(reading.code)}`;
+}
+
+/** A User Code Get over the radio. Resolves undefined when the lock does not answer. */
+export async function readSlotFromLock(lock: ZWaveNode, slotNo: number): Promise<SlotReading | undefined> {
+  const answer = await lock.commandClasses['User Code'].get(slotNo);
+  if (!answer) return undefined;
+  const raw = answer.userCode;
+  return {
+    status: answer.userIdStatus,
+    code: typeof raw === 'string' ? raw.trim() : undefined,
+  };
+}
+
 // zwave-js keys a slot's userCode and userIdStatus value IDs by the same user ID
 // (propertyKey); they differ only in `property`. Derive the status ID from the
 // code's rather than looking it up among the node's defined value IDs, so a
@@ -249,7 +350,8 @@ export function statusValueIdFor(code: TranslatedValueID): TranslatedValueID {
 // controller sent it without a confirmation channel (SuccessUnsupervised — the
 // normal case over S0, which has no Supervision), or it's still in progress
 // (Working). Anything else (Fail / NoDeviceSupport / InvalidValue / timeout via
-// a thrown error) is a genuine failure worth surfacing.
+// a thrown error) is a genuine failure worth surfacing. A landed write is still
+// only trusted once the lock's own answer shows it (see allocateCodeSlot).
 export type SetValueResult = Awaited<ReturnType<ZWaveNode['setValue']>>;
 
 export function setValueOk(result: SetValueResult): boolean {
@@ -270,4 +372,3 @@ function popSet<A>(set: Set<A>): A | undefined {
   }
   return undefined;
 }
-

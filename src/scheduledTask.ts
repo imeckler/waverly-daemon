@@ -1,7 +1,13 @@
+// setTimeout takes a 32-bit signed delay; anything longer fires immediately
+// (with a TimeoutOverflowWarning). Bookings are routinely made further out
+// than that, so long waits are chained.
+const MAX_DELAY_MS = 2 ** 31 - 1;
+
 export class ScheduledTask {
   id: NodeJS.Timeout;
   finalState: 'finishedEarly' | 'cancelled' | 'occurred' | undefined;
   f: () => void;
+  private t: number;
 
   cancel() {
     if (this.finalState == undefined) {
@@ -20,25 +26,22 @@ export class ScheduledTask {
 
   constructor(t: Date, f: () => void) {
     this.finalState = undefined;
-    const now = new Date();
     this.f = f;
-    const delay = Math.max(0, t.getTime() - now.getTime());
+    this.t = t.getTime();
+    // To please the type-checker; replaced by arm() unless firing now.
+    this.id = global.setTimeout(() => { }, 0);
+    this.arm();
+  }
 
-    if (delay == 0) {
-      this.finalState = 'occurred';
-      f();
-      // To please the type-checker
-      this.id = global.setTimeout(() => { }, 0);
-    } else {
-      this.id = global.setTimeout(() => {
-        if (this.finalState == undefined) {
-          this.finalState = 'occurred';
-          f();
-        }
-      }, delay);
+  private arm() {
+    const delay = this.t - Date.now();
+    if (delay <= 0) {
+      if (this.finalState == undefined) {
+        this.finalState = 'occurred';
+        this.f();
+      }
+      return;
     }
-
+    this.id = global.setTimeout(() => this.arm(), Math.min(delay, MAX_DELAY_MS));
   }
 }
-
-

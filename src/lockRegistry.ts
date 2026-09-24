@@ -1,5 +1,5 @@
 import { ZWaveNode } from 'zwave-js';
-import { setValueOk, describeSetValue, statusValueIdFor } from './lockManager';
+import { setValueOk, describeSetValue, statusValueIdFor, readSlotFromLock, confirmsCode, describeReading } from './lockManager';
 import { LockCodes, LockSlot } from '@waverly/sauna-protocol';
 
 // Shared registry of the lock nodes the daemon controls. index.ts populates it
@@ -24,8 +24,11 @@ function statusText(value: unknown): string {
 }
 
 // Read the cached user-code state for every registered lock. Values come from
-// the driver's cache (kept current by the lock's own reports), so this is fast
-// and non-invasive — it does not wake the lock or hit the radio.
+// the driver's cache, so this is fast and non-invasive — it does not wake the
+// lock or hit the radio. The cache is only as good as the lock's reports: over
+// S0 (the Kwikset) the driver fills it with whatever was last *sent*, so a slot
+// shown as enabled here may never have been stored by the lock. setLockCode
+// reads the slot back from the lock itself for that reason.
 export function getLockCodes(): LockCodes[] {
   const result: LockCodes[] = [];
   for (const node of lockNodes.values()) {
@@ -103,7 +106,16 @@ export async function setLockCode(
     if (!setValueOk(result)) {
       return { ok: false, error: `lock rejected write: ${describeSetValue(result)}` };
     }
-    return { ok: true, status: describeSetValue(result) };
+
+    // The radio's acknowledgement is not proof the lock stored anything; ask it.
+    const reading = await readSlotFromLock(node, slot);
+    const confirmed = trimmed === ''
+      ? reading !== undefined && reading.status === 0
+      : confirmsCode(reading, trimmed);
+    if (!confirmed) {
+      return { ok: false, error: `lock did not confirm the write; it reports: ${describeReading(reading)}` };
+    }
+    return { ok: true, status: `${describeSetValue(result)}, verified by lock` };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
