@@ -16,6 +16,11 @@ const OVERHEAT_MARGIN_F = 15;
 // At 30s intervals this is 2.5 minutes.
 const ALERT_THRESHOLD_CYCLES = 5;
 
+// The not-heating check gets a longer fuse: a cold stove takes a few minutes to
+// move the room by TEMP_RISE_MIN_F, so 2.5 minutes paged on normal warmups.
+// At 30s intervals this is 4 minutes.
+const NOT_HEATING_THRESHOLD_CYCLES = 8;
+
 // Wall-clock debounce for the device-unreachable alert only: Shelly devices
 // drop off WiFi transiently, so only page if one stays unreachable for this
 // long continuously. Other (safety-relevant) alerts keep their cycle thresholds.
@@ -1457,6 +1462,7 @@ function checkSaunaHealth(
           `${name} sauna should be heating but temperature is not rising (${status.temperatureF}°F, target ${config.temperature_threshold}°F)`,
           'error',
           `sauna-not-heating-${id}`,
+          NOT_HEATING_THRESHOLD_CYCLES,
         );
       } else {
         // Either rising or not enough data yet — clear any prior alert
