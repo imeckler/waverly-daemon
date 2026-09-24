@@ -400,7 +400,6 @@ async function scheduleSetFlag(ip: string | string[], time: Date, shouldBeOn: bo
 }
 
 async function scheduleSwitch(ip: string, switchId: number, time: Date, on: boolean, utcOffset: number): Promise<void> {
-  // TODO: Temporarily disabling lights for safety
   const ts = formatCronWithOffset(time, utcOffset);
   console.log(`Scheduling switch ${switchId} on ${ip} to ${on ? 'ON' : 'OFF'} at ${time.toISOString()} (device: ${ts})`);
   await shellyRpc(ip, 'Schedule.Create', {
@@ -1127,18 +1126,15 @@ async function applyLightsFanSchedule(
   }
   if (lightsOnNow) {
     console.log(`${saunaName} lights on now (currently inside a booking)`);
-    // TODO:: Temporarily disabling light switch
-    // await setSwitch(lightsFanIp, lightsSwitchId, true);
+    await setSwitch(lightsFanIp, lightsSwitchId, true);
   }
 
   for (const period of mergedBookings) {
     if (period.start > now) {
-      // TODO:: Temporarily disabling light switch
-      // await scheduleSwitch(lightsFanIp, lightsSwitchId, period.start, true, utcOffset);
+      await scheduleSwitch(lightsFanIp, lightsSwitchId, period.start, true, utcOffset);
     }
     if (period.stop > now) {
-      // TODO:: Temporarily disabling light switch
-      // await scheduleSwitch(lightsFanIp, lightsSwitchId, period.stop, false, utcOffset);
+      await scheduleSwitch(lightsFanIp, lightsSwitchId, period.stop, false, utcOffset);
     }
   }
 
@@ -1148,8 +1144,7 @@ async function applyLightsFanSchedule(
   cancelLightsBlinks(saunaName);
   for (const heaterSlot of heaterSlots) {
     if (heaterSlot.stop > now) {
-      // TODO:: Temporarily disabling light switch
-      // scheduleLightsBlink(lightsFanIp, lightsSwitchId, heaterSlot.stop, saunaName);
+      scheduleLightsBlink(lightsFanIp, lightsSwitchId, heaterSlot.stop, saunaName);
     }
   }
 
