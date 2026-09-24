@@ -188,6 +188,36 @@ export interface Probeable {
   heal(): Promise<boolean>;
 }
 
+/** How often every lock is asked for its battery level. */
+export const BATTERY_REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000;
+export const BATTERY_REFRESH_INITIAL_DELAY_MS = 5 * 60 * 1000;
+
+export interface BatteryRefreshable {
+  health: LockHealth;
+  refreshBattery(): Promise<void>;
+}
+
+/**
+ * Ask every lock for its battery level once a day (and shortly after start),
+ * so the admin page and the low-battery task work from a reading that is at
+ * most a day old rather than whenever the lock last felt like reporting.
+ */
+export function startBatteryRefresh(
+  locks: BatteryRefreshable[] | (() => BatteryRefreshable[]),
+  options: { intervalMs?: number; initialDelayMs?: number } = {},
+): () => void {
+  const current = typeof locks === 'function' ? locks : () => locks;
+  const tick = () => {
+    if (isPairingInProgress()) return;
+    for (const lock of current()) {
+      lock.refreshBattery().catch(e => console.error(`${lock.health.describe()}: battery refresh failed:`, e));
+    }
+  };
+  const first = setTimeout(tick, options.initialDelayMs ?? BATTERY_REFRESH_INITIAL_DELAY_MS);
+  const timer = setInterval(tick, options.intervalMs ?? BATTERY_REFRESH_INTERVAL_MS);
+  return () => { clearTimeout(first); clearInterval(timer); };
+}
+
 export interface WatchdogOptions {
   intervalMs?: number;
   initialDelayMs?: number;

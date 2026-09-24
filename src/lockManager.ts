@@ -3,7 +3,7 @@ import { TranslatedValueID, ZWaveNode, SetValueStatus } from 'zwave-js';
 import { ScheduledTask } from './scheduledTask';
 import { Result, Err, Ok } from './lib/util';
 import { BookingWebSocketClient } from './bookingWebSocketClient';
-import { LockHealth, maskCode, Probeable, checkLiveness } from './lockHealth';
+import { LockHealth, maskCode, Probeable, BatteryRefreshable, checkLiveness } from './lockHealth';
 import { registerLockGroup } from './lockGroups';
 
 interface CodeInterval {
@@ -89,7 +89,7 @@ export interface LockManagerOptions {
   healCheckDelayMs?: number;
 }
 
-export class LockManager implements Probeable {
+export class LockManager implements Probeable, BatteryRefreshable {
   lock: ZWaveNode;
   health: LockHealth;
   tree: IntervalTree<CodeInterval>;
@@ -205,6 +205,18 @@ export class LockManager implements Probeable {
       this.requestHealCheck();
     }
     return reading;
+  }
+
+  /** Ask the lock for its battery level; the answer lands in the driver's cache. */
+  async refreshBattery(): Promise<void> {
+    if (this.retired) return;
+    const answer = await this.lock.commandClasses.Battery.get();
+    if (answer) {
+      this.health.recordHeard();
+      console.log(`Lock ${this.lock.id}: battery ${answer.level}%`);
+    } else {
+      console.warn(`Lock ${this.lock.id}: no answer to battery query`);
+    }
   }
 
   /** Watchdog probe: read the first managed slot and report whether the lock answered. */

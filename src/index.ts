@@ -7,7 +7,7 @@
 import { exit } from 'process';
 import { TranslatedValueID, Driver, isTransportServiceEncapsulation, ZWaveNode } from 'zwave-js';
 import { runLockManager } from './lockManager';
-import { startLockWatchdog } from './lockHealth';
+import { startLockWatchdog, startBatteryRefresh } from './lockHealth';
 import { registerLock } from './lockRegistry';
 import { LockPairing } from './lockPairing';
 import { setLockPairing } from './lockPairingRegistry';
@@ -255,6 +255,7 @@ driver.start().then(async () => {
     // A lock whose radio still acknowledges frames can stop acting on them
     // (seen on the Kwikset). Probe any lock that has gone quiet and page.
     stopLockWatchdog = startLockWatchdog(allLockManagers);
+    startBatteryRefresh(allLockManagers);
 
     // Assisted re-pairing from the admin page: the controller side of
     // exclusion and inclusion, with the new lock adopted for its server.

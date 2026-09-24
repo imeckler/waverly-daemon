@@ -1,6 +1,7 @@
 import { ZWaveNode } from 'zwave-js';
 import { setValueOk, describeSetValue, statusValueIdFor, readSlotFromLock, confirmsCode, describeReading } from './lockManager';
-import { LockCodes, LockSlot } from '@waverly/sauna-protocol';
+import { describeSecurityClass } from './lockPairing';
+import { LockBattery, LockCodes, LockSlot } from '@waverly/sauna-protocol';
 
 // Shared registry of the lock nodes the daemon controls. index.ts populates it
 // as lock nodes become ready; the sauna-schedule control channel reads it to
@@ -60,9 +61,38 @@ export function getLockCodes(): LockCodes[] {
       status: node.status === undefined ? 'unknown' : String(node.status),
       ready: node.ready,
       slots,
+      label: labelOf(node),
+      security: securityOf(node),
+      battery: batteryOf(node),
     });
   }
   return result;
+}
+
+function labelOf(node: ZWaveNode): string | null {
+  const label = (node as unknown as { label?: unknown }).label;
+  return typeof label === 'string' && label !== '' ? label : null;
+}
+
+function securityOf(node: ZWaveNode): string {
+  const highest = node.getHighestSecurityClass();
+  return highest === undefined || highest < 0 ? 'none' : describeSecurityClass(highest);
+}
+
+// The Battery CC's cached report. Locks push one when the level changes and
+// answer the daemon's daily query; the timestamp is the driver's record of
+// when the value last arrived.
+export function batteryOf(node: ZWaveNode): LockBattery | null {
+  const levelId = { commandClass: 128, endpoint: 0, property: 'level' };
+  const level = node.getValue<number>(levelId);
+  if (typeof level !== 'number') return null;
+  const isLow = node.getValue<boolean>({ commandClass: 128, endpoint: 0, property: 'isLow' });
+  const ts = node.getValueTimestamp(levelId);
+  return {
+    level,
+    isLow: isLow === true,
+    reportedAt: typeof ts === 'number' ? new Date(ts).toISOString() : null,
+  };
 }
 
 export interface SetLockCodeResult {
