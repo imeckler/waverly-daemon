@@ -251,7 +251,7 @@ export class LockManager implements Probeable {
     if (this.healCheckTimer || this.retired) return;
     this.healCheckTimer = setTimeout(() => {
       this.healCheckTimer = null;
-      checkLiveness(this, true)
+      checkLiveness(this, true, this.healCheckDelayMs)
         .catch(e => console.error(`${this.health.describe()}: liveness check failed:`, e));
     }, this.healCheckDelayMs);
     this.healCheckTimer.unref();

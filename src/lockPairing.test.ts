@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { LockPairing, PairingController, PairingHooks } from './lockPairing.js';
+import { isPairingInProgress } from './lockHealth.js';
 
 // The controller side of pairing, as an event emitter the test drives.
 class FakeController extends EventEmitter {
@@ -53,6 +54,7 @@ test('exclusion: the lock leaves, it is retired, and the flow ends idle', async 
   const { controller, pairing, retired } = setup();
   await pairing.startExclusion();
   assert.equal(pairing.status().mode, 'excluding');
+  assert.equal(isPairingInProgress(), true);
   assert.match(pairing.status().instruction, /press button A|programming code/);
 
   controller.emit('exclusion started');
@@ -63,7 +65,16 @@ test('exclusion: the lock leaves, it is retired, and the flow ends idle', async 
   controller.emit('exclusion stopped');
   const st = pairing.status();
   assert.equal(st.mode, 'idle');
+  assert.equal(isPairingInProgress(), false);
   assert.match(st.instruction, /Node 13 is out of the network/);
+});
+
+test('an exclusion the controller finishes without a known node says the lock was already out', async () => {
+  const { controller, pairing, retired } = setup();
+  await pairing.startExclusion();
+  controller.emit('exclusion stopped');
+  assert.deepEqual(retired, []);
+  assert.match(pairing.status().instruction, /already out of the network: go on to inclusion/);
 });
 
 test('a second start while busy is refused, and a busy controller is reported', async () => {

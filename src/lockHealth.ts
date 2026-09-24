@@ -39,6 +39,20 @@ export const WATCHDOG_INTERVAL_MS = 30 * 60 * 1000;
 export const STARTUP_PROBE_DELAY_MS = 2 * 60 * 1000;
 /** A lock is re-interviewed at most this often. */
 export const HEAL_MIN_INTERVAL_MS = 6 * 60 * 60 * 1000;
+/** A missed probe is retried after this long before the lock is called silent. */
+export const PROBE_RETRY_DELAY_MS = 60 * 1000;
+
+// While a lock is being excluded or included the controller is busy and
+// other locks answer late or not at all; probing then produces false alarms
+// (and a re-interview would compete with the inclusion). The pairing module
+// flags itself here.
+let pairingInProgress = false;
+export function setPairingInProgress(active: boolean): void {
+  pairingInProgress = active;
+}
+export function isPairingInProgress(): boolean {
+  return pairingInProgress;
+}
 
 /** Hide a door code in anything that leaves the daemon. */
 export function maskCode(code: string): string {
@@ -177,6 +191,8 @@ export interface Probeable {
 export interface WatchdogOptions {
   intervalMs?: number;
   initialDelayMs?: number;
+  /** Wait between the first missed probe and the second. */
+  retryDelayMs?: number;
 }
 
 /**
@@ -186,10 +202,11 @@ export interface WatchdogOptions {
 export function startLockWatchdog(locks: Probeable[] | (() => Probeable[]), options: WatchdogOptions = {}): () => void {
   const intervalMs = options.intervalMs ?? WATCHDOG_INTERVAL_MS;
   const initialDelayMs = options.initialDelayMs ?? STARTUP_PROBE_DELAY_MS;
+  const retryDelayMs = options.retryDelayMs ?? PROBE_RETRY_DELAY_MS;
   const current = typeof locks === 'function' ? locks : () => locks;
   const tick = (force: boolean) => {
     for (const lock of current()) {
-      checkLiveness(lock, force).catch(e => console.error(`${lock.health.describe()}: liveness check failed:`, e));
+      checkLiveness(lock, force, retryDelayMs).catch(e => console.error(`${lock.health.describe()}: liveness check failed:`, e));
     }
   };
   const first = setTimeout(() => tick(true), initialDelayMs);
@@ -198,14 +215,27 @@ export function startLockWatchdog(locks: Probeable[] | (() => Probeable[]), opti
 }
 
 /**
- * Probe a silent lock (or any lock, when forced). A lock that does not answer
- * is re-interviewed once per HEAL_MIN_INTERVAL_MS; if it still does not answer
- * it is paged.
+ * Probe a silent lock (or any lock, when forced). One missed probe is retried
+ * after a pause, since a lock answers late while the controller is busy. A
+ * lock that misses both is re-interviewed once per HEAL_MIN_INTERVAL_MS; if it
+ * still does not answer it is paged. Nothing is probed while a lock is being
+ * paired.
  */
-export async function checkLiveness(lock: Probeable, force = false): Promise<void> {
+export async function checkLiveness(lock: Probeable, force = false, retryDelayMs = PROBE_RETRY_DELAY_MS): Promise<void> {
   const health = lock.health;
+  if (isPairingInProgress()) {
+    console.log(`${health.describe()}: pairing in progress; not probing`);
+    return;
+  }
   if (!force && !health.isSilent()) return;
   console.log(`${health.describe()}: ${force ? 'probing' : 'quiet for a while; probing'}`);
+  if (await lock.probe()) {
+    health.recordHeard();
+    return;
+  }
+  console.log(`${health.describe()}: no answer; probing again in ${Math.round(retryDelayMs / 1000)} s`);
+  await new Promise(r => setTimeout(r, retryDelayMs));
+  if (isPairingInProgress()) return;
   if (await lock.probe()) {
     health.recordHeard();
     return;

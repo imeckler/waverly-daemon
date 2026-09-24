@@ -10,6 +10,7 @@ const SECURITY_NAMES: Record<number, string> = {
   7: 'S0',
 };
 import { LockPairingStatus, LockServerInfo } from '@waverly/sauna-protocol';
+import { setPairingInProgress } from './lockHealth';
 
 // ---------------------------------------------------------------------------
 // Assisted pairing.
@@ -118,8 +119,11 @@ export class LockPairing {
     });
     c.on('exclusion stopped', () => {
       if (this.st.mode !== 'excluding') return;
+      // A lock that answers the button press but was not a member of this
+      // network (it had reset itself) is reported by the controller as node 0,
+      // which zwave-js does not surface as a removal. Either way it is out.
       this.finish(this.st.removedNodeId === null
-        ? 'Exclusion stopped without removing a lock.'
+        ? 'Exclusion finished without removing a managed lock. If the lock reacted when you pressed the button, it was already out of the network: go on to inclusion.'
         : `Node ${this.st.removedNodeId} is out of the network. Start inclusion to pair the lock again.`);
     });
     c.on('node removed', (node, reason) => {
@@ -153,6 +157,7 @@ export class LockPairing {
     this.abortPin();
     this.st.mode = 'idle';
     this.st.instruction = instruction;
+    setPairingInProgress(false);
   }
 
   private abortPin(): void {
@@ -173,6 +178,7 @@ export class LockPairing {
     const ok = await this.controller.beginExclusion({ strategy: ExclusionStrategy.ExcludeOnly });
     if (!ok) throw new Error('The controller is busy and could not enter exclusion mode');
     this.st.mode = 'excluding';
+    setPairingInProgress(true);
     this.st.instruction = `Put the lock in exclusion mode now. ${LEARN_MODE_STEPS}`;
     this.log('Exclusion requested');
     this.armTimeout();
@@ -203,6 +209,7 @@ export class LockPairing {
     });
     if (!ok) throw new Error('The controller is busy and could not enter inclusion mode');
     this.st.mode = 'including';
+    setPairingInProgress(true);
     this.st.instruction = `Put the lock in inclusion mode now. ${LEARN_MODE_STEPS}`;
     this.log(`Inclusion requested for ${server.description ?? serverUrl}${replacesNodeId !== null ? `, replacing node ${replacesNodeId}` : ''}`);
     this.armTimeout();
@@ -252,8 +259,7 @@ export class LockPairing {
     this.clearTimer();
     this.log(`Node ${node.id} joined (${security}); waiting for its interview`);
     if (result.lowSecurity) {
-      this.st.mode = 'idle';
-      this.st.instruction = `The lock joined WITHOUT security (${security}), so its codes cannot be managed. Exclude it and pair it again.`;
+      this.finish(`The lock joined WITHOUT security (${security}), so its codes cannot be managed. Exclude it and pair it again.`);
       return;
     }
     this.st.instruction = `Node ${node.id} joined. Its interview takes a minute or two; leave the lock alone.`;

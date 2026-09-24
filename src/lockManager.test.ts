@@ -171,7 +171,7 @@ test('the watchdog leaves a recently heard lock alone', async () => {
 
   health.recordHeard();
   clock.advance(SILENCE_LIMIT_MS / 2);
-  await checkLiveness(m);
+  await checkLiveness(m, false, 0);
   assert.deepEqual(reads, []);
   assert.equal(triggered.length, 0);
 });
@@ -190,8 +190,9 @@ test('the watchdog probes a silent lock, re-interviews it once, pages when that 
   // Nothing heard since start; after the limit the probe goes out and fails,
   // the lock is re-interviewed, probed again, and paged.
   clock.advance(SILENCE_LIMIT_MS);
-  await checkLiveness(m);
-  assert.deepEqual(reads, [2, 2]);
+  await checkLiveness(m, false, 0);
+  // Probe, the retry, then the probe after the re-interview.
+  assert.deepEqual(reads, [2, 2, 2]);
   assert.equal(reinterviews, 1);
   await flush();
   assert.equal(triggered.length, 1);
@@ -202,15 +203,15 @@ test('the watchdog probes a silent lock, re-interviews it once, pages when that 
 
   // Still silent on the next tick: probed, but not re-interviewed again so soon.
   clock.advance(SILENCE_LIMIT_MS);
-  await checkLiveness(m);
-  assert.equal(reads.length, 3);
+  await checkLiveness(m, false, 0);
+  assert.equal(reads.length, 5);
   assert.equal(reinterviews, 1);
   await flush();
   assert.equal(triggered[1].details.reinterviewAttempted, false);
 
   // The lock comes back: the probe answers and the incident is resolved.
   answer = { status: 0, code: '' };
-  await checkLiveness(m);
+  await checkLiveness(m, false, 0);
   await flush();
   assert.deepEqual(resolved, ['lock-13-unresponsive']);
   assert.equal(health.lastHeardAt, clock.now());
@@ -226,7 +227,7 @@ test('a re-interview that brings the lock back is not paged', async () => {
   const reinterview = async () => { answer = { status: 0, code: '' }; return 'ready' as const; };
   const m = new LockManager(lock, { health, readSlot, reinterview });
 
-  await checkLiveness(m, true);
+  await checkLiveness(m, true, 0);
   await flush();
   assert.equal(triggered.length, 0);
   assert.equal(health.lastHeardAt, clock.now());
@@ -240,10 +241,10 @@ test('a re-interview that fails or times out counts as not healed', async () => 
     const { readSlot, reads } = readsFrom(() => undefined);
     const m = new LockManager(lock, { health, readSlot, reinterview: async () => outcome });
 
-    await checkLiveness(m, true);
+    await checkLiveness(m, true, 0);
     await flush();
-    // No second probe after a failed interview.
-    assert.deepEqual(reads, [2]);
+    // Probe and retry, but no probe after a failed interview.
+    assert.deepEqual(reads, [2, 2]);
     assert.equal(triggered.length, 1);
     assert.equal(triggered[0].details.reinterviewAttempted, true);
   }
