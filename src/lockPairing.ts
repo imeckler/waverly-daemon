@@ -34,6 +34,7 @@ export interface PairingController {
   stopExclusion(): Promise<boolean>;
   beginInclusion(options: {
     strategy: InclusionStrategy.Default;
+    forceSecurity: boolean;
     userCallbacks: {
       grantSecurityClasses(requested: InclusionGrant): Promise<InclusionGrant | false>;
       validateDSKAndEnterPIN(dsk: string): Promise<string | false>;
@@ -195,6 +196,10 @@ export class LockPairing {
     this.st.replacesNodeId = replacesNodeId;
     const ok = await this.controller.beginInclusion({
       strategy: InclusionStrategy.Default,
+      // A lock's User Code command class is only offered over the secure
+      // channel. zwave-js bootstraps S2 on its own but S0 only when forced;
+      // without this a Kwikset joins unencrypted and is useless.
+      forceSecurity: true,
       userCallbacks: {
         grantSecurityClasses: async (requested) => {
           this.log(`Lock asks for ${requested.securityClasses.map(describeSecurityClass).join(', ')}; granting all`);
@@ -258,7 +263,9 @@ export class LockPairing {
     };
     this.clearTimer();
     this.log(`Node ${node.id} joined (${security}); waiting for its interview`);
-    if (result.lowSecurity) {
+    // Whether zwave-js flags it or not, a lock without a security class has
+    // no usable User Code command class.
+    if (result.lowSecurity || !hasSecurity(node)) {
       this.finish(`The lock joined WITHOUT security (${security}), so its codes cannot be managed. Exclude it and pair it again.`);
       return;
     }
@@ -296,6 +303,11 @@ export class LockPairing {
       this.finish('Stopped.');
     }
   }
+}
+
+function hasSecurity(node: ZWaveNode): boolean {
+  const highest = node.getHighestSecurityClass();
+  return highest !== undefined && highest !== SECURITY_NONE;
 }
 
 function labelOf(node: ZWaveNode): string | null {

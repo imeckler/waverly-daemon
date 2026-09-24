@@ -9,9 +9,10 @@ class FakeController extends EventEmitter {
   calls: string[] = [];
   busy = false;
   callbacks: any = null;
+  lastInclusionOptions: any = null;
   async beginExclusion() { this.calls.push('beginExclusion'); return !this.busy; }
   async stopExclusion() { this.calls.push('stopExclusion'); return true; }
-  async beginInclusion(options: any) { this.calls.push('beginInclusion'); this.callbacks = options.userCallbacks; return !this.busy; }
+  async beginInclusion(options: any) { this.calls.push('beginInclusion'); this.callbacks = options.userCallbacks; this.lastInclusionOptions = options; return !this.busy; }
   async stopInclusion() { this.calls.push('stopInclusion'); return true; }
 }
 
@@ -147,6 +148,17 @@ test('cancelling the PIN aborts the secure bootstrap', async () => {
   pairing.enterPin(null);
   assert.equal(await pinPromise, false);
   assert.throws(() => pairing.enterPin('12345'), /not asking for a PIN/);
+});
+
+test('a lock zwave-js did not bootstrap at all is not adopted either', async () => {
+  const { controller, pairing, adopted } = setup();
+  await pairing.startInclusion('https://sauna', null);
+  assert.equal(controller.lastInclusionOptions.forceSecurity, true);
+  const node = fakeNode(14, { ready: true, security: undefined });
+  controller.emit('node added', node, { lowSecurity: false });
+  assert.equal(pairing.status().mode, 'idle');
+  assert.match(pairing.status().instruction, /WITHOUT security \(none\)/);
+  assert.deepEqual(adopted, []);
 });
 
 test('a lock that joins without security is not adopted', async () => {
