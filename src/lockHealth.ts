@@ -1,5 +1,6 @@
 import { ZWaveNode } from 'zwave-js';
 import { triggerIncident, resolveIncident } from './pagerduty';
+import { isLockOutOfOrder } from './lockOutOfOrder';
 
 // ---------------------------------------------------------------------------
 // Lock liveness.
@@ -14,7 +15,8 @@ import { triggerIncident, resolveIncident } from './pagerduty';
 // at the application level (a User Code report, a notification it pushed), how
 // many commands have gone out since, and turns silence or an unconfirmed
 // write into a PagerDuty incident that resolves itself once the lock answers
-// again.
+// again. A lock marked out of order (see lockOutOfOrder.ts) is not probed and
+// raises no incidents.
 // ---------------------------------------------------------------------------
 
 export interface Notifier {
@@ -104,6 +106,22 @@ export class LockHealth {
   get dedupUnresponsive(): string { return `lock-${this.lock.id}-unresponsive`; }
   get dedupUnconfirmed(): string { return `lock-${this.lock.id}-write-unconfirmed`; }
 
+  get outOfOrder(): boolean { return isLockOutOfOrder(this.lock.id); }
+
+  /**
+   * The lock has just been marked out of order: close whatever is open about
+   * it. Both incidents are resolved whether or not this process opened them,
+   * since one raised before a restart is still open at PagerDuty.
+   */
+  resolveIncidents(): void {
+    this.unresponsiveOpen = false;
+    this.unconfirmedOpen = false;
+    for (const key of [this.dedupUnresponsive, this.dedupUnconfirmed]) {
+      this.notifier.resolve(key)
+        .catch(e => console.error(`${this.describe()}: failed to resolve ${key}:`, e));
+    }
+  }
+
   /** A command (write, clear, or probe) is about to go out. */
   recordCommand(): void {
     this.lastCommandAt = this.clock();
@@ -124,9 +142,13 @@ export class LockHealth {
 
   /** A write or clear went out but the lock's answer does not show it. */
   recordUnconfirmed(what: string, details: Record<string, unknown>): void {
-    this.unconfirmedOpen = true;
     const summary = `${this.describe()}: ${what} was not confirmed by the lock`;
     console.error(summary, details);
+    if (this.outOfOrder) {
+      console.log(`${this.describe()}: out of order; not paging`);
+      return;
+    }
+    this.unconfirmedOpen = true;
     this.notifier.trigger(summary, this.dedupUnconfirmed, { lock: this.lock.id, ...details })
       .catch(e => console.error(`${this.describe()}: failed to report unconfirmed write:`, e));
   }
@@ -159,6 +181,11 @@ export class LockHealth {
       : '';
     const summary = `${this.describe()} is not answering the controller ${sinceText}; ${this.commandsSinceHeard} command(s) sent meanwhile${healText}`;
     console.error(summary);
+    // Marked while the probes were out.
+    if (this.outOfOrder) {
+      console.log(`${this.describe()}: out of order; not paging`);
+      return;
+    }
     this.unresponsiveOpen = true;
     this.notifier.trigger(summary, this.dedupUnresponsive, {
       lock: this.lock.id,
@@ -249,10 +276,15 @@ export function startLockWatchdog(locks: Probeable[] | (() => Probeable[]), opti
  * after a pause, since a lock answers late while the controller is busy. A
  * lock that misses both is re-interviewed once per HEAL_MIN_INTERVAL_MS; if it
  * still does not answer it is paged. Nothing is probed while a lock is being
- * paired.
+ * paired, and a lock marked out of order is not probed (or re-interviewed) at
+ * all, forced or not.
  */
 export async function checkLiveness(lock: Probeable, force = false, retryDelayMs = PROBE_RETRY_DELAY_MS): Promise<void> {
   const health = lock.health;
+  if (health.outOfOrder) {
+    console.log(`${health.describe()}: out of order; not probing`);
+    return;
+  }
   if (isPairingInProgress()) {
     console.log(`${health.describe()}: pairing in progress; not probing`);
     return;
@@ -270,6 +302,7 @@ export async function checkLiveness(lock: Probeable, force = false, retryDelayMs
     health.recordHeard();
     return;
   }
+  if (health.outOfOrder) return;
   let healAttempted = false;
   if (health.canHeal()) {
     healAttempted = true;

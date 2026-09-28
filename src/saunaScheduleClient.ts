@@ -3,6 +3,7 @@ import { applyOperationalPlan, Booking, OperationalPlan, setSaunaOverride, getLi
 import { applySteamSchedule, setSteamOverride, SteamPeriod } from './steamController.js';
 import { getLockCodes, setLockCode } from './lockRegistry.js';
 import { lockPairing } from './lockPairingRegistry.js';
+import { setLockOutOfOrder } from './lockGroups.js';
 import {
   ServerToDaemonMessage,
   DaemonToServerMessage,
@@ -10,6 +11,7 @@ import {
   SaunaOverrideMessage,
   GetLockCodesRequest,
   SetLockCodeRequest,
+  SetLockOutOfOrderRequest,
   GetLightsRequest,
   SetLightsRequest,
   StartLockExclusionRequest,
@@ -158,6 +160,9 @@ export class SaunaScheduleClient {
       case 'setLockCode':
         void this.handleSetLockCode(message);
         break;
+      case 'setLockOutOfOrder':
+        this.handleSetLockOutOfOrder(message);
+        break;
       case 'getLights':
         void this.handleGetLights(message);
         break;
@@ -212,6 +217,19 @@ export class SaunaScheduleClient {
       requestId: message.requestId,
       ok: result.ok,
       status: result.status,
+      error: result.error,
+    });
+  }
+
+  private handleSetLockOutOfOrder(message: SetLockOutOfOrderRequest): void {
+    const what = message.outOfOrder ? 'out of order' : 'back in service';
+    console.log(`Lock out-of-order request: node ${message.nodeId} ${what}`);
+    const result = setLockOutOfOrder(message.nodeId, message.outOfOrder);
+    if (!result.ok) console.error(`Marking node ${message.nodeId} ${what} FAILED: ${result.error}`);
+    this.send({
+      kind: 'setLockOutOfOrderResult',
+      requestId: message.requestId,
+      ok: result.ok,
       error: result.error,
     });
   }

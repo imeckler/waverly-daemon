@@ -4,6 +4,8 @@ import { LockServerInfo } from '@waverly/sauna-protocol';
 import { LockManager } from './lockManager';
 import { BookingWebSocketClient } from './bookingWebSocketClient';
 import { registerLock, unregisterLock } from './lockRegistry';
+import { checkLiveness } from './lockHealth';
+import { isLockOutOfOrder, markLockOutOfOrder } from './lockOutOfOrder';
 
 // ---------------------------------------------------------------------------
 // The lock servers the daemon serves, and which lock nodes belong to each.
@@ -110,7 +112,40 @@ export function retireLock(nodeId: number): boolean {
   }
   unregisterLock(nodeId);
   if (found) saveOverrides();
+  // The node id is gone for good; a mark left behind would describe nothing.
+  try {
+    markLockOutOfOrder(nodeId, false);
+  } catch (e) {
+    console.error(`Could not clear the out-of-order mark of retired lock ${nodeId}:`, e);
+  }
   return found;
+}
+
+/**
+ * Mark a managed lock out of order, or put it back in service. Marking it
+ * resolves the incidents open about it. Putting it back probes it at once, so
+ * a lock that is still silent pages now rather than at the next watchdog tick.
+ */
+export function setLockOutOfOrder(
+  nodeId: number,
+  outOfOrder: boolean,
+  retryDelayMs?: number,
+): { ok: boolean; error?: string } {
+  const manager = allLockManagers().find(m => m.lock.id === nodeId);
+  if (!manager) return { ok: false, error: `Lock node ${nodeId} is not managed by this daemon` };
+  const was = isLockOutOfOrder(nodeId);
+  try {
+    markLockOutOfOrder(nodeId, outOfOrder);
+  } catch (e) {
+    return { ok: false, error: `Could not save the mark: ${e instanceof Error ? e.message : String(e)}` };
+  }
+  if (outOfOrder) {
+    manager.health.resolveIncidents();
+  } else if (was) {
+    checkLiveness(manager, true, retryDelayMs)
+      .catch(e => console.error(`${manager.health.describe()}: liveness check failed:`, e));
+  }
+  return { ok: true };
 }
 
 /**

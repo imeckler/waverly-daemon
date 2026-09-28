@@ -1,6 +1,7 @@
 import { ZWaveNode } from 'zwave-js';
 import { setValueOk, describeSetValue, statusValueIdFor, readSlotFromLock, confirmsCode, describeReading } from './lockManager';
 import { describeSecurityClass } from './lockPairing';
+import { isLockOutOfOrder } from './lockOutOfOrder';
 import { LockBattery, LockCodes, LockSlot } from '@waverly/sauna-protocol';
 
 // Shared registry of the lock nodes the daemon controls. index.ts populates it
@@ -64,6 +65,7 @@ export function getLockCodes(): LockCodes[] {
       label: labelOf(node),
       security: securityOf(node),
       battery: batteryOf(node),
+      outOfOrder: isLockOutOfOrder(node.id),
     });
   }
   return result;
