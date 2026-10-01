@@ -576,10 +576,40 @@ function switchOff(nowS) {
   }
 }
 
+// Snapshot of what the device could see when the lockout tripped. Printed to the
+// script console and stored in KVS (values are capped at 255 bytes, hence the short keys)
+// so the daemon can log it for tracking.
+function lockoutDetail(nowS) {
+  const temp = Shelly.getComponentStatus("temperature", 100);
+  const sw = Shelly.getComponentStatus("switch", 0);
+  const wifi = Shelly.getComponentStatus("wifi");
+  const sys = Shelly.getComponentStatus("sys");
+  const lastEventS = events.length > 0 ? getRingBuffer(events, events.length - 1) : null;
+  const onTimeS = totalTimeOnForCompleteIntervals + ((events.length % 2) ? nowS - lastEventS : 0);
+  return JSON.stringify({
+    t: nowS,
+    tF: temp ? temp.tF : null,
+    pF: prevTempF,
+    out: sw ? sw.output : null,
+    w: sw ? sw.apower : null,
+    ev: events.length,
+    le: lastEventS,
+    on: onTimeS,
+    hb: lastHeartbeatMs ? Math.floor(nowS - lastHeartbeatMs / 1000) : null,
+    wf: wifi ? wifi.status : null,
+    up: sys ? sys.uptime : null
+  });
+}
+
 function switchOffUntilManualReset(nowS, reason) {
+  // Relay off and lockout flag first. The snapshot below is diagnostics only; it must
+  // not be able to prevent the flag from being set (an uncaught exception stops the script).
   switchOff(nowS);
-  Shelly.call("KVS.Set", { key: "manualResetReason", value: reason });
   markManualResetRequired();
+  Shelly.call("KVS.Set", { key: "manualResetReason", value: reason });
+  const detail = lockoutDetail(nowS);
+  print("SAFETY LOCKOUT: " + reason + " " + detail);
+  Shelly.call("KVS.Set", { key: "manualResetDetail", value: detail });
 }
 
 function trimTimeLog(nowS) {
@@ -893,7 +923,7 @@ if (typeof TEMP_OFF !== 'number' || typeof TEMP_ON !== 'number'
   // A redeploy does not clear a tripped safety lockout (the script leaves the flag as it
   // finds it). Make that visible in the daemon log rather than only on the device console.
   if (await getManualResetRequired(heaterIp) === true) {
-    console.error(`Heater ${heaterIp}: safety lockout is set — script redeployed but the heater stays OFF until the lockout is manually cleared (see manual-reset)`);
+    console.error(`Heater ${heaterIp}: safety lockout is set — script redeployed but the heater stays OFF until the lockout is manually cleared (see manual-reset): ${JSON.stringify(await getLockoutInfo(heaterIp))}`);
   }
 }
 
@@ -1850,6 +1880,24 @@ async function getOverrideState(ip: string | string[]): Promise<{ override: 'on'
   return { override, overrideExpiresAt };
 }
 
+// What the device recorded when the lockout tripped (reason + snapshot written by the
+// script) plus its current switch/temperature state. Best-effort: unreadable fields are null.
+async function getLockoutInfo(ip: string | string[]): Promise<Record<string, unknown>> {
+  const kvs = (key: string) => shellyRpc(ip, 'KVS.Get', { key }).then(r => r?.value ?? null, () => null);
+  const [reason, detail, status] = await Promise.all([
+    kvs('manualResetReason'),
+    kvs('manualResetDetail').then(d => { try { return JSON.parse(d); } catch { return d; } }),
+    shellyRpc(ip, 'Shelly.GetStatus').catch(() => null),
+  ]);
+  return {
+    reason,
+    detail,
+    trippedAt: typeof detail?.t === 'number' ? new Date(detail.t * 1000).toISOString() : null,
+    switch: status?.['switch:0'] ?? null,
+    temperature: status?.['temperature:100'] ?? null,
+  };
+}
+
 async function checkManualResetRequired(): Promise<void> {
   const saunas: Array<{ name: 'Small' | 'Big'; ip: string | string[] }> = [
     { name: 'Small', ip: config.small_sauna_heater_ip },
@@ -1862,8 +1910,9 @@ async function checkManualResetRequired(): Promise<void> {
 
     if (required === true) {
       const summary = `${name} sauna heater requires manual reset (safety lockout tripped)`;
-      console.error(summary);
-      triggerIncident(summary, 'critical', dedupKey, { sauna: name, ip })
+      const info = await getLockoutInfo(ip);
+      console.error(`${summary}: ${JSON.stringify(info)}`);
+      triggerIncident(summary, 'critical', dedupKey, { sauna: name, ip, ...info })
         .catch(e => console.error('Failed to trigger manual-reset incident:', e));
     } else if (required === false) {
       resolveIncident(dedupKey)
