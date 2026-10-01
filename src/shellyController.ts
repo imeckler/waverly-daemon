@@ -828,6 +828,31 @@ function startupTimerInit() {
   thermostatTimer = Timer.set(10000, true, checkTemperature);
 }
 
+// The lockout flag must survive script restarts. This script is (re)started on every
+// daemon boot, every plan apply and every heartbeat self-heal, so writing "false" here
+// would silently un-trip a safety lockout within minutes of it firing. Only a key that
+// has never been written (fresh device, KVS.Get -> -105 not found) is armed here;
+// anything else is left exactly as found. Clearing a real lockout is a manual
+// operation (see manual-reset in the repo). The check loop fails closed on any value
+// other than "false", so an unreadable key also keeps the heater off.
+function startupResetFlagInit(res, err, errMsg) {
+  if (res == undefined || res.value == undefined || err == -105) {
+    print("manualResetRequired not present — first provisioning, arming heater");
+    Shelly.call("KVS.Set", { key: "manualResetRequired", value: "false" }, startupTimerInit);
+    return;
+  }
+
+  if (err !== 0) {
+    print("Could not read manualResetRequired (" + JSON.stringify(err) + " " + JSON.stringify(errMsg) + "). Leaving as is, heater stays OFF");
+  } else if (res.value !== "false" && res.value !== false) {
+    print("Safety lockout still set from before this start. Heater stays OFF until manually cleared");
+  }
+
+  Shelly.call("Switch.Set", { id: 0, on: false });
+
+  startupTimerInit();
+}
+
 // Config sanity check on startup: if temperature limits got templated in as anything
 // other than ordered finite numbers, refuse to run and require manual reset.
 if (typeof TEMP_OFF !== 'number' || typeof TEMP_ON !== 'number'
@@ -842,7 +867,7 @@ if (typeof TEMP_OFF !== 'number' || typeof TEMP_ON !== 'number'
   Shelly.call("KVS.Set", { key: "manualResetRequired", value: "true" });
   // Timer is intentionally not started.
 } else {
-  Shelly.call("KVS.Set", { key: "manualResetRequired", value: "false" }, startupTimerInit);
+  Shelly.call("KVS.Get", { key: "manualResetRequired" }, startupResetFlagInit);
 }
 `;
 
@@ -864,6 +889,12 @@ if (typeof TEMP_OFF !== 'number' || typeof TEMP_ON !== 'number'
   await pingHeartbeat(heaterIp).catch(e =>
     console.error(`Initial heartbeat ping to ${heaterIp} failed:`, e)
   );
+
+  // A redeploy does not clear a tripped safety lockout (the script leaves the flag as it
+  // finds it). Make that visible in the daemon log rather than only on the device console.
+  if (await getManualResetRequired(heaterIp) === true) {
+    console.error(`Heater ${heaterIp}: safety lockout is set — script redeployed but the heater stays OFF until the lockout is manually cleared (see manual-reset)`);
+  }
 }
 
 async function pingHeartbeat(ip: string | string[]): Promise<void> {
