@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 import { applyOperationalPlan, Booking, OperationalPlan, setSaunaOverride, getLightsState, setLights } from './shellyController.js';
 import { applySteamSchedule, setSteamOverride, SteamPeriod } from './steamController.js';
-import { getLockCodes, setLockCode } from './lockRegistry.js';
+import { getLockCodes, setLockCode, setLockAutoLock } from './lockRegistry.js';
 import { lockPairing } from './lockPairingRegistry.js';
 import { setLockOutOfOrder } from './lockGroups.js';
 import {
@@ -12,6 +12,7 @@ import {
   GetLockCodesRequest,
   SetLockCodeRequest,
   SetLockOutOfOrderRequest,
+  SetLockAutoLockRequest,
   GetLightsRequest,
   SetLightsRequest,
   StartLockExclusionRequest,
@@ -163,6 +164,9 @@ export class SaunaScheduleClient {
       case 'setLockOutOfOrder':
         this.handleSetLockOutOfOrder(message);
         break;
+      case 'setLockAutoLock':
+        void this.handleSetLockAutoLock(message);
+        break;
       case 'getLights':
         void this.handleGetLights(message);
         break;
@@ -232,6 +236,18 @@ export class SaunaScheduleClient {
       ok: result.ok,
       error: result.error,
     });
+  }
+
+  private async handleSetLockAutoLock(message: SetLockAutoLockRequest): Promise<void> {
+    const what = message.autoLock ? 'on' : 'off';
+    console.log(`Lock auto-lock request: node ${message.nodeId} ${what}`);
+    const result = await setLockAutoLock(message.nodeId, message.autoLock);
+    if (result.ok) {
+      console.log(`Lock ${message.nodeId} auto-lock ${what}, verified by lock`);
+    } else {
+      console.error(`Turning auto-lock ${what} on node ${message.nodeId} FAILED: ${result.error}`);
+    }
+    this.send({ kind: 'setLockAutoLockResult', requestId: message.requestId, ok: result.ok, error: result.error });
   }
 
   // Every pairing request gets the same reply: the whole pairing status after

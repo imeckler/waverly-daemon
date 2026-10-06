@@ -1,4 +1,4 @@
-import { ZWaveNode } from 'zwave-js';
+import { TranslatedValueID, ZWaveNode } from 'zwave-js';
 import { setValueOk, describeSetValue, statusValueIdFor, readSlotFromLock, confirmsCode, describeReading } from './lockManager';
 import { describeSecurityClass } from './lockPairing';
 import { isLockOutOfOrder } from './lockOutOfOrder';
@@ -66,6 +66,7 @@ export function getLockCodes(): LockCodes[] {
       security: securityOf(node),
       battery: batteryOf(node),
       outOfOrder: isLockOutOfOrder(node.id),
+      autoLock: autoLockOf(node),
     });
   }
   return result;
@@ -95,6 +96,61 @@ export function batteryOf(node: ZWaveNode): LockBattery | null {
     isLow: isLow === true,
     reportedAt: typeof ts === 'number' ? new Date(ts).toISOString() : null,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Auto-lock: the lock's own relock-after-unlock setting. On the Schlage it is
+// the "Auto Lock" configuration parameter, which throws the deadbolt 30
+// seconds after the door is opened. The parameter is found by the label the
+// device database gives it, and the values that mean on and off come from the
+// same place, so a lock without it (the Kwikset) has no setting rather than a
+// wrong one.
+// ---------------------------------------------------------------------------
+
+interface AutoLockParam { valueId: TranslatedValueID; on: number; off: number }
+
+function autoLockParam(node: ZWaveNode): AutoLockParam | null {
+  const valueId = node.getDefinedValueIDs()
+    .find(v => v.commandClass === 112 && typeof v.property === 'number' && v.propertyName === 'Auto Lock');
+  if (!valueId) return null;
+  const metadata = node.getValueMetadata(valueId);
+  const states = Object.entries('states' in metadata ? metadata.states ?? {} : {});
+  const valueLabelled = (label: string) => states.find(([, l]) => l === label)?.[0];
+  const on = valueLabelled('Enable');
+  const off = valueLabelled('Disable');
+  return on === undefined || off === undefined ? null : { valueId, on: Number(on), off: Number(off) };
+}
+
+/** What the driver's cache says the lock's auto-lock is; null if the lock has no such setting or it is unknown. */
+export function autoLockOf(node: ZWaveNode): boolean | null {
+  const param = autoLockParam(node);
+  if (!param) return null;
+  const value = node.getValue<number>(param.valueId);
+  return value === param.on ? true : value === param.off ? false : null;
+}
+
+/**
+ * Turn a lock's auto-lock on or off, and read the parameter back from the
+ * lock: as with codes, the radio's acknowledgement does not say the lock
+ * stored it. The read-back also refreshes the cache getLockCodes reports.
+ */
+export async function setLockAutoLock(nodeId: number, autoLock: boolean): Promise<{ ok: boolean; error?: string }> {
+  const node = lockNodes.get(nodeId);
+  if (!node) return { ok: false, error: `Lock node ${nodeId} is not managed by this daemon` };
+  const param = autoLockParam(node);
+  if (!param) return { ok: false, error: `Lock node ${nodeId} has no auto-lock setting` };
+  const want = autoLock ? param.on : param.off;
+  try {
+    const result = await node.setValue(param.valueId, want);
+    if (!setValueOk(result)) return { ok: false, error: `lock rejected write: ${describeSetValue(result)}` };
+    const reading = await node.commandClasses.Configuration.get(param.valueId.property as number);
+    if (reading !== want) {
+      return { ok: false, error: `lock did not confirm the write; it reports ${reading === undefined ? 'no answer' : `value ${reading}`}` };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
 }
 
 export interface SetLockCodeResult {
