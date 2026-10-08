@@ -24,6 +24,7 @@ function fakeLock(id = 13) {
     id,
     label: '912',
     getDefinedValueIDs: () => ids,
+    getValue: () => undefined,
     setValue: async () => ({ status: 254 /* SuccessUnsupervised */ }),
     on: () => {},
     off: () => {},

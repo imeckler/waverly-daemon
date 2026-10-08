@@ -16,6 +16,7 @@ function fakeLock(slotCount = 3) {
     id: 13,
     label: '912',
     getDefinedValueIDs: () => ids,
+    getValue: () => undefined,
     setValue: async (vid: { property: string; propertyKey: number }, value: unknown) => {
       writes.push({ property: vid.property, slot: vid.propertyKey, value });
       return { status: 254 /* SuccessUnsupervised */ };

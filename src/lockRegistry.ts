@@ -1,5 +1,6 @@
 import { TranslatedValueID, ZWaveNode } from 'zwave-js';
-import { setValueOk, describeSetValue, statusValueIdFor, readSlotFromLock, confirmsCode, describeReading } from './lockManager';
+import { setValueOk, describeSetValue, readSlotFromLock, confirmsCode, describeReading } from './lockManager';
+import { userCodeSlots, userCodeValueId, userIdStatusValueId } from './lockSlots';
 import { describeSecurityClass } from './lockPairing';
 import { isLockOutOfOrder } from './lockOutOfOrder';
 import { LockBattery, LockCodes, LockSlot } from '@waverly/sauna-protocol';
@@ -25,6 +26,7 @@ function statusText(value: unknown): string {
     case 0: return 'available';
     case 1: return 'enabled';
     case 2: return 'disabled';
+    case 254: return 'not available';
     default: return value === undefined ? 'unknown' : String(value);
   }
 }
@@ -33,23 +35,15 @@ function statusText(value: unknown): string {
 // the driver's cache, so this is fast and non-invasive — it does not wake the
 // lock or hit the radio. The cache is only as good as the lock's reports: over
 // S0 (the Kwikset) the driver fills it with whatever was last *sent*, so a slot
-// shown as enabled here may never have been stored by the lock. setLockCode
-// reads the slot back from the lock itself for that reason.
+// shown as enabled here may never have been stored by the lock, and a slot the
+// driver has dropped (see lockSlots.ts) reads as unknown. setLockCode reads the
+// slot back from the lock itself for that reason.
 export function getLockCodes(): LockCodes[] {
   const result: LockCodes[] = [];
   for (const node of lockNodes.values()) {
-    // Enumerate the real user slots. propertyKey 0 is the "set all codes"
-    // pseudo-slot, not a real user — skip it.
-    const codeVids = node
-      .getDefinedValueIDs()
-      .filter(v => v.commandClass === 99 && v.property === 'userCode'
-        && typeof v.propertyKey === 'number' && v.propertyKey !== 0)
-      .sort((a, b) => (a.propertyKey as number) - (b.propertyKey as number));
-
-    const slots: LockSlot[] = codeVids.map(codeVid => {
-      const slot = codeVid.propertyKey as number;
-      const code = node.getValue<string>(codeVid);
-      const status = node.getValue(statusValueIdFor(codeVid));
+    const slots: LockSlot[] = userCodeSlots(node).map(slot => {
+      const code = node.getValue<string>(userCodeValueId(slot));
+      const status = node.getValue(userIdStatusValueId(slot));
       return {
         slot,
         code: code && code.trim() !== '' ? code : null,
@@ -171,28 +165,21 @@ export async function setLockCode(
   if (!node) {
     return { ok: false, error: `Lock node ${nodeId} is not managed by this daemon` };
   }
-  if (!Number.isInteger(slot) || slot < 1) {
-    return { ok: false, error: `Invalid slot ${slot}` };
-  }
-
-  const codeVid = node.getDefinedValueIDs()
-    .find(v => v.commandClass === 99 && v.property === 'userCode' && v.propertyKey === slot);
-  if (!codeVid) {
+  if (!userCodeSlots(node).includes(slot)) {
     return { ok: false, error: `Lock node ${nodeId} has no user slot ${slot}` };
   }
-  const statusVid = statusValueIdFor(codeVid);
 
   const trimmed = (code ?? '').trim();
   try {
     let result;
     if (trimmed === '') {
       // Clear the slot.
-      result = await node.setValue(statusVid, 0);
+      result = await node.setValue(userIdStatusValueId(slot), 0);
     } else {
       if (!CODE_PATTERN.test(trimmed)) {
         return { ok: false, error: 'Code must be 4–8 digits' };
       }
-      result = await node.setValue(codeVid, trimmed);
+      result = await node.setValue(userCodeValueId(slot), trimmed);
     }
 
     if (!setValueOk(result)) {

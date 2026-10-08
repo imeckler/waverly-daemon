@@ -1,10 +1,11 @@
 import { IntervalTree } from 'node-interval-tree';
-import { TranslatedValueID, ZWaveNode, SetValueStatus } from 'zwave-js';
+import { ValueID, ZWaveNode, SetValueStatus } from 'zwave-js';
 import { ScheduledTask } from './scheduledTask';
 import { Result, Err, Ok } from './lib/util';
 import { BookingWebSocketClient } from './bookingWebSocketClient';
 import { LockHealth, maskCode, Probeable, BatteryRefreshable, checkLiveness } from './lockHealth';
 import { registerLockGroup } from './lockGroups';
+import { userCodeSlots, userCodeValueId, userIdStatusValueId } from './lockSlots';
 
 interface CodeInterval {
   low: number,
@@ -13,7 +14,7 @@ interface CodeInterval {
   startEvent: ScheduledTask,
   stopEvent: ScheduledTask,
 };
-type CodeSlot = { value: TranslatedValueID, status: TranslatedValueID };
+type CodeSlot = { value: ValueID, status: ValueID };
 type AllocatedSlot = { slot: CodeSlot, slotIndex: number, count: number };
 
 /** What the lock says a slot holds, in answer to a User Code Get. */
@@ -22,6 +23,8 @@ export type SlotReading = { status: number | undefined, code: string | undefined
 const CAPACITY = 20;
 const CODE_ENABLED = 1;
 const CODE_AVAILABLE = 0;
+/** The lock cannot say what the slot holds. zwave-js drops the slot from its cache on seeing this; see lockSlots.ts. */
+const CODE_STATUS_NOT_AVAILABLE = 254;
 
 /** How long to give a re-interview before treating it as failed. */
 export const REINTERVIEW_TIMEOUT_MS = 10 * 60 * 1000;
@@ -113,12 +116,11 @@ export class LockManager implements Probeable, BatteryRefreshable {
     this.healCheckDelayMs = options.healCheckDelayMs ?? HEAL_CHECK_DELAY_MS;
     this.tree = new IntervalTree();
     this.codeToSlot = new Map();
-    // Code 1 (propertyKey == 1) is reserved and propertyKey 0 is special and used for modifying all the codes at once.
-    // propertyKey 0 is special and used for modifying all the codes.
-    const codeValues = lock.getDefinedValueIDs().filter(v =>
-      v.commandClass === 99 && v.property == 'userCode' && v.propertyKey != 0 && v.propertyKey != 1);
-
-    this.userCodeSlots = codeValues.map((code) => ({ value: code, status: statusValueIdFor(code) }));
+    // Slot 1 is reserved (left to a code programmed by hand); slot 0 means
+    // every code at once and is not a slot.
+    this.userCodeSlots = userCodeSlots(lock)
+      .filter(slot => slot !== 1)
+      .map(slot => ({ value: userCodeValueId(slot), status: userIdStatusValueId(slot) }));
 
     this.availableSlots = new Set();
     for (let i = 0; i < this.userCodeSlots.length; ++i) {
@@ -416,6 +418,7 @@ export function describeReading(reading: SlotReading | undefined): string {
   if (reading === undefined) return 'no answer';
   const status = reading.status === CODE_AVAILABLE ? 'available'
     : reading.status === CODE_ENABLED ? 'enabled'
+    : reading.status === CODE_STATUS_NOT_AVAILABLE ? 'status not available'
     : reading.status === undefined ? 'status unknown' : `status ${reading.status}`;
   return reading.code === undefined || reading.code === '' ? status : `${status}, code ${maskCode(reading.code)}`;
 }
@@ -451,16 +454,6 @@ export async function readSlotFromLock(lock: ZWaveNode, slotNo: number): Promise
     status: answer.userIdStatus,
     code: typeof raw === 'string' ? raw.trim() : undefined,
   };
-}
-
-// zwave-js keys a slot's userCode and userIdStatus value IDs by the same user ID
-// (propertyKey); they differ only in `property`. Derive the status ID from the
-// code's rather than looking it up among the node's defined value IDs, so a
-// slot whose status the driver has not cached is still usable. setValue only
-// dispatches on commandClass/endpoint/property/propertyKey, and writing
-// Available (0) maps to UserCodeCC.clear, which never consults the cache.
-export function statusValueIdFor(code: TranslatedValueID): TranslatedValueID {
-  return { ...code, property: 'userIdStatus', propertyName: 'userIdStatus' };
 }
 
 // A lock write counts as "landed" if the device accepted it (Success), the
