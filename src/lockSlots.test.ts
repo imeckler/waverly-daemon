@@ -1,6 +1,7 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { userCodeSlots } from './lockSlots.js';
+import { UserCodeCCValues } from '@zwave-js/cc';
+import { userCodeSlots, userCodeValueId, userIdStatusValueId } from './lockSlots.js';
 import { getLockCodes, registerLock, setLockCode, unregisterLock } from './lockRegistry.js';
 
 // A Schlage that reported 30 users, whose driver cache holds only some of
@@ -32,6 +33,13 @@ function schlage(cachedSlots: number[]) {
 }
 
 beforeEach(() => unregisterLock(6));
+
+test('the built value ids are the ones zwave-js keys its cache by', () => {
+  for (const slot of [1, 2, 30]) {
+    assert.deepEqual(userCodeValueId(slot), UserCodeCCValues.userCode(slot).endpoint(0));
+    assert.deepEqual(userIdStatusValueId(slot), UserCodeCCValues.userIdStatus(slot).endpoint(0));
+  }
+});
 
 test('slots come from the reported user count, not from what the cache happens to hold', () => {
   const { lock } = schlage([2, 3, 4]);
