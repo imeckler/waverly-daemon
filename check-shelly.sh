@@ -26,7 +26,12 @@ run() {
 run "Shelly.GetDeviceInfo"
 run "Sys.GetStatus"
 run "Script.List"
-run "Script.GetStatus?id=1"
+run "KVS.GetMany?match=activeScriptSlot"
 
-echo "=== Script.GetCode?id=1 (size in bytes, including JSON envelope) ==="
-ssh waverly@waverlypi.local "curl -s --max-time 10 --digest -u admin:$PASSWORD \"http://$IP/rpc/Script.GetCode?id=1\" | wc -c"
+# The temp monitor alternates between slots 1 and 2; activeScriptSlot says which is live.
+for slot in 1 2; do
+  run "Script.GetStatus?id=$slot"
+
+  echo "=== Script.GetCode?id=$slot (size in bytes, including JSON envelope) ==="
+  ssh waverly@waverlypi.local "curl -s --max-time 10 --digest -u admin:$PASSWORD \"http://$IP/rpc/Script.GetCode?id=$slot\" | wc -c"
+done

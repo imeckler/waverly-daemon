@@ -465,6 +465,13 @@ async function deployTemperatureMonitor(
   // The device clock cannot legitimately be older than the moment we wrote the script.
   const clockMinSaneS = Math.floor(Date.now() / 1000) - 10;
 
+  // The script alternates between slots 1 and 2. The new version is uploaded into the
+  // idle slot while the current one keeps running, and once started it stops its
+  // predecessor itself (see the takeover at the end of the script). A slow or failed
+  // upload therefore never leaves the heater without its watchdog.
+  const activeSlot = await getActiveScriptSlot(heaterIp);
+  const slot = activeSlot === 1 ? 2 : 1;
+
   const script = `
 // Temperature monitoring script — reads from addon sensor (temperature:100)
 // Predictive control: estimates where temp will be in ${lookaheadSeconds}s based on rate of change,
@@ -492,6 +499,8 @@ let farFuture = 8640000000000000;
 
 let prevTempF = null;
 let prevTimeS = null;
+
+let lastGoodReadingS = null;
 
 let thermostatTimer = null;
 
@@ -591,7 +600,6 @@ function lockoutDetail(nowS) {
     tF: temp ? temp.tF : null,
     pF: prevTempF,
     out: sw ? sw.output : null,
-    w: sw ? sw.apower : null,
     ev: events.length,
     le: lastEventS,
     on: onTimeS,
@@ -732,11 +740,19 @@ HTTPServer.registerEndpoint("heartbeat", heartbeatEndpoint);
 function checkTemperatureInner(nowS) {
   let temp = Shelly.getComponentStatus("temperature", 100);
   // Catches missing component, missing/null/undefined tF, and NaN (typeof NaN === 'number' but NaN !== NaN).
+
   if (!temp || typeof temp.tF !== 'number' || temp.tF !== temp.tF) {
     print("No usable addon temperature reading");
-    switchOffUntilManualReset(nowS, 'no usable temperature reading');
+    if (lastGoodReadingS != null && nowS - lastGoodReadingS > 60) {
+      switchOffUntilManualReset(nowS, 'no usable temperature reading');
+    } else {
+      // could be transient
+      switchOff(nowS);
+    }
     return;
   }
+
+  lastGoodReadingS = nowS;
 
   let tempF = temp.tF;
 
@@ -885,40 +901,83 @@ function startupResetFlagInit(res, err, errMsg) {
 
 // Config sanity check on startup: if temperature limits got templated in as anything
 // other than ordered finite numbers, refuse to run and require manual reset.
-if (typeof TEMP_OFF !== 'number' || typeof TEMP_ON !== 'number'
-    || typeof OVERHEAT_TEMP_F !== 'number' || typeof CLOCK_MIN_SANE_S !== 'number'
-    || TEMP_OFF !== TEMP_OFF || TEMP_ON !== TEMP_ON || OVERHEAT_TEMP_F !== OVERHEAT_TEMP_F
-    || TEMP_OFF <= TEMP_ON || TEMP_OFF > OVERHEAT_TEMP_F) {
-  print("Invalid temperature config (TEMP_OFF=" + JSON.stringify(TEMP_OFF)
-    + ", TEMP_ON=" + JSON.stringify(TEMP_ON)
-    + ", OVERHEAT_TEMP_F=" + JSON.stringify(OVERHEAT_TEMP_F)
-    + ") — refusing to start thermostat");
-  Shelly.call("Switch.Set", { id: 0, on: false });
-  Shelly.call("KVS.Set", { key: "manualResetRequired", value: "true" });
-  // Timer is intentionally not started.
-} else {
-  Shelly.call("KVS.Get", { key: "manualResetRequired" }, startupResetFlagInit);
+function startupConfigCheck() {
+  if (typeof TEMP_OFF !== 'number' || typeof TEMP_ON !== 'number'
+      || typeof OVERHEAT_TEMP_F !== 'number' || typeof CLOCK_MIN_SANE_S !== 'number'
+      || TEMP_OFF !== TEMP_OFF || TEMP_ON !== TEMP_ON || OVERHEAT_TEMP_F !== OVERHEAT_TEMP_F
+      || TEMP_OFF <= TEMP_ON || TEMP_OFF > OVERHEAT_TEMP_F) {
+    print("Invalid temperature config (TEMP_OFF=" + JSON.stringify(TEMP_OFF)
+      + ", TEMP_ON=" + JSON.stringify(TEMP_ON)
+      + ", OVERHEAT_TEMP_F=" + JSON.stringify(OVERHEAT_TEMP_F)
+      + ") — refusing to start thermostat");
+    Shelly.call("Switch.Set", { id: 0, on: false });
+    Shelly.call("KVS.Set", { key: "manualResetRequired", value: "true" });
+    // Timer is intentionally not started.
+  } else {
+    Shelly.call("KVS.Get", { key: "manualResetRequired" }, startupResetFlagInit);
+  }
 }
+
+// Takeover. This script is started in one of slots 1 and 2 while its predecessor may
+// still be running in the other. Its first action is to record its own slot in KVS —
+// the daemon reads activeScriptSlot to pick the other slot for the next upload — and
+// only once that is stored does it stop the predecessor. If it cannot be stored, this
+// instance stops itself and the predecessor stays in charge. Start-on-boot moves the
+// same way, old slot off before new slot on, so at most one slot is ever enabled.
+const SLOT = ${slot};
+const OTHER_SLOT = ${activeSlot};
+
+function takeoverEnableSelf() {
+  Shelly.call("Script.SetConfig", { id: SLOT, config: { enable: true } }, startupConfigCheck);
+}
+
+function takeoverDisableOld() {
+  Shelly.call("Script.SetConfig", { id: OTHER_SLOT, config: { enable: false } }, takeoverEnableSelf);
+}
+
+function takeoverStopOld(res, err, errMsg) {
+  if (err !== 0) {
+    print("Could not store activeScriptSlot (" + JSON.stringify(err) + " " + JSON.stringify(errMsg) + "). Stopping, slot " + JSON.stringify(OTHER_SLOT) + " stays in charge");
+    Shelly.call("Script.Stop", { id: SLOT });
+    return;
+  }
+  Shelly.call("Script.Stop", { id: OTHER_SLOT }, takeoverDisableOld);
+}
+
+Shelly.call("KVS.Set", { key: "activeScriptSlot", value: SLOT }, takeoverStopOld);
 `;
 
-  // Ensure script slot exists
+  // Ensure both script slots exist
   const list = await shellyRpc(heaterIp, 'Script.List');
-  const existing = list.scripts?.find((s: any) => s.id === 1);
-  if (!existing) {
-    await shellyRpc(heaterIp, 'Script.Create', { name: 'temp_monitor' });
+  for (const id of [1, 2]) {
+    if (list.scripts?.some((s: any) => s.id === id)) continue;
+    const created = await shellyRpc(heaterIp, 'Script.Create', { name: `temp_monitor_${id}` });
+    if (created.id !== id) {
+      throw new Error(`Script.Create on ${heaterIp} returned slot ${created.id}, expected ${id}`);
+    }
   }
 
-  try { await shellyRpc(heaterIp, 'Script.Stop', { id: 1 }); } catch { /* not running */ }
+  // The idle slot is normally stopped. If it is running anyway, it is not the one the
+  // device calls active.
+  if (list.scripts?.some((s: any) => s.id === slot && s.running)) {
+    await shellyRpc(heaterIp, 'Script.Stop', { id: slot });
+  }
 
-  await shellyRpc(heaterIp, 'Script.PutCode', { id: 1, code: script });
-  await shellyRpc(heaterIp, 'Script.SetConfig', { id: 1, config: { enable: true } });
-  await shellyRpc(heaterIp, 'Script.Start', { id: 1 });
+  // No Script.Stop for the active slot and no enable flags from here: the new script
+  // does both on the device once it has started.
+  await shellyRpc(heaterIp, 'Script.PutCode', { id: slot, code: script });
+  await shellyRpc(heaterIp, 'Script.Start', { id: slot });
 
   // Bootstrap the heartbeat — the endpoint isn't registered until after Script.Start runs.
   // First cycle (~10s later) will then see a fresh lastHeartbeatMs.
-  await pingHeartbeat(heaterIp).catch(e =>
+  await pingHeartbeatSlot(heaterIp, slot).catch(e =>
     console.error(`Initial heartbeat ping to ${heaterIp} failed:`, e)
   );
+
+  // Check the new script really took over. This read also updates the slot we ping.
+  if (await getActiveScriptSlot(heaterIp) !== slot) {
+    throw new Error(`Temp monitor started in slot ${slot} on ${heaterIp} did not take over; slot ${activeSlot} is still active`);
+  }
 
   // A redeploy does not clear a tripped safety lockout (the script leaves the flag as it
   // finds it). Make that visible in the daemon log rather than only on the device console.
@@ -927,22 +986,55 @@ if (typeof TEMP_OFF !== 'number' || typeof TEMP_ON !== 'number'
   }
 }
 
+// Pings the temp monitor in the slot we last saw it in. Only when that slot does not
+// answer (or we have not asked yet) is the device asked where its monitor is now.
 async function pingHeartbeat(ip: string | string[]): Promise<void> {
+  const cached = activeSlotCache.get(heaterKey(ip));
+  const error = cached === undefined ? undefined : await pingHeartbeatSlot(ip, cached).then(() => null, e => e);
+  if (error === null) return;
+
+  const slot = await getActiveScriptSlot(ip);
+  if (slot === cached) throw error;
+  await pingHeartbeatSlot(ip, slot);
+}
+
+async function pingHeartbeatSlot(ip: string | string[], slot: number): Promise<void> {
   if (typeof ip === "string") {
-    return await pingHeartbeatOne(ip);
+    return await pingHeartbeatOne(ip, slot);
   } else {
-    return await firstSuccessful(ip, pingHeartbeatOne);
+    return await firstSuccessful(ip, ip_ => pingHeartbeatOne(ip_, slot));
   }
 }
 
-async function pingHeartbeatOne(ip: string): Promise<void> {
-  // Hits the script-registered endpoint at /script/1/heartbeat (script id is always 1 here).
+// The daemon's last reading of which script slot each heater's temp monitor runs in.
+// The device's activeScriptSlot KVS key is the truth; this only saves asking for it
+// every heartbeat. Keyed by address list, order-independent because firstSuccessful
+// reorders it.
+const activeSlotCache = new Map<string, 1 | 2>();
+const heaterKey = (ip: string | string[]) => `${[ip].flat().sort()}`;
+
+// Which script slot (1 or 2) the device says holds the running temp monitor.
+async function getActiveScriptSlot(ip: string | string[]): Promise<1 | 2> {
+  // GetMany rather than Get: a missing key comes back as an empty list instead of an
+  // error, so a device that has never run a slot-aware script (monitor in slot 1) can
+  // be told apart from a failed read.
+  const { items } = await shellyRpc(ip, 'KVS.GetMany', { match: 'activeScriptSlot' });
+  const slot = items.find((i: any) => i.key === 'activeScriptSlot')?.value ?? 1;
+  if (slot !== 1 && slot !== 2) {
+    throw new Error(`Unexpected activeScriptSlot ${JSON.stringify(slot)} on ${ip}`);
+  }
+  activeSlotCache.set(heaterKey(ip), slot);
+  return slot;
+}
+
+async function pingHeartbeatOne(ip: string, slot: number): Promise<void> {
+  // Hits the script-registered endpoint at /script/<slot>/heartbeat.
   // The script handler just sets lastHeartbeatMs = Date.now() in RAM; no flash writes.
   // Method must be GET: on Gen4 firmware 1.5.99, POST to a script-registered endpoint
   // RSTs the connection from any Node client (verified with fetch/undici, node:http,
   // and raw sockets). GET returns properly (200 or 401). Auth may or may not be required
   // depending on device state, so do the digest dance on 401.
-  const uri = '/script/1/heartbeat';
+  const uri = `/script/${slot}/heartbeat`;
   const url = `http://${ip}${uri}`;
 
   const response = await fetch(url, {
@@ -1014,6 +1106,18 @@ export async function clearAllSchedulesAndScripts(): Promise<void> {
     try { await setKVS(device.ip, 'should_be_on', false); }
     catch { /* KVS key may not exist yet */ }
 
+    if (device.isHeater) {
+      // A heater's temp monitor is left running until its replacement takes over (see
+      // deployTemperatureMonitor). With should_be_on now false it opens the relay itself
+      // within a cycle, and the replacement opens it again when it starts. Force the
+      // relay off from here only when no script answers: an external off is never
+      // recorded in a running script's duty-cycle events log.
+      if (!(await pingHeartbeat(device.ip).then(() => true, () => false))) {
+        await setSwitch(device.ip, 0, false);
+      }
+      continue;
+    }
+
     try {
       const list = await shellyRpc(device.ip, 'Script.List');
       if (list.scripts?.some((s: any) => s.id === 1)) {
@@ -1021,12 +1125,6 @@ export async function clearAllSchedulesAndScripts(): Promise<void> {
         await shellyRpc(device.ip, 'Script.SetConfig', { id: 1, config: { enable: false } });
       }
     } catch { /* scripting may not be relevant for this device */ }
-
-    // Heater contract: relay must be OFF before the temperature monitor script (re)starts,
-    // so its events-log invariant holds. Do this after stopping the script so it can't fight us.
-    if (device.isHeater) {
-      await setSwitch(device.ip, 0, false);
-    }
   }
 }
 
