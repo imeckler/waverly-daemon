@@ -1,5 +1,5 @@
 import { ZWaveNode } from 'zwave-js';
-import { triggerIncident, resolveIncident } from './pagerduty';
+import { triggerIncident, resolveIncident, type Severity } from './pagerduty';
 import { isLockOutOfOrder } from './lockOutOfOrder';
 
 // ---------------------------------------------------------------------------
@@ -20,13 +20,18 @@ import { isLockOutOfOrder } from './lockOutOfOrder';
 // ---------------------------------------------------------------------------
 
 export interface Notifier {
-  trigger(summary: string, dedupKey: string, details: Record<string, unknown>): Promise<void>;
+  /**
+   * Open an incident. 'critical' pages; 'warning' opens a low-urgency
+   * incident that shows up in PagerDuty without a notification (the service
+   * decides urgency from severity).
+   */
+  trigger(summary: string, dedupKey: string, details: Record<string, unknown>, severity?: Severity): Promise<void>;
   resolve(dedupKey: string): Promise<void>;
 }
 
 export const pagerDutyNotifier: Notifier = {
-  async trigger(summary, dedupKey, details) {
-    await triggerIncident(summary, 'critical', dedupKey, details);
+  async trigger(summary, dedupKey, details, severity = 'critical') {
+    await triggerIncident(summary, severity, dedupKey, details);
   },
   async resolve(dedupKey) {
     await resolveIncident(dedupKey);
@@ -140,8 +145,12 @@ export class LockHealth {
     }
   }
 
-  /** A write or clear went out but the lock's answer does not show it. */
-  recordUnconfirmed(what: string, details: Record<string, unknown>): void {
+  /**
+   * A write or clear went out but the lock's answer does not show it. An
+   * unconfirmed write pages (someone may be locked out); a caller can pass a
+   * lower severity when the consequence is only a nuisance, as with a clear.
+   */
+  recordUnconfirmed(what: string, details: Record<string, unknown>, severity: Severity = 'critical'): void {
     const summary = `${this.describe()}: ${what} was not confirmed by the lock`;
     console.error(summary, details);
     if (this.outOfOrder) {
@@ -149,7 +158,7 @@ export class LockHealth {
       return;
     }
     this.unconfirmedOpen = true;
-    this.notifier.trigger(summary, this.dedupUnconfirmed, { lock: this.lock.id, ...details })
+    this.notifier.trigger(summary, this.dedupUnconfirmed, { lock: this.lock.id, ...details }, severity)
       .catch(e => console.error(`${this.describe()}: failed to report unconfirmed write:`, e));
   }
 

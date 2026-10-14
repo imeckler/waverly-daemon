@@ -28,10 +28,10 @@ function fakeLock(slotCount = 3) {
 }
 
 function fakeNotifier() {
-  const triggered: { summary: string; dedupKey: string; details: Record<string, unknown> }[] = [];
+  const triggered: { summary: string; dedupKey: string; details: Record<string, unknown>; severity: string }[] = [];
   const resolved: string[] = [];
   const notifier: Notifier = {
-    async trigger(summary, dedupKey, details) { triggered.push({ summary, dedupKey, details }); },
+    async trigger(summary, dedupKey, details, severity = 'critical') { triggered.push({ summary, dedupKey, details, severity }); },
     async resolve(dedupKey) { resolved.push(dedupKey); },
   };
   return { notifier, triggered, resolved };
@@ -94,6 +94,7 @@ test('a write the lock reports as still available is retried once, then paged', 
   assert.equal(triggered[0].dedupKey, 'lock-13-write-unconfirmed');
   assert.match(triggered[0].summary, /Lock 13 \(912\)/);
   assert.equal(triggered[0].details.code, '91****');
+  assert.equal(triggered[0].severity, 'critical');
   // The lock answered, so it is not silent — only the write failed.
   assert.notEqual(health.lastHeardAt, null);
 });
@@ -148,7 +149,7 @@ test('a clear is verified on status only, so a Kwikset echoing the old digits pa
   assert.equal(triggered.length, 0);
 });
 
-test('a clear the lock does not confirm is paged', async () => {
+test('a clear the lock does not confirm opens a low-urgency incident', async () => {
   const { lock } = fakeLock();
   const { notifier, triggered } = fakeNotifier();
   const health = new LockHealth(lock, notifier, fakeClock().now);
@@ -160,6 +161,7 @@ test('a clear the lock does not confirm is paged', async () => {
   await flush();
   assert.equal(triggered.length, 1);
   assert.match(triggered[0].summary, /clearing slot 2/);
+  assert.equal(triggered[0].severity, 'warning');
 });
 
 test('the watchdog leaves a recently heard lock alone', async () => {

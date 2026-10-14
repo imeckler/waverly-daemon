@@ -295,11 +295,13 @@ export class LockManager implements Probeable, BatteryRefreshable {
           console.log(`Lock ${this.lock.id} slot ${slotNo}: clear verified`);
           this.health.recordConfirmed();
         } else {
+          // A code that lingers in a slot is a nuisance, not a lockout: worth
+          // an incident, not worth waking anyone.
           this.health.recordUnconfirmed(`clearing slot ${slotNo}`, {
             slot: slotNo,
             code: maskCode(code),
             lockReports: describeReading(reading),
-          });
+          }, 'warning');
         }
       }
     }
