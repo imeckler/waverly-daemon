@@ -19,8 +19,15 @@
 // enforced by the control tick. The consequence is deliberate and worth stating:
 // if this daemon stops, the steam room stops with it. That is the safe direction
 // to fail for a unit with no independent supervision.
+//
+// After a session the unit's ventilation fan runs while the room is still
+// cooling and stops once it no longer is (fanCooldown.ts, shared with the sauna
+// fans). The fan is driven the same way as the heater: its own timer is re-armed
+// every tick as a dead-man's switch, so a daemon outage mid-cooldown leaves the
+// fan to switch itself off within minutes.
 
 import { ToloClient, ToloCommunicationError } from './tolo/index.js';
+import { FanCooldownLimits, FanCooldownState, newFanCooldown, withReading, stopReason } from './fanCooldown.js';
 
 // Structurally compatible with shellyController's SaunaStatus so it can be dropped
 // straight into the status report posted to the server.
@@ -48,7 +55,20 @@ const POWER_TIMER_MINUTES = 10;
 // within a tick. Must be within TARGET_TEMPERATURE_MIN..MAX (35..60).
 const TARGET_TEMPERATURE_C = 48;
 
-const CONTROL_INTERVAL_MS = 30_000;
+const DEFAULT_CONTROL_INTERVAL_MS = 30_000;
+
+// Post-session fan cooldown limits; the same as the sauna fans'. The daemon
+// itself enforces the cap (the unit's fan timer is at most 60 minutes).
+const DEFAULT_FAN_COOLDOWN: FanCooldownLimits = {
+  minDropF: 0.5,
+  stallMs: 5 * 60 * 1000,
+  maxMs: 3 * 60 * 60 * 1000,
+};
+
+// Minutes the TOLO fan timer is (re-)armed to on every tick of a cooldown: the
+// fan's dead-man's switch, as POWER_TIMER_MINUTES is the heater's. Must be <=
+// FAN_TIMER_MAX (60).
+const FAN_TIMER_MINUTES = 10;
 
 function celsiusToFahrenheit(c: number): number {
   return Math.round((c * 9) / 5 + 32);
@@ -66,6 +86,14 @@ let schedulePlanDate: string | null = null;
 // Last state we drove towards, so the tick only logs transitions rather than
 // narrating every 30 seconds.
 let lastDesiredOn: boolean | null = null;
+let fanCooldownLimits: FanCooldownLimits = DEFAULT_FAN_COOLDOWN;
+// The cooldown in progress, if any.
+let fanCooldown: FanCooldownState | null = null;
+// When the most recent period that had already ended when the plan arrived
+// ended, if that was within the cooldown cap. A daemon restarted (or a plan
+// re-sent) mid-cooldown finds the fan running and picks the cooldown up from
+// here; the next tick consumes it.
+let endedBeforePlanAt: number | null = null;
 
 /** Apply an admin override to the steam room (relayed from the server). */
 export function setSteamOverride(override: 'on' | 'off' | 'none'): void {
@@ -89,6 +117,10 @@ export function applySteamSchedule(periods: SteamPeriod[], planDate: string): vo
     .filter(p => p.stop.getTime() > now)
     .sort((a, b) => a.start.getTime() - b.start.getTime());
   schedulePlanDate = planDate;
+  const recentlyEnded = periods
+    .map(p => p.stop.getTime())
+    .filter(stop => stop <= now && now - stop < fanCooldownLimits.maxMs);
+  endedBeforePlanAt = recentlyEnded.length ? Math.max(...recentlyEnded) : null;
 
   if (schedule.length === 0) {
     console.log(`steam: plan ${planDate} has no upcoming periods`);
@@ -155,11 +187,15 @@ async function applySteamState(): Promise<void> {
   // An admin override wins outright, in both directions: 'off' keeps the room
   // shut through a scheduled period (a member reported a fault, say), 'on' opens
   // it outside one. With no override in force the plan decides.
+  const now = Date.now();
   const desiredOn =
     steamOverride === 'on' ? true :
       steamOverride === 'off' ? false :
-        scheduledOn(Date.now());
+        scheduledOn(now);
 
+  // A session ends when we go from driving the room on to driving it off; the
+  // first decision after a start is not one (see endedBeforePlanAt for that).
+  const sessionEndedNow = lastDesiredOn === true && !desiredOn;
   if (desiredOn !== lastDesiredOn) {
     const why = steamOverride === 'none' ? `plan ${schedulePlanDate ?? '(none)'}` : `override "${steamOverride}"`;
     console.log(`steam: turning ${desiredOn ? 'on' : 'off'} (${why})`);
@@ -183,6 +219,59 @@ async function applySteamState(): Promise<void> {
   } else {
     await c.setPowerOn(false);
   }
+
+  await driveFanCooldown(c, desiredOn, sessionEndedNow, now);
+}
+
+/**
+ * One tick's worth of post-session fan cooldown. Starts the fan when a session
+ * ends, feeds the room's temperature in while it runs, and switches the fan off
+ * once the room has stopped cooling, the cap hits, or the room is back on.
+ * Setting the fan timer does not start the fan (like the power timer, verified
+ * on the hardware for power), so the fan is switched on explicitly, and only
+ * here: a cooldown that has already ended is never restarted.
+ */
+async function driveFanCooldown(c: ToloClient, desiredOn: boolean, sessionEndedNow: boolean, now: number): Promise<void> {
+  if (sessionEndedNow) {
+    // Timer first, so the fan is never running without its backstop armed.
+    await c.setFanTimer(FAN_TIMER_MINUTES);
+    await c.setFanOn(true);
+    fanCooldown = newFanCooldown(now);
+    endedBeforePlanAt = null;
+    console.log('steam: session over; fan on while the room keeps cooling');
+    return;
+  }
+
+  if (!fanCooldown) {
+    if (endedBeforePlanAt === null) return;
+    const endedAt = endedBeforePlanAt;
+    endedBeforePlanAt = null;
+    if (desiredOn) return;
+    // Mid-cooldown (daemon restart or a plan re-sent): pick it up where it is,
+    // but only if the fan is still running. A finished cooldown stays finished.
+    const status = await c.getStatus();
+    if (!status.fanOn) return;
+    fanCooldown = newFanCooldown(endedAt);
+    console.log(`steam: fan is running after a period that ended ${new Date(endedAt).toISOString()}; picking up the cooldown`);
+  }
+
+  const status = await c.getStatus();
+  if (!status.fanOn) {
+    // The timer lapsed (ticks were missed) or someone switched it off at the
+    // panel. Either way the cooldown is over; don't bring the fan back.
+    fanCooldown = null;
+    console.log('steam: fan is off mid-cooldown; leaving it off');
+    return;
+  }
+  fanCooldown = withReading(fanCooldown, now, celsiusToFahrenheit(status.currentTemperature), fanCooldownLimits.minDropF);
+  const reason = stopReason(fanCooldown, now, desiredOn, fanCooldownLimits);
+  if (reason === null) {
+    await c.setFanTimer(FAN_TIMER_MINUTES);
+    return;
+  }
+  fanCooldown = null;
+  console.log(`steam: fan cooldown over (${reason}); turning fan off`);
+  await c.setFanOn(false);
 }
 
 /**
@@ -222,19 +311,26 @@ export async function getSteamStatus(): Promise<SteamStatus | null> {
 }
 
 /** Construct the TOLO client and start the control tick loop. */
-export function startSteamController(host: string, port?: number): void {
+export function startSteamController(
+  host: string,
+  port?: number,
+  // Tests run a fast tick and short cooldown limits against the simulator.
+  options: { controlIntervalMs?: number; fanCooldown?: FanCooldownLimits } = {},
+): void {
   if (controlInterval) return;
+  const intervalMs = options.controlIntervalMs ?? DEFAULT_CONTROL_INTERVAL_MS;
+  fanCooldownLimits = options.fanCooldown ?? DEFAULT_FAN_COOLDOWN;
   client = new ToloClient(host, port);
   console.log(
-    `Starting steam controller (TOLO ${host}:${port ?? 51500}, control every ${CONTROL_INTERVAL_MS / 1000}s)`,
+    `Starting steam controller (TOLO ${host}:${port ?? 51500}, control every ${intervalMs / 1000}s)`,
   );
-  controlInterval = setInterval(requestApply, CONTROL_INTERVAL_MS);
+  controlInterval = setInterval(requestApply, intervalMs);
 }
 
 /**
  * Stop the control loop and release the socket.
  *
- * Note what this deliberately does *not* do: switch the unit off. The power
+ * Note what this deliberately does *not* do: switch the unit (or its fan) off. The power
  * timer is the backstop — it lapses within POWER_TIMER_MINUTES of the last tick
  * and the unit powers itself down — so a daemon shutting down leaves the room to
  * fail safe on its own rather than depending on one last packet landing.
@@ -251,5 +347,9 @@ export async function stopSteamController(): Promise<void> {
   steamOverride = 'none';
   steamOverrideExpiresAt = 0;
   lastDesiredOn = null;
+  // The fan is left to its timer for the same reason as the heater.
+  fanCooldown = null;
+  endedBeforePlanAt = null;
+  fanCooldownLimits = DEFAULT_FAN_COOLDOWN;
   if (c) await c.close();
 }

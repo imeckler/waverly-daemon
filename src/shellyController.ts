@@ -4,6 +4,7 @@ import { triggerIncident, resolveIncident } from './pagerduty.js';
 import { getSteamStatus } from './steamController.js';
 import { ScheduledTask } from './scheduledTask.js';
 import { blinkSwitch } from './blink.js';
+import { FanCooldownState, FanCooldownLimits, newFanCooldown, withReading, stopReason } from './fanCooldown.js';
 
 const RPC_TIMEOUT_MS = 10_000;
 const SWITCH_MAX_RETRIES = 3;
@@ -61,7 +62,7 @@ const COIL_BROKEN_POWER_THRESHOLD_W = 0.1;
 
 // Sensor-stuck check: if temp moves less than this much over the window while
 // the heater should be running, the sensor is probably disconnected.
-const TEMP_STUCK_WINDOW_MS = 3 * 60 * 1000;
+const TEMP_STUCK_WINDOW_MS = 5 * 60 * 1000;
 const TEMP_STUCK_EPSILON_F = 0.5;
 
 // Track consecutive failure counts for threshold-based alerts.
@@ -106,6 +107,89 @@ const LIGHTS_BLINK_DELAY_MS = 3_000;
 // Pending blink timers, keyed by sauna name. Every plan apply replaces the
 // whole set, so a withdrawn slot can't leave a stray blink behind.
 const lightsBlinkTasks = new Map<string, ScheduledTask[]>();
+
+// When a heater slot ends, the fan keeps running while the room is still
+// cooling (see fanCooldown.ts). Driven from the daemon, which already reads
+// the heater's temperature every monitor cycle and the fan lives on a
+// different device from the sensor. The fan's own device only gets an off
+// schedule at the cap, so a daemon outage can't leave the fan running for good.
+const FAN_COOLDOWN: FanCooldownLimits = {
+  minDropF: 0.5,
+  stallMs: 5 * 60 * 1000,
+  maxMs: 3 * 60 * 60 * 1000,
+};
+// The device-side cap must land before the next heater slot's schedules, which
+// may turn the fan on for the next booking at the slot's first instant.
+const FAN_COOLDOWN_NEXT_SLOT_MARGIN_MS = 60 * 1000;
+
+type SaunaName = 'Small' | 'Big';
+
+function fanSwitch(saunaName: SaunaName): { ip: string; switchId: number } {
+  return saunaName === 'Small'
+    ? { ip: config.small_sauna_lights_fan_ip, switchId: config.small_sauna_fan_switch_id ?? 1 }
+    : { ip: config.big_sauna_lights_fan_ip, switchId: config.big_sauna_fan_switch_id ?? 1 };
+}
+
+// Pending cooldown starts and running cooldowns, both keyed by sauna name and
+// both replaced wholesale by every plan apply, like the blinks.
+const fanCooldownTasks = new Map<SaunaName, ScheduledTask[]>();
+const activeFanCooldowns = new Map<SaunaName, FanCooldownState>();
+
+function cancelFanCooldowns(saunaName: SaunaName): void {
+  for (const t of fanCooldownTasks.get(saunaName) ?? []) t.cancel();
+  fanCooldownTasks.delete(saunaName);
+  activeFanCooldowns.delete(saunaName);
+}
+
+/**
+ * Begin watching the room cool after a heater slot that ended at `slotStop`.
+ * Only a fan that is already running is kept running: this never turns the
+ * fan on, so a daemon restart (which reapplies the plan) after a cooldown has
+ * already finished does not bring the fan back.
+ */
+async function startFanCooldown(saunaName: SaunaName, slotStop: Date): Promise<void> {
+  const fan = fanSwitch(saunaName);
+  const status = await shellyRpc(fan.ip, 'Switch.GetStatus', { id: fan.switchId });
+  if (!status.output) {
+    console.log(`${saunaName} fan is already off at the end of the heater slot; no cooldown`);
+    return;
+  }
+  activeFanCooldowns.set(saunaName, newFanCooldown(slotStop.getTime()));
+  console.log(`${saunaName} fan cooldown started (heater slot ended ${slotStop.toISOString()}); fan stays on while the room keeps cooling`);
+}
+
+function scheduleFanCooldown(saunaName: SaunaName, slotStop: Date): void {
+  console.log(`Scheduling ${saunaName} fan cooldown at ${slotStop.toISOString()}`);
+  const task = new ScheduledTask(slotStop, () => {
+    startFanCooldown(saunaName, slotStop)
+      .catch(e => console.error(`${saunaName} fan cooldown could not start:`, e));
+  });
+  const tasks = fanCooldownTasks.get(saunaName) ?? [];
+  tasks.push(task);
+  fanCooldownTasks.set(saunaName, tasks);
+}
+
+/**
+ * One monitor cycle's worth of cooldown: feed the heater's reading in and turn
+ * the fan off once the room has stopped cooling (or the cap / next slot hits).
+ */
+async function updateFanCooldown(
+  saunaName: SaunaName,
+  status: { reachable: boolean; temperatureF: number | null },
+  planSlots: Slot[],
+): Promise<void> {
+  const previous = activeFanCooldowns.get(saunaName);
+  if (!previous) return;
+  const now = Date.now();
+  const state = withReading(previous, now, status.reachable ? status.temperatureF : null, FAN_COOLDOWN.minDropF);
+  activeFanCooldowns.set(saunaName, state);
+  const reason = stopReason(state, now, saunaHeaterShouldBeOn(planSlots), FAN_COOLDOWN);
+  if (reason === null) return;
+  activeFanCooldowns.delete(saunaName);
+  console.log(`${saunaName} fan cooldown over (${reason}); turning fan off`);
+  const fan = fanSwitch(saunaName);
+  await setSwitch(fan.ip, fan.switchId, false);
+}
 
 function cancelLightsBlinks(saunaName?: string): void {
   for (const [name, tasks] of lightsBlinkTasks) {
@@ -1268,7 +1352,7 @@ async function applyLightsFanSchedule(
   fanSwitchId: number,
   heaterSlots: Slot[],
   bookings: Booking[],
-  saunaName: string,
+  saunaName: SaunaName,
   utcOffset: number
 ): Promise<void> {
   console.log(`Applying ${saunaName} lights/fan schedule with ${bookings.length} bookings`);
@@ -1307,27 +1391,45 @@ async function applyLightsFanSchedule(
     }
   }
 
-  // Fan: on during bookings that overlap heater slots, off 30min after heater stops
+  // Fan: on during bookings that overlap heater slots. Once the heater slot
+  // ends it stays on while the room keeps cooling; the daemon decides when
+  // that is over (updateFanCooldown). The device only gets an off at the cap,
+  // pulled in ahead of the next heater slot so it can never cut the fan during
+  // a later booking.
+  cancelFanCooldowns(saunaName);
   for (const heaterSlot of heaterSlots) {
     const overlappingBookings = bookings.filter(b =>
       b.start < heaterSlot.stop && b.stop > heaterSlot.start
     );
+    if (overlappingBookings.length === 0) continue;
 
-    if (overlappingBookings.length > 0) {
-      const mergedOccupancy = mergeBookings(overlappingBookings);
-
-      for (const period of mergedOccupancy) {
-        if (now >= period.start && now < period.stop) {
-          await setSwitch(lightsFanIp, fanSwitchId, true);
-        } else if (period.start > now) {
-          await scheduleSwitch(lightsFanIp, fanSwitchId, period.start, true, utcOffset);
-        }
+    const mergedOccupancy = mergeBookings(overlappingBookings);
+    for (const period of mergedOccupancy) {
+      if (now >= period.start && now < period.stop) {
+        await setSwitch(lightsFanIp, fanSwitchId, true);
+      } else if (period.start > now) {
+        await scheduleSwitch(lightsFanIp, fanSwitchId, period.start, true, utcOffset);
       }
+    }
 
-      const fanOffTime = new Date(heaterSlot.stop.getTime() + 30 * 60 * 1000);
-      if (fanOffTime > now) {
-        await scheduleSwitch(lightsFanIp, fanSwitchId, fanOffTime, false, utcOffset);
+    let capMs = heaterSlot.stop.getTime() + FAN_COOLDOWN.maxMs;
+    for (const other of heaterSlots) {
+      if (other.start >= heaterSlot.stop) {
+        capMs = Math.min(capMs, other.start.getTime() - FAN_COOLDOWN_NEXT_SLOT_MARGIN_MS);
       }
+    }
+    const fanOffTime = new Date(Math.max(capMs, heaterSlot.stop.getTime()));
+    if (fanOffTime > now) {
+      await scheduleSwitch(lightsFanIp, fanSwitchId, fanOffTime, false, utcOffset);
+    }
+
+    // No cooldown when the next slot follows right behind this one.
+    if (fanOffTime <= heaterSlot.stop) continue;
+    if (heaterSlot.stop > now) {
+      scheduleFanCooldown(saunaName, heaterSlot.stop);
+    } else if (now < fanOffTime) {
+      // Mid-cooldown (daemon restart or a plan change): pick it up where it is.
+      await startFanCooldown(saunaName, heaterSlot.stop);
     }
   }
 }
@@ -1891,6 +1993,10 @@ export function startTemperatureMonitor(): void {
         .catch(e => console.error('[monitor] Small heartbeat health check failed:', e)),
       checkHeartbeatHealth('Big', config.big_sauna_heater_ip, heartbeats.big, status.big)
         .catch(e => console.error('[monitor] Big heartbeat health check failed:', e)),
+      updateFanCooldown('Small', status.small, currentPlan?.small ?? [])
+        .catch(e => console.error('[monitor] Small fan cooldown update failed:', e)),
+      updateFanCooldown('Big', status.big, currentPlan?.big ?? [])
+        .catch(e => console.error('[monitor] Big fan cooldown update failed:', e)),
     ]);
     const [smallManualReset, bigManualReset, smallOverride, bigOverride] = await Promise.all([
       getManualResetRequired(config.small_sauna_heater_ip),

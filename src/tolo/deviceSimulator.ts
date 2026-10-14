@@ -45,6 +45,11 @@ export class ToloDeviceSimulator {
     });
   }
 
+  /** Set the temperature (°C) the simulated device reports; there is no protocol command for it. */
+  setCurrentTemperature(celsius: number): void {
+    this.status[1] = celsius;
+  }
+
   stop(): Promise<void> {
     const socket = this.socket;
     this.socket = null;
