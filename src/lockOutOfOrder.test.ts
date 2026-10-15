@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { LockManager, SlotReading } from './lockManager.js';
+import { InterviewStage } from 'zwave-js';
 import { LockHealth, Notifier, SILENCE_LIMIT_MS, checkLiveness } from './lockHealth.js';
 import { isLockOutOfOrder, markLockOutOfOrder, setOutOfOrderFile } from './lockOutOfOrder.js';
 import { registerLockGroup, resetLockGroups, retireLock, setLockOutOfOrder, setOverridesFile } from './lockGroups.js';
@@ -23,6 +24,7 @@ function fakeLock(id = 13) {
   const lock = {
     id,
     label: '912',
+    interviewStage: InterviewStage.Complete,
     getDefinedValueIDs: () => ids,
     getValue: () => undefined,
     setValue: async () => ({ status: 254 /* SuccessUnsupervised */ }),

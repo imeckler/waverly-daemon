@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LockManager, SlotReading, confirmsCode } from './lockManager.js';
+import { InterviewStage } from 'zwave-js';
 import { LockHealth, Notifier, SILENCE_LIMIT_MS, checkLiveness } from './lockHealth.js';
 
 // A stand-in for a ZWaveNode with user-code slots 2..(2+n-1). Writes are
@@ -15,6 +16,7 @@ function fakeLock(slotCount = 3) {
   const lock = {
     id: 13,
     label: '912',
+    interviewStage: InterviewStage.Complete,
     getDefinedValueIDs: () => ids,
     getValue: () => undefined,
     setValue: async (vid: { property: string; propertyKey: number }, value: unknown) => {
@@ -233,6 +235,42 @@ test('a re-interview that brings the lock back is not paged', async () => {
   await checkLiveness(m, true, 0);
   await flush();
   assert.equal(triggered.length, 0);
+  assert.equal(health.lastHeardAt, clock.now());
+});
+
+test('a lock that ignored its re-interview is re-interviewed every tick, not probed, until it answers', async () => {
+  const { lock } = fakeLock();
+  const { notifier, triggered, resolved } = fakeNotifier();
+  const clock = fakeClock();
+  const health = new LockHealth(lock, notifier, clock.now);
+  let answer: SlotReading | undefined = undefined;
+  const { readSlot, reads } = readsFrom(() => answer);
+  // The first re-interview gets no answer and leaves the driver without the
+  // lock's command classes; the second completes.
+  let reinterviews = 0;
+  const reinterview = async () => {
+    reinterviews++;
+    if (reinterviews < 2) { lock.interviewStage = InterviewStage.ProtocolInfo; return 'interview failed' as const; }
+    lock.interviewStage = InterviewStage.Complete;
+    answer = { status: 0, code: '' };
+    return 'ready' as const;
+  };
+  const m = new LockManager(lock, { health, readSlot, reinterview });
+
+  clock.advance(SILENCE_LIMIT_MS);
+  await checkLiveness(m, false, 0);
+  await flush();
+  assert.equal(reinterviews, 1);
+  assert.equal(triggered.length, 1);
+
+  // Next tick: no radio probe (it could not reach the lock), but another
+  // re-interview despite the cooldown, which brings the lock back.
+  clock.advance(SILENCE_LIMIT_MS);
+  await checkLiveness(m, false, 0);
+  await flush();
+  assert.deepEqual(reads, [2, 2, 2]);
+  assert.equal(reinterviews, 2);
+  assert.deepEqual(resolved, ['lock-13-unresponsive']);
   assert.equal(health.lastHeardAt, clock.now());
 });
 

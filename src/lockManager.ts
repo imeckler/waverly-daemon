@@ -1,5 +1,5 @@
 import { IntervalTree } from 'node-interval-tree';
-import { ValueID, ZWaveNode, SetValueStatus } from 'zwave-js';
+import { ValueID, ZWaveNode, SetValueStatus, InterviewStage } from 'zwave-js';
 import { ScheduledTask } from './scheduledTask';
 import { Result, Err, Ok } from './lib/util';
 import { BookingWebSocketClient } from './bookingWebSocketClient';
@@ -221,8 +221,17 @@ export class LockManager implements Probeable, BatteryRefreshable {
     }
   }
 
-  /** Watchdog probe: read the first managed slot and report whether the lock answered. */
+  /**
+   * Watchdog probe: read the first managed slot and report whether the lock
+   * answered. A lock whose re-interview failed has no command-class table in
+   * the driver, so a read would fail without touching the radio; only another
+   * interview (heal) can reach it.
+   */
   async probe(): Promise<boolean> {
+    if (this.lock.interviewStage !== InterviewStage.Complete) {
+      console.log(`${this.health.describe()}: interview incomplete; cannot probe until it is re-interviewed`);
+      return false;
+    }
     const slot = this.userCodeSlots[0];
     if (!slot) return false;
     let reading: SlotReading | undefined;
@@ -240,9 +249,13 @@ export class LockManager implements Probeable, BatteryRefreshable {
    * Kwikset, after an interrupted transaction). A fresh interview re-queries
    * every command class, which has brought such a lock back without anyone
    * touching it. Reports whether the lock answers a probe afterwards.
+   *
+   * An interview the lock never engaged with costs one frame and leaves the
+   * driver without the lock's command classes, so it does not start the
+   * re-interview cooldown: the watchdog tries again next tick, as the driver
+   * itself would at startup, and the lock is picked up whenever it is back.
    */
   async heal(): Promise<boolean> {
-    this.health.lastHealAt = this.health.now();
     console.log(`${this.health.describe()}: not answering; re-interviewing`);
     let outcome: InterviewOutcome;
     try {
@@ -252,6 +265,7 @@ export class LockManager implements Probeable, BatteryRefreshable {
       return false;
     }
     console.log(`${this.health.describe()}: re-interview ${outcome}`);
+    if (outcome !== 'interview failed') this.health.lastHealAt = this.health.now();
     if (outcome !== 'ready') return false;
     return this.probe();
   }
@@ -427,7 +441,8 @@ export function describeReading(reading: SlotReading | undefined): string {
 
 /**
  * Re-interview the lock and wait for it to come back (ready), give up
- * (interview failed), or run out of time.
+ * (interview failed), or run out of time. The driver retries a failed
+ * attempt a few times on its own; only its final verdict counts.
  */
 export function reinterviewLock(lock: ZWaveNode): Promise<InterviewOutcome> {
   const outcome = new Promise<InterviewOutcome>((resolve) => {
@@ -438,7 +453,7 @@ export function reinterviewLock(lock: ZWaveNode): Promise<InterviewOutcome> {
       resolve(o);
     };
     const onReady = () => finish('ready');
-    const onFailed = () => finish('interview failed');
+    const onFailed = (_node: ZWaveNode, args: { isFinal: boolean }) => { if (args.isFinal) finish('interview failed'); };
     const timer = setTimeout(() => finish('timeout'), REINTERVIEW_TIMEOUT_MS);
     lock.on('ready', onReady);
     lock.on('interview failed', onFailed);

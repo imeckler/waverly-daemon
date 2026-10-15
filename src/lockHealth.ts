@@ -44,7 +44,7 @@ export const SILENCE_LIMIT_MS = 2 * 60 * 60 * 1000;
 export const WATCHDOG_INTERVAL_MS = 30 * 60 * 1000;
 /** How soon after start every lock is probed once, whether or not it is silent. */
 export const STARTUP_PROBE_DELAY_MS = 2 * 60 * 1000;
-/** A lock is re-interviewed at most this often. */
+/** A lock that engages with a re-interview is re-interviewed at most this often; one that ignores it is tried again every tick. */
 export const HEAL_MIN_INTERVAL_MS = 6 * 60 * 60 * 1000;
 /** A missed probe is retried after this long before the lock is called silent. */
 export const PROBE_RETRY_DELAY_MS = 60 * 1000;
@@ -186,7 +186,7 @@ export class LockHealth {
       ? `since the daemon started ${describeAge(now - this.startedAt)} ago`
       : `for ${describeAge(now - since)} (last answer ${new Date(since).toISOString()})`;
     const healText = healAttempted
-      ? '; a re-interview did not help — it needs hands on: pull its batteries, and if it stays silent exclude and re-include it'
+      ? '; a re-interview did not help and is retried every tick — if it stays silent it needs hands on: pull its batteries, and failing that exclude and re-include it'
       : '';
     const summary = `${this.describe()} is not answering the controller ${sinceText}; ${this.commandsSinceHeard} command(s) sent meanwhile${healText}`;
     console.error(summary);
