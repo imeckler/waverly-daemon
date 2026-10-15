@@ -57,11 +57,16 @@ const TARGET_TEMPERATURE_C = 48;
 
 const DEFAULT_CONTROL_INTERVAL_MS = 30_000;
 
-// Post-session fan cooldown limits; the same as the sauna fans'. The daemon
-// itself enforces the cap (the unit's fan timer is at most 60 minutes).
+// Post-session fan cooldown limits. The daemon itself enforces the cap (the
+// unit's fan timer is at most 60 minutes). The stall window is longer than the
+// sauna fans' because the unit reports whole degrees Celsius: a reading only
+// moves once the room has dropped 1.8°F, which took 6-10 minutes early in the
+// cooldown and 20-40 minutes an hour in on 2026-10-14, with a plateau of up to
+// 13 minutes right after the session. A 5-minute window ended every cooldown
+// at its first tick.
 const DEFAULT_FAN_COOLDOWN: FanCooldownLimits = {
   minDropF: 0.5,
-  stallMs: 5 * 60 * 1000,
+  stallMs: 30 * 60 * 1000,
   maxMs: 3 * 60 * 60 * 1000,
 };
 
