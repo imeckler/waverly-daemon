@@ -274,6 +274,39 @@ test('a lock that ignored its re-interview is re-interviewed every tick, not pro
   assert.equal(health.lastHeardAt, clock.now());
 });
 
+test('a liveness check that lands during a re-interview is dropped, not run alongside it', async () => {
+  const { lock } = fakeLock();
+  const { notifier, triggered } = fakeNotifier();
+  const clock = fakeClock();
+  const health = new LockHealth(lock, notifier, clock.now);
+  let answer: SlotReading | undefined = undefined;
+  const { readSlot, reads } = readsFrom(() => answer);
+  let reinterviews = 0;
+  let finishInterview!: () => void;
+  const reinterview = () => new Promise<'ready'>((resolve) => {
+    reinterviews++;
+    lock.interviewStage = InterviewStage.ProtocolInfo;
+    finishInterview = () => { lock.interviewStage = InterviewStage.Complete; answer = { status: 0, code: '' }; resolve('ready'); };
+  });
+  const m = new LockManager(lock, { health, readSlot, reinterview });
+
+  clock.advance(SILENCE_LIMIT_MS);
+  const first = checkLiveness(m, false, 0);
+  while (reinterviews === 0) await flush();
+
+  // A tick and a heal check arrive mid-interview: neither probes nor interviews.
+  await checkLiveness(m, false, 0);
+  await checkLiveness(m, true, 0);
+  assert.deepEqual(reads, [2, 2]);
+  assert.equal(reinterviews, 1);
+
+  finishInterview();
+  await first;
+  assert.deepEqual(reads, [2, 2, 2]);
+  assert.equal(triggered.length, 0);
+  assert.equal(health.lastHeardAt, clock.now());
+});
+
 test('a re-interview that fails or times out counts as not healed', async () => {
   for (const outcome of ['interview failed', 'timeout'] as const) {
     const { lock } = fakeLock();

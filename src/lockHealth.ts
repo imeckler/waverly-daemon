@@ -287,8 +287,27 @@ export function startLockWatchdog(locks: Probeable[] | (() => Probeable[]), opti
  * still does not answer it is paged. Nothing is probed while a lock is being
  * paired, and a lock marked out of order is not probed (or re-interviewed) at
  * all, forced or not.
+ *
+ * One check per lock at a time: a check can run for the length of a
+ * re-interview, and a tick or heal check that lands meanwhile is dropped
+ * rather than probing a half-interviewed lock and starting a second interview.
  */
 export async function checkLiveness(lock: Probeable, force = false, retryDelayMs = PROBE_RETRY_DELAY_MS): Promise<void> {
+  if (checking.has(lock)) {
+    console.log(`${lock.health.describe()}: liveness check already under way; not starting another`);
+    return;
+  }
+  checking.add(lock);
+  try {
+    await runLivenessCheck(lock, force, retryDelayMs);
+  } finally {
+    checking.delete(lock);
+  }
+}
+
+const checking = new WeakSet<Probeable>();
+
+async function runLivenessCheck(lock: Probeable, force: boolean, retryDelayMs: number): Promise<void> {
   const health = lock.health;
   if (health.outOfOrder) {
     console.log(`${health.describe()}: out of order; not probing`);
