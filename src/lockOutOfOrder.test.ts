@@ -7,7 +7,7 @@ import { LockManager, SlotReading } from './lockManager.js';
 import { InterviewStage } from 'zwave-js';
 import { LockHealth, Notifier, SILENCE_LIMIT_MS, checkLiveness } from './lockHealth.js';
 import { isLockOutOfOrder, markLockOutOfOrder, setOutOfOrderFile } from './lockOutOfOrder.js';
-import { registerLockGroup, resetLockGroups, retireLock, setLockOutOfOrder, setOverridesFile } from './lockGroups.js';
+import { checkLock, registerLockGroup, resetLockGroups, retireLock, setLockOutOfOrder, setOverridesFile } from './lockGroups.js';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lock-out-of-order-'));
 const marksFile = path.join(dir, 'lock-out-of-order.json');
@@ -184,4 +184,34 @@ test('marking directly is idempotent', () => {
   markLockOutOfOrder(13, true);
   markLockOutOfOrder(13, true);
   assert.deepEqual(JSON.parse(fs.readFileSync(marksFile, 'utf-8')).outOfOrder, [13]);
+});
+
+test('checking a lock probes it at once, re-interviews it if silent, and pages', async () => {
+  const l = managedLock();
+  assert.deepEqual(checkLock(13, 0), { ok: true });
+  assert.equal(l.health.checking, true);
+  await settle();
+  assert.equal(l.health.checking, false);
+  assert.deepEqual(l.reads, [2, 2, 2]);
+  assert.equal(l.reinterviews(), 1);
+  assert.deepEqual(l.triggered, ['lock-13-unresponsive']);
+});
+
+test('checking a lock that answers records it heard and pages nothing', async () => {
+  const l = managedLock();
+  l.answer.value = { status: 0, code: '' };
+  checkLock(13, 0);
+  await settle();
+  assert.deepEqual(l.reads, [2]);
+  assert.deepEqual(l.triggered, []);
+  assert.notEqual(l.health.lastHeardAt, null);
+});
+
+test('checking an out-of-order lock, or one the daemon does not manage, is refused', async () => {
+  const l = managedLock();
+  setLockOutOfOrder(13, true);
+  assert.equal(checkLock(13, 0).ok, false);
+  assert.equal(checkLock(99, 0).ok, false);
+  await settle();
+  assert.deepEqual(l.reads, []);
 });

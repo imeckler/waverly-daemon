@@ -66,6 +66,12 @@ export function maskCode(code: string): string {
   return code.length <= 2 ? '**' : code.slice(0, 2) + '*'.repeat(code.length - 2);
 }
 
+const healthByNode = new WeakMap<ZWaveNode, LockHealth>();
+/** The health record of a managed lock, for reporting; undefined for a node no LockHealth watches. */
+export function healthOf(node: ZWaveNode): LockHealth | undefined {
+  return healthByNode.get(node);
+}
+
 export class LockHealth {
   /** Last time the lock answered a query or pushed a report; null since start. */
   lastHeardAt: number | null = null;
@@ -85,6 +91,7 @@ export class LockHealth {
     private readonly clock: () => number = () => Date.now(),
   ) {
     this.startedAt = clock();
+    healthByNode.set(lock, this);
     // Reports the lock pushes on its own (keypad events, low battery, ...) are
     // proof of life too. 'value updated' is deliberately not used: the driver
     // fires it for its own optimistic updates after our writes.
@@ -97,6 +104,9 @@ export class LockHealth {
   }
 
   now(): number { return this.clock(); }
+
+  /** Whether a liveness check (a probe or re-interview) of the lock is under way. */
+  get checking(): boolean { return checking.has(this); }
 
   /** Whether enough time has passed since the last re-interview to try another. */
   canHeal(now: number = this.clock()): boolean {
@@ -293,19 +303,19 @@ export function startLockWatchdog(locks: Probeable[] | (() => Probeable[]), opti
  * rather than probing a half-interviewed lock and starting a second interview.
  */
 export async function checkLiveness(lock: Probeable, force = false, retryDelayMs = PROBE_RETRY_DELAY_MS): Promise<void> {
-  if (checking.has(lock)) {
+  if (checking.has(lock.health)) {
     console.log(`${lock.health.describe()}: liveness check already under way; not starting another`);
     return;
   }
-  checking.add(lock);
+  checking.add(lock.health);
   try {
     await runLivenessCheck(lock, force, retryDelayMs);
   } finally {
-    checking.delete(lock);
+    checking.delete(lock.health);
   }
 }
 
-const checking = new WeakSet<Probeable>();
+const checking = new WeakSet<LockHealth>();
 
 async function runLivenessCheck(lock: Probeable, force: boolean, retryDelayMs: number): Promise<void> {
   const health = lock.health;

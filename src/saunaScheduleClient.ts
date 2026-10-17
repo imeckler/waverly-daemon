@@ -3,7 +3,7 @@ import { applyOperationalPlan, Booking, OperationalPlan, setSaunaOverride, getLi
 import { applySteamSchedule, setSteamOverride, SteamPeriod } from './steamController.js';
 import { getLockCodes, setLockCode, setLockAutoLock } from './lockRegistry.js';
 import { lockPairing } from './lockPairingRegistry.js';
-import { setLockOutOfOrder } from './lockGroups.js';
+import { setLockOutOfOrder, checkLock } from './lockGroups.js';
 import {
   ServerToDaemonMessage,
   DaemonToServerMessage,
@@ -12,6 +12,7 @@ import {
   GetLockCodesRequest,
   SetLockCodeRequest,
   SetLockOutOfOrderRequest,
+  CheckLockRequest,
   SetLockAutoLockRequest,
   GetLightsRequest,
   SetLightsRequest,
@@ -167,6 +168,9 @@ export class SaunaScheduleClient {
       case 'setLockAutoLock':
         void this.handleSetLockAutoLock(message);
         break;
+      case 'checkLock':
+        this.handleCheckLock(message);
+        break;
       case 'getLights':
         void this.handleGetLights(message);
         break;
@@ -236,6 +240,13 @@ export class SaunaScheduleClient {
       ok: result.ok,
       error: result.error,
     });
+  }
+
+  private handleCheckLock(message: CheckLockRequest): void {
+    console.log(`Lock check request: node ${message.nodeId}`);
+    const result = checkLock(message.nodeId);
+    if (!result.ok) console.error(`Checking node ${message.nodeId} refused: ${result.error}`);
+    this.send({ kind: 'checkLockResult', requestId: message.requestId, ok: result.ok, error: result.error });
   }
 
   private async handleSetLockAutoLock(message: SetLockAutoLockRequest): Promise<void> {

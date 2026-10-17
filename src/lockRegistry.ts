@@ -3,6 +3,7 @@ import { setValueOk, describeSetValue, readSlotFromLock, confirmsCode, describeR
 import { userCodeSlots, userCodeValueId, userIdStatusValueId } from './lockSlots';
 import { describeSecurityClass } from './lockPairing';
 import { isLockOutOfOrder } from './lockOutOfOrder';
+import { healthOf } from './lockHealth';
 import { LockBattery, LockCodes, LockSlot } from '@waverly/sauna-protocol';
 
 // Shared registry of the lock nodes the daemon controls. index.ts populates it
@@ -51,6 +52,7 @@ export function getLockCodes(): LockCodes[] {
       };
     });
 
+    const health = healthOf(node);
     result.push({
       nodeId: node.id,
       status: node.status === undefined ? 'unknown' : String(node.status),
@@ -61,6 +63,8 @@ export function getLockCodes(): LockCodes[] {
       battery: batteryOf(node),
       outOfOrder: isLockOutOfOrder(node.id),
       autoLock: autoLockOf(node),
+      lastHeardAt: health?.lastHeardAt == null ? null : new Date(health.lastHeardAt).toISOString(),
+      checking: health?.checking ?? false,
     });
   }
   return result;

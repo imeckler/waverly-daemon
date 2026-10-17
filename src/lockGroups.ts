@@ -149,6 +149,21 @@ export function setLockOutOfOrder(
 }
 
 /**
+ * Check a managed lock now, as the watchdog would at its next tick: for
+ * whoever has just changed its batteries. Returns once the check is under
+ * way; getLockCodes shows how it goes. A lock marked out of order is refused,
+ * since putting it back in service is what probes it.
+ */
+export function checkLock(nodeId: number, retryDelayMs?: number): { ok: boolean; error?: string } {
+  const manager = allLockManagers().find(m => m.lock.id === nodeId);
+  if (!manager) return { ok: false, error: `Lock node ${nodeId} is not managed by this daemon` };
+  if (isLockOutOfOrder(nodeId)) return { ok: false, error: `Lock node ${nodeId} is marked out of order; put it back in service to probe it` };
+  checkLiveness(manager, true, retryDelayMs)
+    .catch(e => console.error(`${manager.health.describe()}: liveness check failed:`, e));
+  return { ok: true };
+}
+
+/**
  * Take a freshly included lock on for a server. If it replaces another lock
  * that is still managed, that one is retired first. The server's booking
  * socket is reconnected so the server resends every live access grant, which
