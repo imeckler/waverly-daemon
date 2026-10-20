@@ -1,5 +1,5 @@
 import { IntervalTree } from 'node-interval-tree';
-import { ValueID, ZWaveNode, SetValueStatus, InterviewStage } from 'zwave-js';
+import { ZWaveNode, SetValueStatus, InterviewStage } from 'zwave-js';
 import { ScheduledTask } from './scheduledTask';
 import { Result, Err, Ok } from './lib/util';
 import { BookingWebSocketClient } from './bookingWebSocketClient';
@@ -14,8 +14,7 @@ interface CodeInterval {
   startEvent: ScheduledTask,
   stopEvent: ScheduledTask,
 };
-type CodeSlot = { value: ValueID, status: ValueID };
-type AllocatedSlot = { slot: CodeSlot, slotIndex: number, count: number };
+type AllocatedSlot = { slotNo: number, count: number };
 
 /** What the lock says a slot holds, in answer to a User Code Get. */
 export type SlotReading = { status: number | undefined, code: string | undefined };
@@ -96,9 +95,6 @@ export class LockManager implements Probeable, BatteryRefreshable {
   lock: ZWaveNode;
   health: LockHealth;
   tree: IntervalTree<CodeInterval>;
-  userCodeSlots: Array<CodeSlot>;
-  // These are indices into the userCodeIds array. The 
-  availableSlots: Set<number>;
   // ref-counting to handle overlapping intervals with the same code
   codeToSlot: Map<string, AllocatedSlot>;
   private readonly readSlot: (slotNo: number) => Promise<SlotReading | undefined>;
@@ -116,16 +112,24 @@ export class LockManager implements Probeable, BatteryRefreshable {
     this.healCheckDelayMs = options.healCheckDelayMs ?? HEAL_CHECK_DELAY_MS;
     this.tree = new IntervalTree();
     this.codeToSlot = new Map();
-    // Slot 1 is reserved (left to a code programmed by hand); slot 0 means
-    // every code at once and is not a slot.
-    this.userCodeSlots = userCodeSlots(lock)
-      .filter(slot => slot !== 1)
-      .map(slot => ({ value: userCodeValueId(slot), status: userIdStatusValueId(slot) }));
+  }
 
-    this.availableSlots = new Set();
-    for (let i = 0; i < this.userCodeSlots.length; ++i) {
-      this.availableSlots.add(i);
-    }
+  /**
+   * The slots the daemon may use, as the driver knows them now. This reads
+   * the driver's cache, not the lock, so it is free to ask every time — and
+   * it must be asked every time: the driver forgets a lock whose re-interview
+   * fails, and a daemon restarted meanwhile sees no slots at all until the
+   * next re-interview succeeds. A list taken once at construction stayed
+   * empty for good (lock 15, 2026-10-17). Slot 1 is reserved (left to a code
+   * programmed by hand); slot 0 means every code at once and is not a slot.
+   */
+  private managedSlots(): number[] {
+    return userCodeSlots(this.lock).filter(slot => slot !== 1);
+  }
+
+  private freeSlot(): number | undefined {
+    const used = new Set([...this.codeToSlot.values()].map(r => r.slotNo));
+    return this.managedSlots().find(slot => !used.has(slot));
   }
 
   /**
@@ -232,11 +236,14 @@ export class LockManager implements Probeable, BatteryRefreshable {
       console.log(`${this.health.describe()}: interview incomplete; cannot probe until it is re-interviewed`);
       return false;
     }
-    const slot = this.userCodeSlots[0];
-    if (!slot) return false;
+    const slotNo = this.managedSlots()[0];
+    if (slotNo === undefined) {
+      console.log(`${this.health.describe()}: the driver knows no user-code slots for it; cannot probe until it is re-interviewed`);
+      return false;
+    }
     let reading: SlotReading | undefined;
     try {
-      reading = await this.readSlot(slot.value.propertyKey as number);
+      reading = await this.readSlot(slotNo);
     } catch (e) {
       console.error(`Lock ${this.lock.id}: probe failed:`, e);
       reading = undefined;
@@ -267,7 +274,26 @@ export class LockManager implements Probeable, BatteryRefreshable {
     console.log(`${this.health.describe()}: re-interview ${outcome}`);
     if (outcome !== 'interview failed') this.health.lastHealAt = this.health.now();
     if (outcome !== 'ready') return false;
-    return this.probe();
+    if (!await this.probe()) return false;
+    await this.reapplyAccess();
+    return true;
+  }
+
+  /**
+   * Write the code of every access interval that is under way but holds no
+   * slot. A start that fired while the driver knew no slots for the lock was
+   * refused; now that the lock is back and interviewed, it gets its code.
+   * One call per interval keeps the ref-count right for a code with two
+   * overlapping intervals.
+   */
+  private async reapplyAccess(): Promise<void> {
+    const refused = [...this.tree.inOrder()].filter(i =>
+      i.startEvent.finalState === 'occurred' && i.stopEvent.finalState === undefined && !this.codeToSlot.has(i.code));
+    for (const { code } of refused) {
+      console.log(`Lock ${this.lock.id}: writing code ${code}, refused while the lock had no slots`);
+      const r = await this.allocateCodeSlot(code);
+      if (r.ok === false) console.error(`Failed to write code ${code} to lock ${this.lock.id}: ${r.error}`);
+    }
   }
 
   /**
@@ -291,10 +317,9 @@ export class LockManager implements Probeable, BatteryRefreshable {
       r.count -= 1;
       if (r.count <= 0) {
         this.codeToSlot.delete(code)
-        this.availableSlots.add(r.slotIndex);
-        const slotNo = r.slot.status.propertyKey as number;
+        const slotNo = r.slotNo;
         this.health.recordCommand();
-        const result = await this.lock.setValue(r.slot.status, CODE_AVAILABLE);
+        const result = await this.lock.setValue(userIdStatusValueId(slotNo), CODE_AVAILABLE);
         if (!setValueOk(result)) {
           console.error(`Lock ${this.lock.id} slot ${slotNo}: failed to CLEAR code ${code} — ${describeSetValue(result)}`);
           return;
@@ -325,18 +350,19 @@ export class LockManager implements Probeable, BatteryRefreshable {
     let r = this.codeToSlot.get(code);
 
     if (r == undefined) {
-      const i = popSet(this.availableSlots);
-      if (i == undefined) {
-        return Err('No available slot');
-      } else {
-        r = { slotIndex: i, count: 1, slot: this.userCodeSlots[i] };
-        this.codeToSlot.set(code, r);
+      const slotNo = this.freeSlot();
+      if (slotNo == undefined) {
+        return Err(this.managedSlots().length === 0
+          ? 'The driver knows no user-code slots for this lock; it needs a re-interview'
+          : 'No available slot');
       }
+      r = { slotNo, count: 1 };
+      this.codeToSlot.set(code, r);
     } else {
       r.count += 1;
     }
 
-    const slotNo = r.slot.value.propertyKey as number;
+    const slotNo = r.slotNo;
 
     // Writing the userCode value sends a complete UserCodeCC.Set (status=Enabled
     // + the code) in a single command. Do NOT separately enable the slot first:
@@ -352,7 +378,7 @@ export class LockManager implements Probeable, BatteryRefreshable {
     let reading: SlotReading | undefined;
     for (let attempt = 1; attempt <= 2; attempt++) {
       this.health.recordCommand();
-      const codeResult = await this.lock.setValue(r.slot.value, code);
+      const codeResult = await this.lock.setValue(userCodeValueId(slotNo), code);
       if (!setValueOk(codeResult)) {
         return Err(`Lock ${this.lock.id} slot ${slotNo}: setValue rejected — code=${describeSetValue(codeResult)}`);
       }
@@ -490,12 +516,4 @@ export function setValueOk(result: SetValueResult): boolean {
 export function describeSetValue(result: SetValueResult): string {
   const name = SetValueStatus[result.status] ?? `status ${result.status}`;
   return result.message ? `${name} (${result.message})` : name;
-}
-
-function popSet<A>(set: Set<A>): A | undefined {
-  for (const value of set) {
-    set.delete(value);
-    return value;
-  }
-  return undefined;
 }

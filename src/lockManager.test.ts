@@ -26,7 +26,7 @@ function fakeLock(slotCount = 3) {
     on: (ev: string, fn: () => void) => { (events[ev] ??= []).push(fn); },
     off: () => {},
   };
-  return { lock: lock as any, writes, events };
+  return { lock: lock as any, writes, events, ids };
 }
 
 function fakeNotifier() {
@@ -352,4 +352,44 @@ test('a notification pushed by the lock counts as being heard', async () => {
   clock.advance(1234);
   for (const fn of events['notification']) fn();
   assert.equal(health.lastHeardAt, clock.now());
+});
+
+test('a manager built while the driver knew nothing about the lock finds its slots after a re-interview and writes the codes refused meanwhile', async () => {
+  // The lock's last re-interview failed, so the driver has no slots for it,
+  // and the daemon has just restarted (lock 15, 2026-10-17).
+  const { lock, writes, ids } = fakeLock(0);
+  lock.interviewStage = InterviewStage.ProtocolInfo;
+  const { notifier, triggered } = fakeNotifier();
+  const clock = fakeClock();
+  const health = new LockHealth(lock, notifier, clock.now);
+  let answer: SlotReading | undefined = undefined;
+  const { readSlot, reads } = readsFrom(() => answer);
+  const reinterview = async () => {
+    lock.interviewStage = InterviewStage.Complete;
+    ids.push({ commandClass: 99, endpoint: 0, property: 'userCode', propertyName: 'userCode', propertyKey: 2 });
+    answer = { status: 1, code: '913790' };
+    return 'ready' as const;
+  };
+  const m = new LockManager(lock, { health, readSlot, reinterview });
+
+  // An access interval already under way is refused: there is no slot to put its code in.
+  const now = Date.now();
+  assert.equal(m.addAccessInterval('913790', [new Date(now - 1000), new Date(now + 60 * 60 * 1000)]).ok, true);
+  await flush();
+  assert.deepEqual(writes, []);
+  assert.deepEqual(reads, []);
+
+  // The watchdog cannot probe a lock without slots, re-interviews it, and
+  // once it is back writes the code.
+  await checkLiveness(m, true, 0);
+  await flush();
+  assert.deepEqual(writes, [{ property: 'userCode', slot: 2, value: '913790' }]);
+  assert.deepEqual(reads, [2, 2]);
+  assert.equal(triggered.length, 0);
+  assert.equal(health.lastHeardAt, clock.now());
+
+  // The interval's end clears the slot it was finally given.
+  await m.freeCodeSlot('913790');
+  assert.deepEqual(writes[1], { property: 'userIdStatus', slot: 2, value: 0 });
+  m.retire();
 });
