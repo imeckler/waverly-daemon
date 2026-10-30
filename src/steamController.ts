@@ -28,6 +28,7 @@
 
 import { ToloClient, ToloCommunicationError } from './tolo/index.js';
 import { FanCooldownLimits, FanCooldownState, newFanCooldown, withReading, stopReason } from './fanCooldown.js';
+import { heaterOnOrDue, HEATER_DUE_WINDOW_MS } from './alertUrgency.js';
 
 // Structurally compatible with shellyController's SaunaStatus so it can be dropped
 // straight into the status report posted to the server.
@@ -144,6 +145,16 @@ export function applySteamSchedule(periods: SteamPeriod[], planDate: string): vo
 /** Whether the plan wants the room powered at `now`. */
 function scheduledOn(now: number): boolean {
   return schedule.some(p => now >= p.start.getTime() && now < p.stop.getTime());
+}
+
+/**
+ * Whether the steam room is on, or due on within `windowMs`: the observed power
+ * state, an 'on' override, or a plan period in progress or about to start.
+ * Decides how urgently a TOLO fault pages (see alertUrgency).
+ */
+export function steamOnOrDue(now: number, on: boolean, windowMs = HEATER_DUE_WINDOW_MS): boolean {
+  if (on || steamOverride === 'on') return true;
+  return heaterOnOrDue(schedule, now, false, windowMs);
 }
 
 function expireOverrideIfNeeded(): void {

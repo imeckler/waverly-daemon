@@ -1,7 +1,8 @@
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 import { triggerIncident, resolveIncident } from './pagerduty.js';
-import { getSteamStatus } from './steamController.js';
+import { getSteamStatus, steamOnOrDue } from './steamController.js';
+import { heaterOnOrDue, linkFaultSeverity, dedupKeyFor, dedupKeysFor, localNetworkOutage, Severity } from './alertUrgency.js';
 import { ScheduledTask } from './scheduledTask.js';
 import { blinkSwitch } from './blink.js';
 import { FanCooldownState, FanCooldownLimits, newFanCooldown, withReading, stopReason } from './fanCooldown.js';
@@ -1436,18 +1437,19 @@ async function applyLightsFanSchedule(
 
 // --- Status + temperature monitoring ---
 
+// Throws when the device cannot be reached; the caller marks it unreachable.
+// Swallowing the error here made every network failure look like a reachable
+// device with no sensor, which paged "no temperature reading" and "script
+// down" (both meant for a device that answers) instead of the debounced
+// unreachable alert, and let the heartbeat counter run through outages.
 async function getHeaterStatus(ip: string | string[]): Promise<{ on: boolean; temperatureF: number | null; powerW: number | null }> {
-  try {
-    const status = await shellyRpc(ip, 'Shelly.GetStatus');
-    const apower = status['switch:0']?.apower;
-    return {
-      on: status['switch:0']?.output ?? false,
-      temperatureF: status['temperature:100']?.tF ?? null,
-      powerW: typeof apower === 'number' ? apower : null,
-    };
-  } catch {
-    return { on: false, temperatureF: null, powerW: null };
-  }
+  const status = await shellyRpc(ip, 'Shelly.GetStatus');
+  const apower = status['switch:0']?.apower;
+  return {
+    on: status['switch:0']?.output ?? false,
+    temperatureF: status['temperature:100']?.tF ?? null,
+    powerW: typeof apower === 'number' ? apower : null,
+  };
 }
 
 function checkOverheatFromStatus(name: string, ip: string | string[], temperatureF: number | null): void {
@@ -1476,6 +1478,36 @@ function checkOverheatFromStatus(name: string, ip: string | string[], temperatur
 // --- Threshold-based alerting helpers ---
 
 /**
+ * Send a trigger under the dedup key for its urgency tier (see alertUrgency).
+ * A high-urgency trigger also resolves the low-urgency incident for the same
+ * fault, if one is open, so an escalation replaces the quiet incident rather
+ * than sitting beside it.
+ */
+async function sendTrigger(summary: string, severity: Severity, dedupKey: string): Promise<void> {
+  try {
+    const key = dedupKeyFor(dedupKey, severity);
+    await triggerIncident(summary, severity, key);
+    const low = dedupKeyFor(dedupKey, 'warning');
+    if (low === key) {
+      lowKeysOpened.add(low);
+    } else {
+      lowKeysOpened.delete(low);
+      await resolveIncident(low);
+    }
+  } catch (e) {
+    console.error(`[monitor] Failed to trigger PagerDuty:`, e);
+  }
+}
+
+// Low-urgency dedup keys this process has triggered. The bare key is resolved
+// every clear cycle as it always was (which also clears incidents an earlier
+// process left open); the low key is only resolved where an incident may be
+// open, so the split doesn't double the PagerDuty traffic. Low incidents left
+// by an earlier process are swept once, on the first monitor cycle.
+const lowKeysOpened = new Set<string>();
+let lowKeySweepDone = false;
+
+/**
  * Bump a failure counter. Once it crosses the threshold, send a trigger every cycle —
  * PagerDuty dedupes by dedup_key, so this is cheap. If someone resolves the incident
  * out-of-band while the condition still holds, the next trigger reopens it.
@@ -1494,11 +1526,7 @@ async function alertIfThreshold(
     if (count === threshold) {
       console.error(`[monitor] ALERT: ${summary}`);
     }
-    try {
-      await triggerIncident(summary, severity, dedupKey);
-    } catch (e) {
-      console.error(`[monitor] Failed to trigger PagerDuty:`, e);
-    }
+    await sendTrigger(summary, severity, dedupKey);
   }
 }
 
@@ -1531,11 +1559,7 @@ async function alertIfPersistent(
       state.alerted = true;
       console.error(`[monitor] ALERT: ${summary}`);
     }
-    try {
-      await triggerIncident(summary, severity, dedupKey);
-    } catch (e) {
-      console.error(`[monitor] Failed to trigger PagerDuty:`, e);
-    }
+    await sendTrigger(summary, severity, dedupKey);
   }
 }
 
@@ -1546,10 +1570,14 @@ async function alertIfPersistent(
 async function resolveIfClear(key: string, dedupKey: string): Promise<void> {
   failCounts.delete(key);
   faultFirstSeen.delete(key);
-  try {
-    await resolveIncident(dedupKey);
-  } catch (e) {
-    console.error(`[monitor] Failed to resolve PagerDuty:`, e);
+  const [bare, low] = dedupKeysFor(dedupKey);
+  const keys = !lowKeySweepDone || lowKeysOpened.delete(low) ? [bare, low] : [bare];
+  for (const k of keys) {
+    try {
+      await resolveIncident(k);
+    } catch (e) {
+      console.error(`[monitor] Failed to resolve PagerDuty:`, e);
+    }
   }
 }
 
@@ -1673,6 +1701,9 @@ function checkSaunaHealth(
   planSlots: Slot[],
 ): void {
   const id = name.toLowerCase();
+  // Connectivity faults page loudly only while this heater is on or due
+  // (alertUrgency); the safety checks further down keep their own severities.
+  const linkSeverity = linkFaultSeverity(heaterOnOrDue(planSlots, Date.now(), status.on));
 
   // Always record temp so checks have history available regardless of branch taken below
   if (status.reachable && status.temperatureF !== null) {
@@ -1684,7 +1715,7 @@ function checkSaunaHealth(
     alertIfPersistent(
       `unreachable-${id}`,
       `${name} sauna Shelly device is unreachable`,
-      'critical',
+      linkSeverity,
       `sauna-unreachable-${id}`,
     );
   } else {
@@ -1696,7 +1727,7 @@ function checkSaunaHealth(
     alertIfThreshold(
       `no-temp-${id}`,
       `${name} sauna has no temperature reading (sensor may be disconnected)`,
-      'error',
+      linkSeverity,
       `sauna-no-temp-${id}`,
     );
   } else {
@@ -1812,6 +1843,7 @@ async function checkHeartbeatHealth(
   ip: string | string[],
   heartbeatOk: boolean,
   status: { on: boolean; reachable: boolean },
+  planSlots: Slot[],
 ): Promise<void> {
   const id = name.toLowerCase();
   const key = `heartbeat-${id}`;
@@ -1852,15 +1884,13 @@ async function checkHeartbeatHealth(
     if (count === ALERT_THRESHOLD_CYCLES) {
       console.error(`[monitor] ALERT: ${name} sauna temp-monitor script down (no heartbeat)`);
     }
-    try {
-      await triggerIncident(
-        `${name} sauna temperature-monitor script is down (no heartbeat) — heater has no on-device watchdog`,
-        'critical',
-        dedupKey,
-      );
-    } catch (e) {
-      console.error(`[monitor] Failed to trigger PagerDuty:`, e);
-    }
+    // The relay was forced off above, so with nothing due this is a repair for
+    // the morning; with the heater on or due it is a watchdog gap, and urgent.
+    await sendTrigger(
+      `${name} sauna temperature-monitor script is down (no heartbeat) — heater has no on-device watchdog`,
+      linkFaultSeverity(heaterOnOrDue(planSlots, Date.now(), status.on)),
+      dedupKey,
+    );
   }
 
   if (planApplyInProgress) return;
@@ -1903,10 +1933,9 @@ async function checkHeartbeatHealth(
   });
 }
 
-export async function getAllSaunaStatus(): Promise<{
-  small: { on: boolean; temperatureF: number | null; powerW: number | null; reachable: boolean };
-  big: { on: boolean; temperatureF: number | null; powerW: number | null; reachable: boolean };
-}> {
+type HeaterStatus = { on: boolean; temperatureF: number | null; powerW: number | null; reachable: boolean };
+
+async function fetchAllHeaterStatus(): Promise<{ small: HeaterStatus; big: HeaterStatus }> {
   const [small, big] = await Promise.all([
     getHeaterStatus(config.small_sauna_heater_ip)
       .then(s => ({ ...s, reachable: true }))
@@ -1915,15 +1944,19 @@ export async function getAllSaunaStatus(): Promise<{
       .then(s => ({ ...s, reachable: true }))
       .catch(() => ({ on: false, temperatureF: null, powerW: null, reachable: false })),
   ]);
+  return { small, big };
+}
 
+function checkAllSaunaHealth({ small, big }: { small: HeaterStatus; big: HeaterStatus }): void {
   checkOverheatFromStatus('Small', config.small_sauna_heater_ip, small.temperatureF);
   checkOverheatFromStatus('Big', config.big_sauna_heater_ip, big.temperatureF);
 
   checkSaunaHealth('Small', config.small_sauna_heater_ip, small, currentPlan?.small ?? []);
   checkSaunaHealth('Big', config.big_sauna_heater_ip, big, currentPlan?.big ?? []);
-
-  return { small, big };
 }
+
+// Whether the last monitor cycle found the Pi itself offline (logged on transitions).
+let localOutage = false;
 
 type SaunaStatus = {
   on: boolean;
@@ -1980,34 +2013,60 @@ async function pingAllHeartbeats(): Promise<{ small: boolean; big: boolean }> {
   return { small, big };
 }
 
-export function startTemperatureMonitor(): void {
+/**
+ * @param serverConnected whether the booking-server websocket is open right
+ *   now. When every device is unreachable in the same cycle, this is what
+ *   separates "the Pi lost its network" from "the devices lost theirs".
+ */
+export function startTemperatureMonitor(serverConnected: () => boolean): void {
   if (tempMonitorInterval) return;
   const alertTemp = config.temperature_threshold + OVERHEAT_MARGIN_F;
   console.log(`Starting temperature monitor (every ${TEMP_CHECK_INTERVAL_MS / 1000}s, alert at ${alertTemp}°F)`);
   tempMonitorInterval = setInterval(async () => {
     const heartbeats = await pingAllHeartbeats();
-    const status = await getAllSaunaStatus();
+    const status = await fetchAllHeaterStatus();
+    // The steam room (TOLO unit) has no on-device script; its status/override are
+    // tracked by steamController. Omitted from the report when not configured.
+    const steam = await getSteamStatus();
+
+    // With the Pi's own network down nothing here is observable, and the
+    // booking server's dead-man's switch already pages for a Pi gone dark.
+    // Suspend the device alerts and drop partial fault history, so the first
+    // cycles after the link returns start clean instead of paging, in a
+    // burst, about the outage itself.
+    const outage = localNetworkOutage([status.small, status.big, ...(steam ? [steam] : [])], serverConnected());
+    if (outage !== localOutage) {
+      localOutage = outage;
+      console.warn(outage
+        ? '[monitor] every device and the booking server are unreachable — local network outage, device alerts suspended'
+        : '[monitor] network is back — device alerts resumed');
+    }
+    if (outage) {
+      failCounts.clear();
+      faultFirstSeen.clear();
+    } else {
+      checkAllSaunaHealth(status);
+    }
+
     // Isolated so a failure here can't skip the status report below.
     await Promise.all([
-      checkHeartbeatHealth('Small', config.small_sauna_heater_ip, heartbeats.small, status.small)
+      outage ? Promise.resolve() : checkHeartbeatHealth('Small', config.small_sauna_heater_ip, heartbeats.small, status.small, currentPlan?.small ?? [])
         .catch(e => console.error('[monitor] Small heartbeat health check failed:', e)),
-      checkHeartbeatHealth('Big', config.big_sauna_heater_ip, heartbeats.big, status.big)
+      outage ? Promise.resolve() : checkHeartbeatHealth('Big', config.big_sauna_heater_ip, heartbeats.big, status.big, currentPlan?.big ?? [])
         .catch(e => console.error('[monitor] Big heartbeat health check failed:', e)),
       updateFanCooldown('Small', status.small, currentPlan?.small ?? [])
         .catch(e => console.error('[monitor] Small fan cooldown update failed:', e)),
       updateFanCooldown('Big', status.big, currentPlan?.big ?? [])
         .catch(e => console.error('[monitor] Big fan cooldown update failed:', e)),
     ]);
+    if (!outage) lowKeySweepDone = true;
     const [smallManualReset, bigManualReset, smallOverride, bigOverride] = await Promise.all([
       getManualResetRequired(config.small_sauna_heater_ip),
       getManualResetRequired(config.big_sauna_heater_ip),
       getOverrideState(config.small_sauna_heater_ip),
       getOverrideState(config.big_sauna_heater_ip),
     ]);
-    // The steam room (TOLO unit) has no on-device script; its status/override are
-    // tracked by steamController. Omitted from the report when not configured.
-    const steam = await getSteamStatus();
-    if (steam) {
+    if (steam && !outage) {
       await checkSteamReachable(steam).catch(e => console.error('[monitor] Steam reachability check failed:', e));
     }
     await reportStatusToServer({
@@ -2039,7 +2098,7 @@ async function checkSteamReachable(steam: SaunaStatus): Promise<void> {
     await alertIfPersistent(
       'unreachable-steam',
       'Steam room TOLO unit is unreachable',
-      'error',
+      linkFaultSeverity(steamOnOrDue(Date.now(), steam.on)),
       'sauna-unreachable-steam',
     );
   } else {

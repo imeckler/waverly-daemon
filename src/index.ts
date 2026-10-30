@@ -168,9 +168,10 @@ try {
   const shellyConfig = daemonConfig.shelly;
   if (shellyConfig && shellyConfig.sauna_server_url) {
     console.log(`Initializing sauna schedule client for ${shellyConfig.sauna_server_url}...`);
-    saunaScheduleClient = new SaunaScheduleClient(shellyConfig.sauna_server_url);
-    saunaScheduleClient.connect();
-    startTemperatureMonitor();
+    const scheduleClient = new SaunaScheduleClient(shellyConfig.sauna_server_url);
+    saunaScheduleClient = scheduleClient;
+    scheduleClient.connect();
+    startTemperatureMonitor(() => scheduleClient.getConnectionStatus());
     startManualResetMonitor();
     deployTemperatureMonitors().catch(e => console.error('Failed to deploy temperature monitors:', e));
     if (shellyConfig.tolo_ip) {
