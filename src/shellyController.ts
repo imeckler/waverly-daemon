@@ -5,6 +5,7 @@ import { getSteamStatus, steamOnOrDue } from './steamController.js';
 import { heaterOnOrDue, linkFaultSeverity, dedupKeyFor, dedupKeysFor, localNetworkOutage, Severity } from './alertUrgency.js';
 import { ScheduledTask } from './scheduledTask.js';
 import { blinkSwitch } from './blink.js';
+import { cronTimespec } from './cronTimespec.js';
 import { FanCooldownState, FanCooldownLimits, newFanCooldown, withReading, stopReason } from './fanCooldown.js';
 
 const RPC_TIMEOUT_MS = 10_000;
@@ -474,8 +475,8 @@ async function setKVS(ip: string | string[], key: string, value: any): Promise<v
   await shellyRpc(ip, 'KVS.Set', { key, value });
 }
 
-async function scheduleSetFlag(ip: string | string[], time: Date, shouldBeOn: boolean, utcOffset: number): Promise<void> {
-  const ts = formatCronWithOffset(time, utcOffset);
+async function scheduleSetFlag(ip: string | string[], time: Date, shouldBeOn: boolean): Promise<void> {
+  const ts = cronTimespec(time, await deviceTimeZone(ip));
   console.log(`Scheduling ${ip} to set should_be_on=${shouldBeOn} at ${time.toISOString()} (device: ${ts})`);
   await shellyRpc(ip, 'Schedule.Create', {
     enable: true,
@@ -484,8 +485,8 @@ async function scheduleSetFlag(ip: string | string[], time: Date, shouldBeOn: bo
   });
 }
 
-async function scheduleSwitch(ip: string, switchId: number, time: Date, on: boolean, utcOffset: number): Promise<void> {
-  const ts = formatCronWithOffset(time, utcOffset);
+async function scheduleSwitch(ip: string, switchId: number, time: Date, on: boolean): Promise<void> {
+  const ts = cronTimespec(time, await deviceTimeZone(ip));
   console.log(`Scheduling switch ${switchId} on ${ip} to ${on ? 'ON' : 'OFF'} at ${time.toISOString()} (device: ${ts})`);
   await shellyRpc(ip, 'Schedule.Create', {
     enable: true,
@@ -494,30 +495,13 @@ async function scheduleSwitch(ip: string, switchId: number, time: Date, on: bool
   });
 }
 
-/**
- * Shelly schedules use device local time. Query the UTC offset from a device,
- * cache it, and use it to convert UTC dates to device-local timespecs.
- */
-let deviceUtcOffsetSeconds: number | null = null;
-
-async function getDeviceUtcOffset(): Promise<number> {
-  if (deviceUtcOffsetSeconds !== null) return deviceUtcOffsetSeconds;
-  try {
-    const status = await shellyRpc(config.small_sauna_heater_ip, 'Shelly.GetStatus');
-    deviceUtcOffsetSeconds = status.sys?.utc_offset ?? -25200;
-  } catch {
-    deviceUtcOffsetSeconds = -25200; // default to UTC-7
-  }
-  return deviceUtcOffsetSeconds!;
-}
-
-function formatCronWithOffset(date: Date, utcOffsetSeconds: number): string {
-  const local = new Date(date.getTime() + utcOffsetSeconds * 1000);
-  const minutes = local.getUTCMinutes();
-  const hours = local.getUTCHours();
-  const day = local.getUTCDate();
-  const month = local.getUTCMonth() + 1;
-  return `0 ${minutes} ${hours} ${day} ${month} *`;
+// Shelly schedules fire on the device's local clock, so each timespec is built in
+// the zone of the device that will run it. Read fresh every time: a value held
+// across a DST change put every schedule an hour off (2026-11-01).
+async function deviceTimeZone(ip: string | string[]): Promise<string> {
+  const tz = (await shellyRpc(ip, 'Sys.GetConfig')).location?.tz;
+  if (typeof tz !== 'string' || !tz) throw new Error(`Shelly ${ip} has no timezone configured`);
+  return tz;
 }
 
 // --- Temperature monitoring script (deployed to device) ---
@@ -1252,7 +1236,6 @@ async function applyOperationalPlanInner(
 
   await clearAllSchedulesAndScripts();
 
-  const utcOffset = await getDeviceUtcOffset();
   const smallBookings = bookings.filter(b => b.unitId === 1);
   const bigBookings = bookings.filter(b => b.unitId === 2);
 
@@ -1261,7 +1244,7 @@ async function applyOperationalPlanInner(
   const phases: Array<{ name: string; run: () => Promise<void> }> = [
     {
       name: 'Small heater',
-      run: () => applyHeaterSchedule(config.small_sauna_heater_ip, plan.small, 'Small', utcOffset),
+      run: () => applyHeaterSchedule(config.small_sauna_heater_ip, plan.small, 'Small'),
     },
     {
       name: 'Small lights/fan',
@@ -1272,12 +1255,11 @@ async function applyOperationalPlanInner(
         plan.small,
         smallBookings,
         'Small',
-        utcOffset,
       ),
     },
     {
       name: 'Big heater',
-      run: () => applyHeaterSchedule(config.big_sauna_heater_ip, plan.big, 'Big', utcOffset),
+      run: () => applyHeaterSchedule(config.big_sauna_heater_ip, plan.big, 'Big'),
     },
     {
       name: 'Big lights/fan',
@@ -1288,7 +1270,6 @@ async function applyOperationalPlanInner(
         plan.big,
         bigBookings,
         'Big',
-        utcOffset,
       ),
     },
   ];
@@ -1315,8 +1296,7 @@ async function applyOperationalPlanInner(
 async function applyHeaterSchedule(
   heaterIp: string | string[],
   heaterSlots: Slot[],
-  saunaName: string,
-  utcOffset: number
+  saunaName: string
 ): Promise<void> {
   console.log(`Applying ${saunaName} heater schedule with ${heaterSlots.length} heater slots`);
 
@@ -1337,10 +1317,10 @@ async function applyHeaterSchedule(
 
   for (const slot of heaterSlots) {
     if (slot.start > now) {
-      await scheduleSetFlag(heaterIp, slot.start, true, utcOffset);
+      await scheduleSetFlag(heaterIp, slot.start, true);
     }
     if (slot.stop > now) {
-      await scheduleSetFlag(heaterIp, slot.stop, false, utcOffset);
+      await scheduleSetFlag(heaterIp, slot.stop, false);
     }
   }
 
@@ -1353,8 +1333,7 @@ async function applyLightsFanSchedule(
   fanSwitchId: number,
   heaterSlots: Slot[],
   bookings: Booking[],
-  saunaName: SaunaName,
-  utcOffset: number
+  saunaName: SaunaName
 ): Promise<void> {
   console.log(`Applying ${saunaName} lights/fan schedule with ${bookings.length} bookings`);
 
@@ -1375,10 +1354,10 @@ async function applyLightsFanSchedule(
 
   for (const period of mergedBookings) {
     if (period.start > now) {
-      await scheduleSwitch(lightsFanIp, lightsSwitchId, period.start, true, utcOffset);
+      await scheduleSwitch(lightsFanIp, lightsSwitchId, period.start, true);
     }
     if (period.stop > now) {
-      await scheduleSwitch(lightsFanIp, lightsSwitchId, period.stop, false, utcOffset);
+      await scheduleSwitch(lightsFanIp, lightsSwitchId, period.stop, false);
     }
   }
 
@@ -1409,7 +1388,7 @@ async function applyLightsFanSchedule(
       if (now >= period.start && now < period.stop) {
         await setSwitch(lightsFanIp, fanSwitchId, true);
       } else if (period.start > now) {
-        await scheduleSwitch(lightsFanIp, fanSwitchId, period.start, true, utcOffset);
+        await scheduleSwitch(lightsFanIp, fanSwitchId, period.start, true);
       }
     }
 
@@ -1421,7 +1400,7 @@ async function applyLightsFanSchedule(
     }
     const fanOffTime = new Date(Math.max(capMs, heaterSlot.stop.getTime()));
     if (fanOffTime > now) {
-      await scheduleSwitch(lightsFanIp, fanSwitchId, fanOffTime, false, utcOffset);
+      await scheduleSwitch(lightsFanIp, fanSwitchId, fanOffTime, false);
     }
 
     // No cooldown when the next slot follows right behind this one.
@@ -1923,7 +1902,7 @@ async function checkHeartbeatHealth(
       }
       const slots = (name === 'Small' ? currentPlan?.small : currentPlan?.big) ?? [];
       await clearSchedules(ip);
-      await applyHeaterSchedule(ip, slots, name, await getDeviceUtcOffset());
+      await applyHeaterSchedule(ip, slots, name);
       console.log(`[monitor] ${name} heater temp monitor redeployed`);
     } catch (e) {
       // The relay is already off, the alert keeps firing, and the next attempt
