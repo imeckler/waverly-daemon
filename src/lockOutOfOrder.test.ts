@@ -6,8 +6,8 @@ import * as path from 'path';
 import { LockManager, SlotReading } from './lockManager.js';
 import { InterviewStage } from 'zwave-js';
 import { LockHealth, Notifier, SILENCE_LIMIT_MS, checkLiveness } from './lockHealth.js';
-import { isLockOutOfOrder, markLockOutOfOrder, setOutOfOrderFile } from './lockOutOfOrder.js';
-import { checkLock, registerLockGroup, resetLockGroups, retireLock, setLockOutOfOrder, setOverridesFile } from './lockGroups.js';
+import { isLockOutOfOrder, isLockClearAlertsMuted, markLockOutOfOrder, setOutOfOrderFile } from './lockOutOfOrder.js';
+import { checkLock, registerLockGroup, resetLockGroups, retireLock, setLockOutOfOrder, setLockClearAlertsMuted, setOverridesFile } from './lockGroups.js';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lock-out-of-order-'));
 const marksFile = path.join(dir, 'lock-out-of-order.json');
@@ -184,6 +184,92 @@ test('marking directly is idempotent', () => {
   markLockOutOfOrder(13, true);
   markLockOutOfOrder(13, true);
   assert.deepEqual(JSON.parse(fs.readFileSync(marksFile, 'utf-8')).outOfOrder, [13]);
+});
+
+// A lock that confirms the code it is given but, asked after the clear,
+// still shows it enabled: the shape of an unconfirmed clear.
+async function clearUnconfirmed(l: ReturnType<typeof managedLock>) {
+  l.answer.value = { status: 1, code: '913790' };
+  assert.equal((await l.manager.allocateCodeSlot('913790')).ok, true);
+  await l.manager.freeCodeSlot('913790');
+  await settle();
+}
+
+test('an unconfirmed clear opens a low-urgency incident unless the lock\'s clear alerts are muted', async () => {
+  const l = managedLock();
+  await clearUnconfirmed(l);
+  assert.deepEqual(l.triggered, ['lock-13-write-unconfirmed']);
+
+  const m = managedLock(14);
+  assert.deepEqual(setLockClearAlertsMuted(14, true), { ok: true });
+  await clearUnconfirmed(m);
+  assert.deepEqual(m.triggered, []);
+});
+
+test('an unconfirmed write on a lock with clear alerts muted still pages', async () => {
+  const l = managedLock();
+  setLockClearAlertsMuted(13, true);
+  // The lock answers, but with another code in the slot.
+  l.answer.value = { status: 1, code: '000000' };
+  assert.equal((await l.manager.allocateCodeSlot('913790')).ok, false);
+  await settle();
+  assert.deepEqual(l.triggered, ['lock-13-write-unconfirmed']);
+});
+
+test('muting resolves an open unconfirmed-clear incident, but not one about a write', async () => {
+  const l = managedLock();
+  await clearUnconfirmed(l);
+  setLockClearAlertsMuted(13, true);
+  await flush();
+  assert.deepEqual(l.resolved, ['lock-13-write-unconfirmed']);
+
+  const m = managedLock(14);
+  m.answer.value = { status: 1, code: '000000' };
+  await m.manager.allocateCodeSlot('913790');
+  await settle();
+  assert.deepEqual(m.triggered, ['lock-14-write-unconfirmed']);
+  setLockClearAlertsMuted(14, true);
+  await flush();
+  assert.deepEqual(m.resolved, []);
+});
+
+test('the mute is its own mark: saved with the out-of-order one, kept across a restart, dropped on retire', () => {
+  managedLock();
+  setLockClearAlertsMuted(13, true);
+  assert.equal(isLockOutOfOrder(13), false);
+  setLockOutOfOrder(13, true);
+  setOutOfOrderFile(marksFile);
+  assert.equal(isLockClearAlertsMuted(13), true);
+  assert.equal(isLockOutOfOrder(13), true);
+  assert.equal(isLockClearAlertsMuted(14), false);
+  const saved = JSON.parse(fs.readFileSync(marksFile, 'utf-8'));
+  assert.deepEqual(saved.outOfOrder, [13]);
+  assert.deepEqual(saved.clearAlertsMuted, [13]);
+
+  assert.deepEqual(setLockClearAlertsMuted(13, false), { ok: true });
+  assert.equal(isLockClearAlertsMuted(13), false);
+  assert.equal(isLockOutOfOrder(13), true);
+
+  setLockClearAlertsMuted(13, true);
+  retireLock(13);
+  setOutOfOrderFile(marksFile);
+  assert.equal(isLockClearAlertsMuted(13), false);
+  assert.equal(isLockOutOfOrder(13), false);
+});
+
+test('a marks file from before the mute loads with no lock muted', () => {
+  fs.writeFileSync(marksFile, '{"outOfOrder": [13], "updatedAt": "2026-10-17T00:00:00.000Z"}');
+  setOutOfOrderFile(marksFile);
+  assert.equal(isLockOutOfOrder(13), true);
+  assert.equal(isLockClearAlertsMuted(13), false);
+});
+
+test('muting a lock the daemon does not manage is refused', () => {
+  managedLock();
+  const r = setLockClearAlertsMuted(99, true);
+  assert.equal(r.ok, false);
+  assert.match(r.error ?? '', /not managed/);
+  assert.equal(isLockClearAlertsMuted(99), false);
 });
 
 test('checking a lock probes it at once, re-interviews it if silent, and pages', async () => {

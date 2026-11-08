@@ -2,7 +2,7 @@ import { TranslatedValueID, ZWaveNode } from 'zwave-js';
 import { setValueOk, describeSetValue, readSlotFromLock, confirmsCode, describeReading } from './lockManager';
 import { userCodeSlots, userCodeValueId, userIdStatusValueId } from './lockSlots';
 import { describeSecurityClass } from './lockPairing';
-import { isLockOutOfOrder } from './lockOutOfOrder';
+import { isLockOutOfOrder, isLockClearAlertsMuted } from './lockOutOfOrder';
 import { healthOf } from './lockHealth';
 import { LockBattery, LockCodes, LockSlot } from '@waverly/sauna-protocol';
 
@@ -62,6 +62,7 @@ export function getLockCodes(): LockCodes[] {
       security: securityOf(node),
       battery: batteryOf(node),
       outOfOrder: isLockOutOfOrder(node.id),
+      clearAlertsMuted: isLockClearAlertsMuted(node.id),
       autoLock: autoLockOf(node),
       lastHeardAt: health?.lastHeardAt == null ? null : new Date(health.lastHeardAt).toISOString(),
       checking: health?.checking ?? false,

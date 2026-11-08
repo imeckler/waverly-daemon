@@ -335,12 +335,12 @@ export class LockManager implements Probeable, BatteryRefreshable {
           this.health.recordConfirmed();
         } else {
           // A code that lingers in a slot is a nuisance, not a lockout: worth
-          // an incident, not worth waking anyone.
-          this.health.recordUnconfirmed(`clearing slot ${slotNo}`, {
+          // an incident, not worth waking anyone (lockHealth decides).
+          this.health.recordUnconfirmed('clear', `clearing slot ${slotNo}`, {
             slot: slotNo,
             code: maskCode(code),
             lockReports: describeReading(reading),
-          }, 'warning');
+          });
         }
       }
     }
@@ -395,7 +395,7 @@ export class LockManager implements Probeable, BatteryRefreshable {
       }
     }
 
-    this.health.recordUnconfirmed(`writing code ${maskCode(code)} to slot ${slotNo}`, {
+    this.health.recordUnconfirmed('write', `writing code ${maskCode(code)} to slot ${slotNo}`, {
       slot: slotNo,
       code: maskCode(code),
       lockReports: describeReading(reading),

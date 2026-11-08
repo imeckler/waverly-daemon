@@ -5,7 +5,7 @@ import { LockManager } from './lockManager';
 import { BookingWebSocketClient } from './bookingWebSocketClient';
 import { registerLock, unregisterLock } from './lockRegistry';
 import { checkLiveness } from './lockHealth';
-import { isLockOutOfOrder, markLockOutOfOrder } from './lockOutOfOrder';
+import { isLockOutOfOrder, markLockOutOfOrder, markLockClearAlertsMuted, forgetLockMarks } from './lockOutOfOrder';
 
 // ---------------------------------------------------------------------------
 // The lock servers the daemon serves, and which lock nodes belong to each.
@@ -114,11 +114,27 @@ export function retireLock(nodeId: number): boolean {
   if (found) saveOverrides();
   // The node id is gone for good; a mark left behind would describe nothing.
   try {
-    markLockOutOfOrder(nodeId, false);
+    forgetLockMarks(nodeId);
   } catch (e) {
-    console.error(`Could not clear the out-of-order mark of retired lock ${nodeId}:`, e);
+    console.error(`Could not drop the marks of retired lock ${nodeId}:`, e);
   }
   return found;
+}
+
+/**
+ * Mute or unmute a managed lock's alerts about slot clears it does not
+ * confirm. Muting closes the incident about one, if this process opened it.
+ */
+export function setLockClearAlertsMuted(nodeId: number, muted: boolean): { ok: boolean; error?: string } {
+  const manager = allLockManagers().find(m => m.lock.id === nodeId);
+  if (!manager) return { ok: false, error: `Lock node ${nodeId} is not managed by this daemon` };
+  try {
+    markLockClearAlertsMuted(nodeId, muted);
+  } catch (e) {
+    return { ok: false, error: `Could not save the mark: ${e instanceof Error ? e.message : String(e)}` };
+  }
+  if (muted) manager.health.resolveUnconfirmedClear();
+  return { ok: true };
 }
 
 /**

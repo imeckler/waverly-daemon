@@ -3,7 +3,7 @@ import { applyOperationalPlan, Booking, OperationalPlan, setSaunaOverride, getLi
 import { applySteamSchedule, setSteamOverride, SteamPeriod } from './steamController.js';
 import { getLockCodes, setLockCode, setLockAutoLock } from './lockRegistry.js';
 import { lockPairing } from './lockPairingRegistry.js';
-import { setLockOutOfOrder, checkLock } from './lockGroups.js';
+import { setLockOutOfOrder, setLockClearAlertsMuted, checkLock } from './lockGroups.js';
 import {
   ServerToDaemonMessage,
   DaemonToServerMessage,
@@ -12,6 +12,7 @@ import {
   GetLockCodesRequest,
   SetLockCodeRequest,
   SetLockOutOfOrderRequest,
+  SetLockClearAlertsRequest,
   CheckLockRequest,
   SetLockAutoLockRequest,
   GetLightsRequest,
@@ -168,6 +169,9 @@ export class SaunaScheduleClient {
       case 'setLockAutoLock':
         void this.handleSetLockAutoLock(message);
         break;
+      case 'setLockClearAlerts':
+        this.handleSetLockClearAlerts(message);
+        break;
       case 'checkLock':
         this.handleCheckLock(message);
         break;
@@ -236,6 +240,19 @@ export class SaunaScheduleClient {
     if (!result.ok) console.error(`Marking node ${message.nodeId} ${what} FAILED: ${result.error}`);
     this.send({
       kind: 'setLockOutOfOrderResult',
+      requestId: message.requestId,
+      ok: result.ok,
+      error: result.error,
+    });
+  }
+
+  private handleSetLockClearAlerts(message: SetLockClearAlertsRequest): void {
+    const what = message.muted ? 'muted' : 'unmuted';
+    console.log(`Lock clear-alerts request: node ${message.nodeId} ${what}`);
+    const result = setLockClearAlertsMuted(message.nodeId, message.muted);
+    if (!result.ok) console.error(`Setting clear alerts ${what} on node ${message.nodeId} FAILED: ${result.error}`);
+    this.send({
+      kind: 'setLockClearAlertsResult',
       requestId: message.requestId,
       ok: result.ok,
       error: result.error,

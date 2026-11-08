@@ -1,6 +1,6 @@
 import { ZWaveNode } from 'zwave-js';
 import { triggerIncident, resolveIncident, type Severity } from './pagerduty';
-import { isLockOutOfOrder } from './lockOutOfOrder';
+import { isLockOutOfOrder, isLockClearAlertsMuted } from './lockOutOfOrder';
 
 // ---------------------------------------------------------------------------
 // Lock liveness.
@@ -82,7 +82,8 @@ export class LockHealth {
   lastHealAt: number | null = null;
 
   private unresponsiveOpen = false;
-  private unconfirmedOpen = false;
+  /** Which unconfirmed command's incident this process has open, if any; both kinds share one dedup key. */
+  private unconfirmedOpen: 'write' | 'clear' | null = null;
   private readonly startedAt: number;
 
   constructor(
@@ -122,6 +123,7 @@ export class LockHealth {
   get dedupUnconfirmed(): string { return `lock-${this.lock.id}-write-unconfirmed`; }
 
   get outOfOrder(): boolean { return isLockOutOfOrder(this.lock.id); }
+  get clearAlertsMuted(): boolean { return isLockClearAlertsMuted(this.lock.id); }
 
   /**
    * The lock has just been marked out of order: close whatever is open about
@@ -130,7 +132,7 @@ export class LockHealth {
    */
   resolveIncidents(): void {
     this.unresponsiveOpen = false;
-    this.unconfirmedOpen = false;
+    this.unconfirmedOpen = null;
     for (const key of [this.dedupUnresponsive, this.dedupUnconfirmed]) {
       this.notifier.resolve(key)
         .catch(e => console.error(`${this.describe()}: failed to resolve ${key}:`, e));
@@ -157,29 +159,49 @@ export class LockHealth {
 
   /**
    * A write or clear went out but the lock's answer does not show it. An
-   * unconfirmed write pages (someone may be locked out); a caller can pass a
-   * lower severity when the consequence is only a nuisance, as with a clear.
+   * unconfirmed write pages (someone may be locked out). A code that lingers
+   * in a slot is a nuisance, not a lockout: an unconfirmed clear opens a
+   * low-urgency incident, and none at all on a lock whose clear alerts an
+   * admin has muted.
    */
-  recordUnconfirmed(what: string, details: Record<string, unknown>, severity: Severity = 'critical'): void {
+  recordUnconfirmed(kind: 'write' | 'clear', what: string, details: Record<string, unknown>): void {
     const summary = `${this.describe()}: ${what} was not confirmed by the lock`;
     console.error(summary, details);
     if (this.outOfOrder) {
       console.log(`${this.describe()}: out of order; not paging`);
       return;
     }
-    this.unconfirmedOpen = true;
+    if (kind === 'clear' && this.clearAlertsMuted) {
+      console.log(`${this.describe()}: clear alerts muted; not paging`);
+      return;
+    }
+    const severity: Severity = kind === 'write' ? 'critical' : 'warning';
+    this.unconfirmedOpen = kind;
     this.notifier.trigger(summary, this.dedupUnconfirmed, { lock: this.lock.id, ...details }, severity)
-      .catch(e => console.error(`${this.describe()}: failed to report unconfirmed write:`, e));
+      .catch(e => console.error(`${this.describe()}: failed to report unconfirmed ${kind}:`, e));
   }
 
   /** A write or clear was confirmed by the lock's own answer. */
   recordConfirmed(): void {
     this.recordHeard();
-    if (this.unconfirmedOpen) {
-      this.unconfirmedOpen = false;
+    if (this.unconfirmedOpen !== null) {
+      this.unconfirmedOpen = null;
       this.notifier.resolve(this.dedupUnconfirmed)
         .catch(e => console.error(`${this.describe()}: failed to resolve unconfirmed-write incident:`, e));
     }
+  }
+
+  /**
+   * The lock's clear alerts have just been muted: close the incident about an
+   * unconfirmed clear if this process has one open. One about a write is left
+   * alone, as is anything an earlier process opened, since the two share a
+   * dedup key and a lockout incident must not be closed by a mute.
+   */
+  resolveUnconfirmedClear(): void {
+    if (this.unconfirmedOpen !== 'clear') return;
+    this.unconfirmedOpen = null;
+    this.notifier.resolve(this.dedupUnconfirmed)
+      .catch(e => console.error(`${this.describe()}: failed to resolve unconfirmed-clear incident:`, e));
   }
 
   /** Whether the lock has been quiet long enough that the watchdog should probe it. */
