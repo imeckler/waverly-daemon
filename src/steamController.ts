@@ -25,9 +25,18 @@
 // fans). The fan is driven the same way as the heater: its own timer is re-armed
 // every tick as a dead-man's switch, so a daemon outage mid-cooldown leaves the
 // fan to switch itself off within minutes.
+//
+// During a session the fan can also run a set share of each cycle (fanDuty.ts;
+// the share and the cycle length are set from the admin page and carried on
+// the plan). The unit stops making steam once the room sits at its target, so
+// without some airflow the room goes stale; the fan cycles on and off from the
+// moment the room first reaches its target. At 0% the fan is left alone
+// during sessions.
 
-import { ToloClient, ToloCommunicationError } from './tolo/index.js';
+import { ToloClient, ToloCommunicationError, Calefaction } from './tolo/index.js';
+import type { ToloStatus } from './tolo/index.js';
 import { FanCooldownLimits, FanCooldownState, newFanCooldown, withReading, stopReason } from './fanCooldown.js';
+import { dutyFanOn, FanDuty, NO_FAN_DUTY } from './fanDuty.js';
 import { heaterOnOrDue, HEATER_DUE_WINDOW_MS } from './alertUrgency.js';
 
 // Structurally compatible with shellyController's SaunaStatus so it can be dropped
@@ -71,10 +80,17 @@ const DEFAULT_FAN_COOLDOWN: FanCooldownLimits = {
   maxMs: 3 * 60 * 60 * 1000,
 };
 
-// Minutes the TOLO fan timer is (re-)armed to on every tick of a cooldown: the
+// Minutes the TOLO fan timer is (re-)armed to on every tick the daemon wants the
+// fan running (a cooldown, or the on stretch of the session duty cycle): the
 // fan's dead-man's switch, as POWER_TIMER_MINUTES is the heater's. Must be <=
 // FAN_TIMER_MAX (60).
 const FAN_TIMER_MINUTES = 10;
+
+// The room counts as having reached its target, and the session duty cycle
+// starts, once the unit reads within this much of TARGET_TEMPERATURE_C. The
+// unit reports whole degrees, and a room that levels off a degree short is
+// just as idle.
+const TARGET_REACHED_MARGIN_C = 1;
 
 function celsiusToFahrenheit(c: number): number {
   return Math.round((c * 9) / 5 + 32);
@@ -100,6 +116,16 @@ let fanCooldown: FanCooldownState | null = null;
 // re-sent) mid-cooldown finds the fan running and picks the cooldown up from
 // here; the next tick consumes it.
 let endedBeforePlanAt: number | null = null;
+// Session fan duty cycle: the share and cycle length from the latest plan, when
+// the room first reached its target in the session under way, and whether the
+// duty cycle last drove the fan on (so it only ever switches off a fan it
+// switched on, and a fan started at the panel is left be).
+let fanDuty: FanDuty = NO_FAN_DUTY;
+let reachedTargetAt: number | null = null;
+let dutyDroveFanOn = false;
+// The unit's heating state as last logged, so a session's log shows when it
+// stops making steam and at what temperature and humidity.
+let lastCalefaction: Calefaction | null = null;
 
 /** Apply an admin override to the steam room (relayed from the server). */
 export function setSteamOverride(override: 'on' | 'off' | 'none'): void {
@@ -107,6 +133,21 @@ export function setSteamOverride(override: 'on' | 'off' | 'none'): void {
   steamOverrideExpiresAt = override === 'on' ? Date.now() + OVERRIDE_ON_DURATION_MS : 0;
   // Drive the change now rather than waiting for the next control tick.
   requestApply();
+}
+
+const describeDuty = (d: FanDuty) => `${d.percent}% of every ${d.cycleMs / 60_000}min`;
+
+/**
+ * Set how the fan runs during a session once the room is at temperature: on
+ * for `percent` (0-100) of every cycle of `cycleMs`. Arrives with every plan;
+ * the caller has validated it (parseFanDuty). A change takes effect on the next
+ * tick, with the cycle still counted from when the room reached its target.
+ */
+export function setSteamFanDuty(duty: FanDuty): void {
+  if (duty.percent !== fanDuty.percent || duty.cycleMs !== fanDuty.cycleMs) {
+    console.log(`steam: session fan duty ${describeDuty(fanDuty)} -> ${describeDuty(duty)}`);
+  }
+  fanDuty = duty;
 }
 
 /**
@@ -227,16 +268,73 @@ async function applySteamState(): Promise<void> {
     // tick, visibly in the log.
     await c.setPowerTimer(POWER_TIMER_MINUTES);
     await c.setTargetTemperature(TARGET_TEMPERATURE_C);
+    // A cooldown still running from an earlier session ends here (the room is
+    // back on) and switches the fan off, so it goes before the status read the
+    // duty cycle decides from.
+    await driveFanCooldown(c, desiredOn, sessionEndedNow, now);
     const status = await c.getStatus();
     if (!status.powerOn) {
       console.log('steam: unit is off, powering on');
       await c.setPowerOn(true);
     }
+    await logHeatingState(c, status);
+    await driveFanDuty(c, status, now);
   } else {
+    reachedTargetAt = null;
+    dutyDroveFanOn = false;
+    lastCalefaction = null;
     await c.setPowerOn(false);
+    // A fan the duty cycle left on is simply carried into the cooldown.
+    await driveFanCooldown(c, desiredOn, sessionEndedNow, now);
   }
+}
 
-  await driveFanCooldown(c, desiredOn, sessionEndedNow, now);
+/**
+ * Log the unit's heating state when it changes during a session, with the
+ * room's temperature and humidity and the humidity target, so the log shows
+ * whether it stops making steam on temperature or on humidity.
+ */
+async function logHeatingState(c: ToloClient, status: ToloStatus): Promise<void> {
+  if (status.calefaction === lastCalefaction) return;
+  const was = lastCalefaction === null ? 'session start' : Calefaction[lastCalefaction];
+  lastCalefaction = status.calefaction;
+  const settings = await c.getSettings();
+  console.log(
+    `steam: heating ${was} -> ${Calefaction[status.calefaction]}; room ${status.currentTemperature}°C ` +
+    `(target ${settings.targetTemperature}°C), humidity ${status.currentHumidity}% ` +
+    `(target ${settings.targetHumidity}%), fan ${status.fanOn ? 'on' : 'off'}`,
+  );
+}
+
+/**
+ * One tick of the session duty cycle, while the room is driven on. Once the
+ * room first reaches its target, the fan runs fanDuty.percent of each cycle
+ * (fanDuty.ts). While it should be on its timer is re-armed every tick as its
+ * dead-man's switch and it is switched back on if found off (a lapsed timer);
+ * at the end of an on stretch it is switched off only if the duty cycle had
+ * switched it on, so a fan someone started at the panel is left alone. At 0%
+ * the duty cycle never switches the fan on.
+ */
+async function driveFanDuty(c: ToloClient, status: ToloStatus, now: number): Promise<void> {
+  if (reachedTargetAt === null && status.currentTemperature >= TARGET_TEMPERATURE_C - TARGET_REACHED_MARGIN_C) {
+    reachedTargetAt = now;
+    console.log(`steam: room at ${status.currentTemperature}°C, at temperature; session fan duty ${describeDuty(fanDuty)}`);
+  }
+  const wantOn = reachedTargetAt !== null && dutyFanOn(fanDuty, reachedTargetAt, now);
+  if (wantOn) {
+    // Timer first, so the fan is never running without its backstop armed.
+    await c.setFanTimer(FAN_TIMER_MINUTES);
+    if (!status.fanOn) {
+      await c.setFanOn(true);
+      if (dutyDroveFanOn) console.log('steam: duty fan found off mid-stretch; switching it back on');
+    }
+    if (!dutyDroveFanOn) console.log(`steam: duty fan on (${describeDuty(fanDuty)})`);
+    dutyDroveFanOn = true;
+  } else if (dutyDroveFanOn) {
+    dutyDroveFanOn = false;
+    console.log('steam: duty fan off');
+    await c.setFanOn(false);
+  }
 }
 
 /**
@@ -367,5 +465,9 @@ export async function stopSteamController(): Promise<void> {
   fanCooldown = null;
   endedBeforePlanAt = null;
   fanCooldownLimits = DEFAULT_FAN_COOLDOWN;
+  fanDuty = NO_FAN_DUTY;
+  reachedTargetAt = null;
+  dutyDroveFanOn = false;
+  lastCalefaction = null;
   if (c) await c.close();
 }

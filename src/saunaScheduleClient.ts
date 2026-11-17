@@ -1,6 +1,7 @@
 import WebSocket from 'ws';
 import { applyOperationalPlan, Booking, OperationalPlan, setSaunaOverride, getLightsState, setLights } from './shellyController.js';
-import { applySteamSchedule, setSteamOverride, SteamPeriod } from './steamController.js';
+import { applySteamSchedule, setSteamOverride, setSteamFanDuty, SteamPeriod } from './steamController.js';
+import { parseFanDuty } from './fanDuty.js';
 import { getLockCodes, setLockCode, setLockAutoLock } from './lockRegistry.js';
 import { lockPairing } from './lockPairingRegistry.js';
 import { setLockOutOfOrder, setLockClearAlertsMuted, checkLock } from './lockGroups.js';
@@ -348,6 +349,8 @@ export class SaunaScheduleClient {
         stop: new Date(s.stop),
         hotFrom: s.hotFrom ? new Date(s.hotFrom) : null,
       }));
+      // The fan duty first, so the apply the new schedule triggers already uses it.
+      setSteamFanDuty(parseFanDuty(message.steamFanDutyPercent, message.steamFanCycleMinutes));
       applySteamSchedule(steam, message.planDate);
 
       // Convert to OperationalPlan format
