@@ -337,8 +337,10 @@ async function firstSuccessful<A, B>(xs: A[], f: (x: A) => Promise<B>): Promise<
 
     try {
       const res = await f(x);
-      // put this item first for next time
-      xs.splice(i, 1);
+      // Put this item first for next time. Look its index up again: concurrent calls
+      // reorder the same array during the await, and splicing the stale index i
+      // dropped a working address and duplicated a dead one.
+      xs.splice(xs.indexOf(x), 1);
       xs.unshift(x);
       return res;
     } catch (error) {
