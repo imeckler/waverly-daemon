@@ -25,7 +25,8 @@
     "sauna_server_url": "http://localhost:3000",
     "daemon_secret": "your-daemon-secret-here",
     "tolo_ip": "192.168.8.10",
-    "tolo_port": 51500
+    "tolo_port": 51500,
+    "tolo_key": "the-key-in-the-bridge-firmware-secrets-h"
   },
   "pagerduty": {
     "routing_key": "your-pagerduty-integration-routing-key"

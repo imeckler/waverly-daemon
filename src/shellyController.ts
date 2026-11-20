@@ -238,6 +238,9 @@ export interface ShellyConfig {
   // control stays dormant until tolo_ip is set.
   tolo_ip?: string;
   tolo_port?: number;
+  // The secret shared with the ESP32 bridge that stands in for the App Box
+  // (firmware/tolo-bridge); every request to it is authenticated with this.
+  tolo_key?: string;
 }
 
 function loadShellyConfig(): ShellyConfig {

@@ -13,12 +13,16 @@
 // and the unit powers itself off. The unit is never left on without it armed.
 //
 // The room is driven by the operational plan from the server, with an admin
-// override taking precedence. Where the Shelly heaters get their schedules
-// *pushed onto the device* — so they keep running through a daemon outage — the
-// TOLO box has no on-device scheduler, so the plan is held here in memory and
-// enforced by the control tick. The consequence is deliberate and worth stating:
-// if this daemon stops, the steam room stops with it. That is the safe direction
-// to fail for a unit with no independent supervision.
+// override taking precedence. The plan is held here in memory and enforced by
+// the control tick. Where the Shelly heaters get their schedules pushed onto
+// the device, the TOLO unit has no scheduler of its own; what stands in for one
+// is the ESP32 bridge in front of it (firmware/tolo-bridge). On every tick the
+// bridge is sent the periods the room should be powered for, override folded
+// in (wantedPeriods), and while the daemon is out of reach it follows them
+// itself: starting and stopping the room on time and keeping the power timer
+// armed, for up to half an hour, after which it keeps the unit off. It does
+// not run the fan. Reached without a bridge key (the simulator in tests), the
+// unit has no such stand-in, and stops when its power timer lapses.
 //
 // After a session the unit's ventilation fan runs while the room is still
 // cooling and stops once it no longer is (fanCooldown.ts, shared with the sauna
@@ -33,7 +37,7 @@
 // moment the room first reaches its target. At 0% the fan is left alone
 // during sessions.
 
-import { ToloClient, ToloCommunicationError, Calefaction } from './tolo/index.js';
+import { ToloClient, ToloCommunicationError, Calefaction, MAX_PLAN_PERIODS } from './tolo/index.js';
 import type { ToloStatus } from './tolo/index.js';
 import { FanCooldownLimits, FanCooldownState, newFanCooldown, withReading, stopReason } from './fanCooldown.js';
 import { dutyFanOn, FanDuty, NO_FAN_DUTY } from './fanDuty.js';
@@ -183,6 +187,19 @@ export function applySteamSchedule(periods: SteamPeriod[], planDate: string): vo
   requestApply();
 }
 
+/**
+ * The periods the room should be powered for from `now` on, with the override
+ * folded in: what the bridge follows by itself while the daemon is out of
+ * reach. An 'off' override leaves nothing, so a room shut for a fault stays
+ * shut; an 'on' override is a period of its own, up to its expiry.
+ */
+function wantedPeriods(now: number): { start: number; stop: number }[] {
+  if (steamOverride === 'off') return [];
+  const planned = schedule.map(p => ({ start: p.start.getTime(), stop: p.stop.getTime() }));
+  const wanted = steamOverride === 'on' ? [{ start: now, stop: steamOverrideExpiresAt }, ...planned] : planned;
+  return wanted.filter(p => p.stop > now).slice(0, MAX_PLAN_PERIODS);
+}
+
 /** Whether the plan wants the room powered at `now`. */
 function scheduledOn(now: number): boolean {
   return schedule.some(p => now >= p.start.getTime() && now < p.stop.getTime());
@@ -253,6 +270,14 @@ async function applySteamState(): Promise<void> {
   // A session ends when we go from driving the room on to driving it off; the
   // first decision after a start is not one (see endedBeforePlanAt for that).
   const sessionEndedNow = lastDesiredOn === true && !desiredOn;
+  // The bridge gets the plan before anything else, on every tick: it is what
+  // it falls back on if this is the last tick to reach it. A plan that fails to
+  // send must not keep the unit from being driven (above all, switched off), so
+  // the failure is held until the unit has been dealt with.
+  const planFailure: unknown = c.bridged
+    ? await c.sendPlan(TARGET_TEMPERATURE_C, wantedPeriods(now)).then(() => null, (e: unknown) => e)
+    : null;
+
   if (desiredOn !== lastDesiredOn) {
     const why = steamOverride === 'none' ? `plan ${schedulePlanDate ?? '(none)'}` : `override "${steamOverride}"`;
     console.log(`steam: turning ${desiredOn ? 'on' : 'off'} (${why})`);
@@ -287,6 +312,7 @@ async function applySteamState(): Promise<void> {
     // A fan the duty cycle left on is simply carried into the cooldown.
     await driveFanCooldown(c, desiredOn, sessionEndedNow, now);
   }
+  if (planFailure !== null) throw planFailure;
 }
 
 /**
@@ -429,12 +455,13 @@ export function startSteamController(
   host: string,
   port?: number,
   // Tests run a fast tick and short cooldown limits against the simulator.
-  options: { controlIntervalMs?: number; fanCooldown?: FanCooldownLimits } = {},
+  // `key` is the secret shared with the ESP32 bridge (see tolo/bridge.ts).
+  options: { controlIntervalMs?: number; fanCooldown?: FanCooldownLimits; key?: string } = {},
 ): void {
   if (controlInterval) return;
   const intervalMs = options.controlIntervalMs ?? DEFAULT_CONTROL_INTERVAL_MS;
   fanCooldownLimits = options.fanCooldown ?? DEFAULT_FAN_COOLDOWN;
-  client = new ToloClient(host, port);
+  client = new ToloClient(host, port, undefined, undefined, options.key);
   console.log(
     `Starting steam controller (TOLO ${host}:${port ?? 51500}, control every ${intervalMs / 1000}s)`,
   );
@@ -444,10 +471,13 @@ export function startSteamController(
 /**
  * Stop the control loop and release the socket.
  *
- * Note what this deliberately does *not* do: switch the unit (or its fan) off. The power
- * timer is the backstop — it lapses within POWER_TIMER_MINUTES of the last tick
- * and the unit powers itself down — so a daemon shutting down leaves the room to
- * fail safe on its own rather than depending on one last packet landing.
+ * Note what this deliberately does *not* do: switch the unit (or its fan) off,
+ * or withdraw the plan from the bridge. A daemon that stops is, to the bridge,
+ * a daemon out of reach: it carries on with the plan it holds, for up to the
+ * half hour it trusts one, so a restart in the middle of a session does not
+ * interrupt it. Stopping the daemon is therefore not a way to keep the room
+ * off; an 'off' override is. Without a bridge the unit's power timer lapses
+ * within POWER_TIMER_MINUTES of the last tick and the unit powers itself down.
  */
 export async function stopSteamController(): Promise<void> {
   if (controlInterval) {

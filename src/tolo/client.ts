@@ -6,6 +6,7 @@
 
 import * as dgram from 'node:dgram';
 
+import * as bridge from './bridge.js';
 import * as protocol from './protocol.js';
 import { DEFAULT_PORT, DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT, KEEP_ALIVE } from './const.js';
 import { AromaTherapySlot, Command, LampMode } from './enums.js';
@@ -64,12 +65,16 @@ export class ToloClient {
 
   /**
    * @param retryTimeout Per-attempt UDP wait, in seconds.
+   * @param key The secret shared with the ESP32 bridge (firmware/tolo-bridge).
+   *   With it every request goes through the bridge's authenticated exchange;
+   *   without it the client speaks the App Box's bare protocol.
    */
   constructor(
     readonly address: string,
     readonly port: number = DEFAULT_PORT,
     readonly retryTimeout: number = DEFAULT_RETRY_TIMEOUT,
     readonly retryCount: number = DEFAULT_RETRY_COUNT,
+    private readonly key?: string,
   ) {}
 
   async getStatus(): Promise<ToloStatus> {
@@ -185,6 +190,25 @@ export class ToloClient {
     throw new Error(`unexpected type ${typeof result}, expecting number | null`);
   }
 
+  /** Whether requests go through the ESP32 bridge (a key was given). */
+  get bridged(): boolean {
+    return this.key !== undefined;
+  }
+
+  /**
+   * Leave the bridge the plan it follows by itself while the daemon is out of
+   * reach: the temperature to hold and the periods (epoch ms) to power the room
+   * for. Only a bridged client has anywhere to send it.
+   */
+  async sendPlan(targetCelsius: number, periods: { start: number; stop: number }[]): Promise<void> {
+    const { key } = this;
+    if (key === undefined) throw new ToloError('a plan can only be sent to the bridge');
+    const build = () => bridge.planBody(targetCelsius, periods, Date.now());
+    const run = this.chain.then(() => this.bridgeRequest('plan', key, build));
+    this.chain = run.catch(() => undefined);
+    await run;
+  }
+
   /** Close the underlying UDP socket. */
   async close(): Promise<void> {
     if (this.socket !== null) {
@@ -227,7 +251,10 @@ export class ToloClient {
    * on the socket (see `chain`).
    */
   private communicate(message: Message): Promise<Message> {
-    const run = this.chain.then(() => this.exchange(message));
+    const { key } = this;
+    const run = this.chain.then(() =>
+      key === undefined ? this.exchange(message) : this.bridgeExchange(message, key),
+    );
     // Keep the chain alive regardless of how this request ends.
     this.chain = run.catch(() => undefined);
     return run;
@@ -281,6 +308,62 @@ export class ToloClient {
     }
 
     throw new ToloCommunicationError(`failed to send message after ${this.retryCount} attempts`);
+  }
+
+  /**
+   * One TOLO request through the ESP32 bridge, which hands back one whole,
+   * checked frame, so there is no stream to reassemble. A controller that
+   * does not answer the bridge is asked again, as one that did not answer the
+   * App Box was.
+   */
+  private async bridgeExchange(message: Message, key: string): Promise<Message> {
+    for (let attempt = 0; attempt < this.retryCount; attempt++) {
+      const frame = await this.bridgeRequest('command', key, () => message.toBytes());
+      if (frame.length === 0) continue;
+      if (!Message.validateMeta(frame) || frame[2] !== message.command.code) {
+        throw new ToloCommunicationError(`the bridge returned ${frame.toString('hex')}`);
+      }
+      return Message.fromBytes(Buffer.from(frame));
+    }
+    throw new ToloCommunicationError('the bridge got no answer from the controller');
+  }
+
+  /**
+   * One authenticated request to the bridge (see bridge.ts): a hello, the
+   * bridge's challenge, then the request and its answer. Returns the answer's
+   * body. The request's body is built afresh for each attempt, since a plan's
+   * times count from the moment it is sent.
+   */
+  private async bridgeRequest(kind: bridge.Kind, key: string, build: () => Buffer): Promise<Buffer> {
+    const { socket, queue } = this.ensureEndpoint();
+    let failure = 'the bridge did not answer';
+
+    for (let attempt = 0; attempt < this.retryCount; attempt++) {
+      queue.clear();
+      const daemonNonce = bridge.newNonce();
+      socket.send(bridge.hello(daemonNonce), this.port, this.address);
+      const bridgeNonce = await this.firstMatch(queue, (d) => bridge.challengeNonce(d, daemonNonce));
+      if (bridgeNonce === null) continue;
+
+      const body = build();
+      socket.send(bridge.request(kind, key, daemonNonce, bridgeNonce, body), this.port, this.address);
+      const answered = await this.firstMatch(queue, (d) => bridge.answer(kind, key, daemonNonce, bridgeNonce, body, d));
+      if (answered !== null) return answered;
+      failure = `the bridge answered the hello but not the ${kind} (does tolo_key match its key?)`;
+    }
+
+    throw new ToloCommunicationError(`failed to send message after ${this.retryCount} attempts: ${failure}`);
+  }
+
+  /** What `pick` makes of the first datagram it accepts within one retry timeout, else null. */
+  private async firstMatch<T>(queue: AsyncQueue<Buffer>, pick: (datagram: Buffer) => T | null): Promise<T | null> {
+    const deadline = Date.now() + this.retryTimeout * 1000;
+    for (;;) {
+      const datagram = await queue.get(Math.max(0, deadline - Date.now()));
+      if (datagram === TIMEOUT) return null;
+      const picked = pick(datagram);
+      if (picked !== null) return picked;
+    }
   }
 
   /**

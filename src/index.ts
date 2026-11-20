@@ -135,6 +135,9 @@ interface ShellyConfig {
   // control stays dormant until tolo_ip is set.
   tolo_ip?: string;
   tolo_port?: number;
+  // The secret shared with the ESP32 bridge that stands in for the App Box
+  // (firmware/tolo-bridge); every request to it is authenticated with this.
+  tolo_key?: string;
 }
 */
 
@@ -175,7 +178,7 @@ try {
     startManualResetMonitor();
     deployTemperatureMonitors().catch(e => console.error('Failed to deploy temperature monitors:', e));
     if (shellyConfig.tolo_ip) {
-      startSteamController(shellyConfig.tolo_ip, shellyConfig.tolo_port);
+      startSteamController(shellyConfig.tolo_ip, shellyConfig.tolo_port, { key: shellyConfig.tolo_key });
     } else {
       console.log('No tolo_ip configured, skipping steam controller');
     }

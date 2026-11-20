@@ -2,6 +2,7 @@
 // a client for TOLO / STEAMTEC AIO steam bath units. See ./README.md.
 
 export { ToloClient, ToloError, ToloCommunicationError } from './client.js';
+export { MAX_PLAN_PERIODS } from './bridge.js';
 export { ToloDeviceSimulator } from './deviceSimulator.js';
 export { ToloSettings, ToloStatus } from './state.js';
 export { AromaTherapySlot, Calefaction, Command, LampMode, Model } from './enums.js';
