@@ -100,6 +100,8 @@ The commands below are for a Mac or Linux terminal, run from this folder (`firmw
 
    The ESP32 only joins 2.4GHz WiFi. The build refuses to run if the key is shorter than 32 characters.
 
+   Leave `kIp` and `kGateway` at zeros for now. Item 8 below explains when to set them.
+
 5. Plug the ESP32 into the computer with the USB-C data cable.
 6. Build and flash. The first run downloads the toolchain and takes a few minutes:
 
@@ -122,7 +124,9 @@ The commands below are for a Mac or Linux terminal, run from this folder (`firmw
    WiFi up: 192.168.8.42, UDP port 51500
    ```
 
-8. Write down the MAC and the address after `WiFi up`. In the WiFi router's settings, reserve that address for that MAC so it never changes.
+8. Write down the MAC and the address after `WiFi up`. The address must never change, because the daemon is told it once. There are two ways to keep it:
+   - **Reserve it in the router.** In the WiFi router's settings, reserve that address for that MAC.
+   - **Set it on the bridge.** If the bridge joins through a range extender, the router cannot tell it apart from anything else behind the extender: the extender puts its own MAC on all of them, so the router's device list does not show the bridge's MAC. Put the address and the router's address in `secrets.h` as `kIp` and `kGateway` (for example `{10, 0, 0, 194}` and `{10, 0, 0, 1}`) and flash again. The Shellys behind the same extender are set up this way. Pick an address nothing else uses, ideally one outside the range the router hands out.
 
 Keep `src/secrets.h` private. It is deliberately left out of git, and the same key goes into the daemon in Step 5.
 
@@ -202,7 +206,7 @@ The daemon needs three settings: the bridge's address, its port, and the same ke
 2. Restart the daemon. It must be a version that knows `tolo_key`; an older one will talk to the bridge without the key and be ignored.
 3. Read the daemon's log. A working link shows `Starting steam controller` and then no steam errors. The steam room's temperature appears on the admin page within a minute.
 
-The daemon's computer must be able to reach the bridge's address on the network. The old App Box was reached through a WireGuard route to its own address, so that route needs the bridge's address added if the bridge sits on the same network.
+The daemon's computer must be able to reach the bridge's address on the network. The old App Box sat on a separate router's network and was reached through a WireGuard tunnel; a bridge on the daemon's own network needs neither.
 
 If the log shows an error, its last words say which side is at fault:
 
@@ -261,6 +265,7 @@ Plug the ESP32 into a computer and run `uvx --python 3.12 platformio device moni
 | --- | --- | --- |
 | Upload stalls at `Connecting......` | The board did not enter flashing mode | Hold `BOOT` during the upload. Try another cable; many USB-C cables are charge-only. |
 | The build stops with `set kKey in secrets.h` | The key is missing or too short | Paste the 64 characters from `openssl rand -hex 32`. |
+| A few `WiFi down, reason 202` (or `205`), then `WiFi up` within about a minute of starting | The `bod_shretl_EXT_24ghz` extender turns away the first attempts after the bridge starts; it did on every boot on 2026-11-23 with the right password | Nothing. The bridge retries every 30 seconds by itself. |
 | The log repeats `WiFi down, reason ...` | Wrong name or password, a 5GHz-only network, or too far from the router | Fix `secrets.h` and flash again, or move the router closer. |
 | The log says `controller did not answer command ...` | The controller is off, or a wire between the breakouts is wrong | Check the breaker, then repeat the voltage check at the end of Step 4. |
 | The log says `daemon silent: ...` | The bridge has taken over from a daemon it cannot hear | Check the daemon is running and can reach the bridge. |

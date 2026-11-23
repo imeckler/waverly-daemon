@@ -166,6 +166,10 @@ void setup() {
       ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
   WiFi.mode(WIFI_STA);
   WiFi.setHostname("tolo-bridge");
+  const IPAddress ip(kIp[0], kIp[1], kIp[2], kIp[3]);
+  if (uint32_t(ip) != 0) {
+    WiFi.config(ip, IPAddress(kGateway[0], kGateway[1], kGateway[2], kGateway[3]), IPAddress(255, 255, 255, 0));
+  }
   Serial.printf("tolo-bridge, MAC %s, joining %s\n", WiFi.macAddress().c_str(), kWifiName);
   WiFi.begin(kWifiName, kWifiPassword);
   udp.begin(kPort);
