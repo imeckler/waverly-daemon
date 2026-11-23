@@ -218,7 +218,7 @@ If the log shows an error, its last words say which side is at fault:
 
 ## Step 6: Power the bridge from the controller
 
-The cable's +5V wire is what powered the App Box. Using it removes the separate charger. **This step had not been tried when this guide was written (2026-11-20)**, so treat it as a test and keep the charger as the fallback.
+The cable's +5V wire is what powered the App Box. Using it removes the separate charger. **On 2026-11-23 it did not work with no capacitor:** the ESP32's power light stayed on, but the bridge never got back onto WiFi, and it joined straight away once moved to the charger. The first bridge runs on the charger. Try this step only with the 470µF capacitor below fitted from the start, and keep the charger as the fallback.
 
 Do Steps 1 to 5 on charger power first, so you know the bridge works before changing how it is powered.
 
@@ -268,6 +268,7 @@ Plug the ESP32 into a computer and run `uvx --python 3.12 platformio device moni
 | A few `WiFi down, reason 202` (or `205`), then `WiFi up` within about a minute of starting | The `bod_shretl_EXT_24ghz` extender turns away the first attempts after the bridge starts; it did on every boot on 2026-11-23 with the right password | Nothing. The bridge retries every 30 seconds by itself. |
 | The log repeats `WiFi down, reason ...` | Wrong name or password, a 5GHz-only network, or too far from the router | Fix `secrets.h` and flash again, or move the router closer. |
 | The log says `controller did not answer command ...` | The controller is off, or a wire between the breakouts is wrong | Check the breaker, then repeat the voltage check at the end of Step 4. |
+| Powered from the controller's +5V, the power light is on but the bridge never joins WiFi | The controller's supply dips when the WiFi transmits, and the ESP32 keeps resetting (2026-11-23) | Run it from the charger, or fit the 470µF capacitor from Step 6. |
 | The log says `daemon silent: ...` | The bridge has taken over from a daemon it cannot hear | Check the daemon is running and can reach the bridge. |
 | DB9 terminal 3 reads 0V with the cable connected | A breakout wire is on the wrong terminal | The shell terminal was probably counted as a wire. Name the terminals by voltage again. |
 | The bridge restarts every few minutes | Its power supply is dipping | See the end of Step 6. |
